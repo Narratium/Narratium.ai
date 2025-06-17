@@ -62,13 +62,15 @@
 
 [Narratium.ai](https://narratium.org/) is an open-source platform for creating AI characters, immersive worlds, and dynamic conversations.It's your creative studio for building personalized roleplay adventures — from emotional journeys to epic sagas.
 
-## Quick Start
+| Quick Start |
+| :--------------- |
 
 For detailed installation and setup instructions, please refer to our [Getting Started Guide](./docs/GETTING_STARTED.md)
 
 [Download for Mac, Windows, Linux](https://github.com/Narratium/Narratium.ai/releases)
 
-## Features
+| Features |
+| :------- |
 
 - **Immersive Adventure Mode**: Create personalized worlds and make decisions that matter.
 - **Visual Memory Management**: React Flow-powered session tracing and branching.
@@ -76,7 +78,8 @@ For detailed installation and setup instructions, please refer to our [Getting S
 
 For detailed installation and setup instructions, please refer to our [Getting Started Guide](./docs/GETTING_STARTED.md).
 
-<h2>Narratium vs. Other AI Roleplay Platforms</h2>
+| Narratium vs. Other AI Roleplay Platforms |
+| :---------------------------------------- |
 
 <table style="width: 100%;">
   <tr>
@@ -135,7 +138,8 @@ For detailed installation and setup instructions, please refer to our [Getting S
   </tr>
 </table>
 
-## License Overview
+| License Overview |
+| :--------------- |
 
 This project consists of two distinct parts with independent licenses:
 
@@ -144,21 +148,25 @@ This project consists of two distinct parts with independent licenses:
 
 > For full license details, please refer to the [LICENSE](./LICENSE).
 
-## Contact & Support
+| Contact & Support |
+| :---------------- |
 
 * 如果你喜欢这个项目，我们非常欢迎你加入
 * If you like this project, we warmly welcome you to join us
 [Discord community](https://discord.gg/PP7EpSzDfU)
 
-## Code Contributer
+| Code Contributer |
+| :--------------- |
 
 [![Contributors](https://contrib.rocks/image?repo=Narratium/Narratium.ai)](https://github.com/Narratium/Narratium.ai/graphs/contributors)
 
-## Others
+| Others |
+| :----- |
 
 Thanks all Official Website Test API Sponsor
 
-## Star Growth
+| Star Growth |
+| :---------- |
 
 [![Stargazers over time](https://starchart.cc/Narratium/Narratium.ai.svg?variant=adaptive)](https://starchart.cc/Narratium/Narratium.ai)
 
