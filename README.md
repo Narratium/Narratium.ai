@@ -6,9 +6,13 @@
 
 ![Narratium.ai](/public/banner.png)
 
-> **The world is vast, let imagination lead, but human hearts remain forever inscrutable**
+<p align="center">
 
+> **The world is vast, let imagination lead, but human hearts remain forever inscrutable**
+<br>
 > **世界广阔无垠，让想象力引领前行，但人心永远不可直视**
+
+</p>
 
 <p align="center">
   <em>An open-source AI character platform to build, customize, and chat with virtual personas</em>
@@ -25,9 +29,13 @@
   <a href="./README_ZH.md">🇨🇳 中文文档</a>
 </div>
 
+<div align="center">
+
 ![GitHub stars](https://img.shields.io/github/stars/Narratium/Narratium.ai?style=social)
 ![GitHub commits](https://img.shields.io/github/commit-activity/m/Narratium/Narratium.ai)
 ![GitHub Downloads](https://img.shields.io/github/downloads/Narratium/Narratium.ai/total)
+
+</div>
 
 <div align="center">
   <strong>Characters, worlds, and conversations — beautifully unified in Narratium</strong>
