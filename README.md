@@ -1,62 +1,78 @@
-<div align="center">
-<h1 style="border-bottom: none">
-    <b><a href=https://narratium.org/">Narratium.ai</a></b><br />
-    Create, Play, and Roleplay with AI
-    <br>
+<h1 style="border-bottom: none" align="center">
+  <a href=https://narratium.org/">Narratium.ai</a>
+  <br />
+  <p>Create, Play, and Roleplay with AI</p>
 </h1>
 
-> <em>**The world is vast, let imagination lead, but human hearts remain forever inscrutable**</em> </br>
-> <em>**世界广阔无垠，让想象力引领前行，但人心永远不可直视**</em>
+<div align="center">
+  <blockquote>
+    <strong>The world is vast, let imagination lead, but human hearts remain forever inscrutable</strong><br>
+    <strong>世界广阔无垠，让想象力引领前行，但人心永远不可直视</strong>
+  </blockquote>
+</div>
 
-![Narratium.ai](https://socialify.git.ci/Narratium/Narratium.ai/image?custom_description=Open+Source+Alternative+to+Character.AI%2C+MidReal+and+AI+Dungeon&description=1&font=Rokkitt&forks=1&language=1&logo=https%3A%2F%2Fraw.githubusercontent.com%2FNarratium%2FResource%2Fmain%2Flogo.svg&name=1&owner=0&pattern=Circuit+Board&stargazers=1&theme=Dark)
+<br>
+
+![Narratium.ai](/public/banner.png)
 
 <p align="center">
-  <em>An open-source AI character platform to build, customize, and chat with virtual personas</em><br />
+  <em>An open-source AI character platform to build, customize, and chat with virtual personas</em>
+  <br>
   <em>For writers, developers, and storytellers building interactive worlds</em>
 </p>
 
-<p align="center">
+<div align="center">
   <a href="https://narratium.org">🔗 Live Demo</a> &nbsp;|&nbsp;
   <a href="https://deepwiki.com/Narratium/Narratium.ai/">📖 DeepWiki Docs</a> &nbsp;|&nbsp;
   <a href="https://github.com/Narratium/Narratium.ai/stargazers">⭐ Star Us</a> &nbsp;|&nbsp;
   <a href="https://discord.gg/PP7EpSzDfU">💬 Discord Community</a> &nbsp;|&nbsp;
   <a href="https://github.com/Narratium/Narratium.ai/releases">💾 Download</a> &nbsp;|&nbsp;
   <a href="./README_ZH.md">🇨🇳 中文文档</a>
-</p>
+</div>
+
+<br>
+
+<div align="center">
 
 ![GitHub stars](https://img.shields.io/github/stars/Narratium/Narratium.ai?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/Narratium/Narratium.ai?style=social)
 ![GitHub commits](https://img.shields.io/github/commit-activity/m/Narratium/Narratium.ai)
 ![GitHub Downloads](https://img.shields.io/github/downloads/Narratium/Narratium.ai/total)
 
-<div align="center">
-<em><strong>Characters, worlds, and conversations — beautifully unified in Narratium</strong></em>
-</div>
-</br>
-
-<div align="center">
-<img src="./assets/demo_show.gif" style="width: 80%"/>
 </div>
 
+<div align="center">
+  <strong>Characters, worlds, and conversations — beautifully unified in Narratium</strong>
 </div>
+
+<br>
+
+<img src="./assets/demo_show.gif" style="width: 100%"/>
 
 ## Getting started & staying tuned with us
 
-<em>**Star us, and you will receive all release notifications from GitHub without any delay!**</em>
+<div align="center">
+  <strong>Star us, and you will receive all release notifications from GitHub without any delay!</strong>
+</div>
+
+<br>
 
 <img src="./assets/welcome_star.gif" style="width: 100%"/>
 
-## What is Narratium
+| What is Narratium |
+| :---------------- |
 
 [Narratium.ai](https://narratium.org/) is an open-source platform for creating AI characters, immersive worlds, and dynamic conversations.It's your creative studio for building personalized roleplay adventures — from emotional journeys to epic sagas.
 
-## Quick Start
+| Quick Start |
+| :---------- |
 
 For detailed installation and setup instructions, please refer to our [Getting Started Guide](./docs/GETTING_STARTED.md)
 
 [Download for Mac, Windows, Linux](https://github.com/Narratium/Narratium.ai/releases)
 
-## Features
+| Features |
+| :------- |
 
 - **Immersive Adventure Mode**: Create personalized worlds and make decisions that matter.
 - **Visual Memory Management**: React Flow-powered session tracing and branching.
@@ -64,7 +80,8 @@ For detailed installation and setup instructions, please refer to our [Getting S
 
 For detailed installation and setup instructions, please refer to our [Getting Started Guide](./docs/GETTING_STARTED.md).
 
-<h2>Narratium vs. Other AI Roleplay Platforms</h2>
+| Narratium vs. Other AI Roleplay Platforms |
+| :---------------------------------------- |
 
 <table style="width: 100%;">
   <tr>
@@ -123,7 +140,8 @@ For detailed installation and setup instructions, please refer to our [Getting S
   </tr>
 </table>
 
-## License Overview
+| License Overview |
+| :--------------- |
 
 This project consists of two distinct parts with independent licenses:
 
@@ -132,21 +150,25 @@ This project consists of two distinct parts with independent licenses:
 
 > For full license details, please refer to the [LICENSE](./LICENSE).
 
-## Contact & Support
+| Contact & Support |
+| :---------------- |
 
 * 如果你喜欢这个项目，我们非常欢迎你加入
 * If you like this project, we warmly welcome you to join us
 [Discord community](https://discord.gg/PP7EpSzDfU)
 
-## Code Contributer
+| Code Contributer |
+| :--------------- |
 
 [![Contributors](https://contrib.rocks/image?repo=Narratium/Narratium.ai)](https://github.com/Narratium/Narratium.ai/graphs/contributors)
 
-## Others
+| Others |
+| :----- |
 
 Thanks all Official Website Test API Sponsor
 
-## Star Growth
+| Star Growth |
+| :---------- |
 
 [![Stargazers over time](https://starchart.cc/Narratium/Narratium.ai.svg?variant=adaptive)](https://starchart.cc/Narratium/Narratium.ai)
 
