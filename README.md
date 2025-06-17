@@ -49,6 +49,12 @@
 
 [Narratium.ai](https://narratium.org/) is an open-source platform for creating AI characters, immersive worlds, and dynamic conversations.It's your creative studio for building personalized roleplay adventures — from emotional journeys to epic sagas.
 
+## Quick Start
+
+For detailed installation and setup instructions, please refer to our [Getting Started Guide](./docs/GETTING_STARTED.md)
+
+[Download for Mac, Windows, Linux](https://github.com/Narratium/Narratium.ai/releases)
+
 ## Features
 
 - **Immersive Adventure Mode**: Create personalized worlds and make decisions that matter.
@@ -123,15 +129,13 @@ This project consists of two distinct parts with independent licenses:
 - ✅ Code: MIT License — open for commercial and non-commercial use with attribution.
 - 🔒 Content: CC BY-NC-SA 4.0 — non-commercial use only, with attribution and same-license sharing required.
 
-> For full license details, please refer to the [LICENSE.txt](./LICENSE.txt).
+> For full license details, please refer to the [LICENSE](./LICENSE).
 
 ## Contact & Support
 
 * 如果你喜欢这个项目，我们非常欢迎你加入
 * If you like this project, we warmly welcome you to join us
-* Discord community:https://discord.gg/PP7EpSzDfU
-
-Special thanks to the SillyTavern community and countless character card contributors.If you'd like to join the contributor list, please contact: [qianzhang.happyfox@gmail.com](mailto:qianzhang.happyfox@gmail.com)
+[Discord community](https://discord.gg/PP7EpSzDfU)
 
 ## Code Contributer
 

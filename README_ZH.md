@@ -50,13 +50,17 @@
 
 [Narratium.ai](https://narratium.org/) 是一个用于创建AI角色、沉浸式世界和动态对话的开源平台。它是你构建个性化角色扮演冒险的创意工作室 — 从情感之旅到史诗传奇。
 
+## 快速开始
+
+详细的安装和设置说明，请参考我们的:[入门指南](./docs/GETTING_STARTED.md)
+
+[Mac、Windows、Linux下载](https://github.com/Narratium/Narratium.ai/releases)
+
 ## 功能特点
 
 - **沉浸式冒险模式**：创建个性化世界，做出重要的决定。
 - **可视化记忆管理**：基于React Flow的会话追踪和分支。
 - **角色卡片与背景故事**：兼容SillyTavern卡片，一站式管理所有内容。
-
-详细的安装和设置说明，请参考我们的[入门指南](./docs/GETTING_STARTED.md)。
 
 <h2>Narratium与其他AI角色扮演平台对比</h2>
 
@@ -130,9 +134,7 @@
 
 * 如果你喜欢这个项目，我们非常欢迎你加入
 * If you like this project, we warmly welcome you to join us
-* Discord 社区：https://discord.gg/PP7EpSzDfU
-
-特别感谢SillyTavern社区和无数角色卡片贡献者。如果你想加入贡献者名单，请联系：[qianzhang.happyfox@gmail.com](mailto:qianzhang.happyfox@gmail.com)
+[Discord 社区](https://discord.gg/PP7EpSzDfU)
 
 ## 代码贡献者
 
