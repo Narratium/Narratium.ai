@@ -1,47 +1,38 @@
-<div align="center">
 <h1 style="border-bottom: none">
-    <b><a href=https://narratium.org/">Narratium.ai</a></b><br />
-    Create, Play, and Roleplay with AI
-    <br>
+  <a href=https://narratium.org/">Narratium.ai</a>
+  <br />
+  <p>Create, Play, and Roleplay with AI</p>
 </h1>
 
-> <em>**The world is vast, let imagination lead, but human hearts remain forever inscrutable**</em> </br>
-> <em>**世界广阔无垠，让想象力引领前行，但人心永远不可直视**</em>
+![Narratium.ai](/public/banner.png)
 
-![Narratium.ai](https://socialify.git.ci/Narratium/Narratium.ai/image?custom_description=Open+Source+Alternative+to+Character.AI%2C+MidReal+and+AI+Dungeon&description=1&font=Rokkitt&forks=1&language=1&logo=https%3A%2F%2Fraw.githubusercontent.com%2FNarratium%2FResource%2Fmain%2Flogo.svg&name=1&owner=0&pattern=Circuit+Board&stargazers=1&theme=Dark)
+> **The world is vast, let imagination lead, but human hearts remain forever inscrutable**
 
-<p align="center">
-  <em>An open-source AI character platform to build, customize, and chat with virtual personas</em><br />
-  <em>For writers, developers, and storytellers building interactive worlds</em>
-</p>
+> **世界广阔无垠，让想象力引领前行，但人心永远不可直视**
 
-<p align="center">
-  <a href="https://narratium.org">🔗 Live Demo</a> &nbsp;|&nbsp;
-  <a href="https://deepwiki.com/Narratium/Narratium.ai/">📖 DeepWiki Docs</a> &nbsp;|&nbsp;
-  <a href="https://github.com/Narratium/Narratium.ai/stargazers">⭐ Star Us</a> &nbsp;|&nbsp;
-  <a href="https://discord.gg/PP7EpSzDfU">💬 Discord Community</a> &nbsp;|&nbsp;
-  <a href="https://github.com/Narratium/Narratium.ai/releases">💾 Download</a> &nbsp;|&nbsp;
-  <a href="./README_ZH.md">🇨🇳 中文文档</a>
-</p>
+
+<em>An open-source AI character platform to build, customize, and chat with virtual personas</em>
+<em>For writers, developers, and storytellers building interactive worlds</em>
+
+<a href="https://narratium.org">🔗 Live Demo</a> &nbsp;|&nbsp;
+<a href="https://deepwiki.com/Narratium/Narratium.ai/">📖 DeepWiki Docs</a> &nbsp;|&nbsp;
+<a href="https://github.com/Narratium/Narratium.ai/stargazers">⭐ Star Us</a> &nbsp;|&nbsp;
+<a href="https://discord.gg/PP7EpSzDfU">💬 Discord Community</a> &nbsp;|&nbsp;
+<a href="https://github.com/Narratium/Narratium.ai/releases">💾 Download</a> &nbsp;|&nbsp;
+<a href="./README_ZH.md">🇨🇳 中文文档</a>
 
 ![GitHub stars](https://img.shields.io/github/stars/Narratium/Narratium.ai?style=social)
 ![GitHub commits](https://img.shields.io/github/commit-activity/m/Narratium/Narratium.ai)
 ![GitHub Downloads](https://img.shields.io/github/downloads/Narratium/Narratium.ai/total)
 
-<div align="center">
-<em><strong>Characters, worlds, and conversations — beautifully unified in Narratium</strong></em>
-</div>
-</br>
 
-<div align="center">
-<img src="./assets/demo_show.gif" style="width: 80%"/>
-</div>
+**Characters, worlds, and conversations — beautifully unified in Narratium**
 
-</div>
+<img src="./assets/demo_show.gif" style="width: 100%"/>
 
 ## Getting started & staying tuned with us
 
-<em>**Star us, and you will receive all release notifications from GitHub without any delay!**</em>
+**Star us, and you will receive all release notifications from GitHub without any delay!**
 
 <img src="./assets/welcome_star.gif" style="width: 100%"/>
 
