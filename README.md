@@ -6,13 +6,14 @@
 
 ![Narratium.ai](/public/banner.png)
 
-<p align="center">
+<div align="center">
+  <blockquote>
+    <strong>The world is vast, let imagination lead, but human hearts remain forever inscrutable</strong><br>
+    <strong>世界广阔无垠，让想象力引领前行，但人心永远不可直视</strong>
+  </blockquote>
+</div>
 
-> **The world is vast, let imagination lead, but human hearts remain forever inscrutable**
 <br>
-> **世界广阔无垠，让想象力引领前行，但人心永远不可直视**
-
-</p>
 
 <p align="center">
   <em>An open-source AI character platform to build, customize, and chat with virtual personas</em>
@@ -28,6 +29,8 @@
   <a href="https://github.com/Narratium/Narratium.ai/releases">💾 Download</a> &nbsp;|&nbsp;
   <a href="./README_ZH.md">🇨🇳 中文文档</a>
 </div>
+
+<br>
 
 <div align="center">
 
