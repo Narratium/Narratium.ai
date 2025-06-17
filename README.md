@@ -4,8 +4,6 @@
   <p>Create, Play, and Roleplay with AI</p>
 </h1>
 
-![Narratium.ai](/public/banner.png)
-
 <div align="center">
   <blockquote>
     <strong>The world is vast, let imagination lead, but human hearts remain forever inscrutable</strong><br>
@@ -14,6 +12,8 @@
 </div>
 
 <br>
+
+![Narratium.ai](/public/banner.png)
 
 <p align="center">
   <em>An open-source AI character platform to build, customize, and chat with virtual personas</em>
@@ -44,6 +44,8 @@
   <strong>Characters, worlds, and conversations — beautifully unified in Narratium</strong>
 </div>
 
+<br>
+
 <img src="./assets/demo_show.gif" style="width: 100%"/>
 
 ## Getting started & staying tuned with us
@@ -51,6 +53,8 @@
 <div align="center">
   <strong>Star us, and you will receive all release notifications from GitHub without any delay!</strong>
 </div>
+
+<br>
 
 <img src="./assets/welcome_star.gif" style="width: 100%"/>
 
