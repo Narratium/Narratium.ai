@@ -5,6 +5,7 @@ import { useLanguage } from "@/app/i18n";
 import { useSoundContext } from "@/contexts/SoundContext";
 import { useTour } from "@/hooks/useTour";
 import { exportDataToFile, importDataFromFile, generateExportFilename, downloadFile } from "@/function/data/export-import";
+import { backupToGoogle, getFolderList, getGoogleCodeByUrl, getGoogleLoginUrl, getBackUpFile } from "@/function/data/google-control";
 
 interface SettingsDropdownProps {
   toggleModelSidebar: () => void;
@@ -72,6 +73,53 @@ export default function SettingsDropdown({ toggleModelSidebar }: SettingsDropdow
       alert(t("common.importFailed"));
     }
   };
+
+  async function handleImportDataFromGoogle() {
+    const token = localStorage.getItem('google_drive_token')
+    if(token) {
+      const res = await getFolderList()
+      if(res?.id) {
+        const file = await getBackUpFile(res.id)
+        if(file) {
+          await importDataFromFile(file);
+          setIsOpen(false);
+          alert('导入成功！')
+          window.location.reload();
+        }
+      }
+    } else {
+      const url = getGoogleLoginUrl();
+      window.location.href = url
+    }
+  }
+
+  async function handleExportDataToGoogle() {
+    const token = localStorage.getItem('google_drive_token')
+    if(token) {
+      const blob = await exportDataToFile();
+      const filename = generateExportFilename();
+      const res = await getFolderList()
+      if(res?.id) {
+        await backupToGoogle({
+          blob,
+          filename,
+          folderId: res.id
+        })
+        // todo
+        alert('上传成功')
+      } 
+    } else {
+      const url = getGoogleLoginUrl();
+      window.location.href = url
+    }
+  }
+
+  const useFirst = useRef(false);
+  useEffect(() => {
+    if(useFirst.current) return
+    useFirst.current = true
+    getGoogleCodeByUrl(window.location);
+  }, [])
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -181,6 +229,30 @@ export default function SettingsDropdown({ toggleModelSidebar }: SettingsDropdow
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
               {t("common.importData")}
+            </button>
+
+            <button
+              onClick={handleExportDataToGoogle}
+              className="flex items-center w-full px-4 py-2 text-sm text-[#f4e8c1] hover:bg-[#252525] transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              {t("common.exportDataToGoogle")}
+            </button>
+
+            <button
+              onClick={handleImportDataFromGoogle}
+              className="flex items-center w-full px-4 py-2 text-sm text-[#f4e8c1] hover:bg-[#252525] transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              {t("common.importDataFromGoogle")}
             </button>
           </div>
         </div>

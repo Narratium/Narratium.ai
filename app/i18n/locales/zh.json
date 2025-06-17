@@ -12,7 +12,9 @@
     "saving": "保存中...",
     "defaultAutoFillFileName": "默认：自动填写文件名",
     "exportData": "导出数据",
+    "exportDataToGoogle": "导出数据到谷歌",
     "importData": "导入数据",
+    "importDataFromGoogle": "从谷歌导入数据",
     "exportFailed": "导出失败，请重试",
     "importFailed": "导入失败，请重试"
   },

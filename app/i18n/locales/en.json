@@ -12,7 +12,9 @@
     "saving": "Saving...",
     "defaultAutoFillFileName": "Default: Auto-fill from file name",
     "exportData": "Export Data",
+    "exportDataToGoogle": "Export Data To Google",
     "importData": "Import Data",
+    "importDataFromGoogle": "Import Data From Google",
     "exportFailed": "Export failed, please try again",
     "importFailed": "Import failed, please try again"
   },
