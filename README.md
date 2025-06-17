@@ -58,12 +58,13 @@
 
 <img src="./assets/welcome_star.gif" style="width: 100%"/>
 
-## What is Narratium
+| What is Narratium |
+| :---------------- |
 
 [Narratium.ai](https://narratium.org/) is an open-source platform for creating AI characters, immersive worlds, and dynamic conversations.It's your creative studio for building personalized roleplay adventures — from emotional journeys to epic sagas.
 
 | Quick Start |
-| :--------------- |
+| :---------- |
 
 For detailed installation and setup instructions, please refer to our [Getting Started Guide](./docs/GETTING_STARTED.md)
 
