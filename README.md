@@ -1,4 +1,4 @@
-<h1 style="border-bottom: none">
+<h1 style="border-bottom: none" align="center">
   <a href=https://narratium.org/">Narratium.ai</a>
   <br />
   <p>Create, Play, and Roleplay with AI</p>
@@ -10,29 +10,36 @@
 
 > **世界广阔无垠，让想象力引领前行，但人心永远不可直视**
 
+<p align="center">
+  <em>An open-source AI character platform to build, customize, and chat with virtual personas</em>
+  <br>
+  <em>For writers, developers, and storytellers building interactive worlds</em>
+</p>
 
-<em>An open-source AI character platform to build, customize, and chat with virtual personas</em>
-<em>For writers, developers, and storytellers building interactive worlds</em>
-
-<a href="https://narratium.org">🔗 Live Demo</a> &nbsp;|&nbsp;
-<a href="https://deepwiki.com/Narratium/Narratium.ai/">📖 DeepWiki Docs</a> &nbsp;|&nbsp;
-<a href="https://github.com/Narratium/Narratium.ai/stargazers">⭐ Star Us</a> &nbsp;|&nbsp;
-<a href="https://discord.gg/PP7EpSzDfU">💬 Discord Community</a> &nbsp;|&nbsp;
-<a href="https://github.com/Narratium/Narratium.ai/releases">💾 Download</a> &nbsp;|&nbsp;
-<a href="./README_ZH.md">🇨🇳 中文文档</a>
+<div align="center">
+  <a href="https://narratium.org">🔗 Live Demo</a> &nbsp;|&nbsp;
+  <a href="https://deepwiki.com/Narratium/Narratium.ai/">📖 DeepWiki Docs</a> &nbsp;|&nbsp;
+  <a href="https://github.com/Narratium/Narratium.ai/stargazers">⭐ Star Us</a> &nbsp;|&nbsp;
+  <a href="https://discord.gg/PP7EpSzDfU">💬 Discord Community</a> &nbsp;|&nbsp;
+  <a href="https://github.com/Narratium/Narratium.ai/releases">💾 Download</a> &nbsp;|&nbsp;
+  <a href="./README_ZH.md">🇨🇳 中文文档</a>
+</div>
 
 ![GitHub stars](https://img.shields.io/github/stars/Narratium/Narratium.ai?style=social)
 ![GitHub commits](https://img.shields.io/github/commit-activity/m/Narratium/Narratium.ai)
 ![GitHub Downloads](https://img.shields.io/github/downloads/Narratium/Narratium.ai/total)
 
-
-**Characters, worlds, and conversations — beautifully unified in Narratium**
+<div align="center">
+  <strong>Characters, worlds, and conversations — beautifully unified in Narratium</strong>
+</div>
 
 <img src="./assets/demo_show.gif" style="width: 100%"/>
 
 ## Getting started & staying tuned with us
 
-**Star us, and you will receive all release notifications from GitHub without any delay!**
+<div align="center">
+  <strong>Star us, and you will receive all release notifications from GitHub without any delay!</strong>
+</div>
 
 <img src="./assets/welcome_star.gif" style="width: 100%"/>
 
