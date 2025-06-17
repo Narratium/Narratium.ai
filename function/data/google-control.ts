@@ -3,9 +3,9 @@ import { createRequest } from "./google-request"
 const login_url = 'https://accounts.google.com/o/oauth2/v2/auth'
 const token_url = 'https://oauth2.googleapis.com/token'
 const refresh_token_url = 'https://oauth2.googleapis.com/token'
-const client_id = '795242654445-dt7v34mpdltpgf2k1tjmsm2qvj70b469.apps.googleusercontent.com'
-const client_secret = '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'
-const redirect_uri = 'http://localhost:3000'
+const client_id = ''
+const client_secret = ''
+const redirect_uri = ''
 
 export function getGoogleAjaxUrl(url: string, params: Record<string, string>) {
     const newUrl = new URL(url)
