@@ -937,7 +937,7 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
               {configs.length === 0 && !showNewConfigForm && (
                 <div className="flex flex-col items-center justify-center py-8">
                   <p className="text-sm text-[#8a8a8a] mb-4 text-center">
-                    {t("modelSettings.noConfigs") || "No API configurations yet"}
+                    {t("modelSettings.noConfigs")}
                   </p>
                   <button
                     onClick={(e) => { trackButtonClick("ModelSidebar", "创建第一个配置"); e.stopPropagation(); handleCreateConfig(); }}
@@ -1352,7 +1352,7 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
           {configs.length === 0 && !showNewConfigForm && (
             <div className="flex flex-col items-center justify-center py-3 sm:py-3 py-2">
               <p className="text-xs sm:text-xs text-[10px] text-[#8a8a8a] mb-2 sm:mb-2 mb-1">
-                {t("modelSettings.noConfigs") || "No API configurations yet"}
+                {t("modelSettings.noConfigs")}
               </p>
               <button
                 onClick={(e) => { trackButtonClick("ModelSidebar", "创建第一个配置"); e.stopPropagation(); handleCreateConfig(); }}

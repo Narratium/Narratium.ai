@@ -16,7 +16,8 @@
     "importData": "Import Data",
     "importDataFromGoogle": "Import From Google",
     "exportFailed": "Export failed, please try again",
-    "importFailed": "Import failed, please try again"
+    "importFailed": "Import failed, please try again",
+    "noApisConfigured": "No APIs configured"
   },
   "sidebar": {
     "home": "Home",

@@ -16,7 +16,8 @@
     "importData": "导入数据",
     "importDataFromGoogle": "从谷歌导入数据",
     "exportFailed": "导出失败，请重试",
-    "importFailed": "导入失败，请重试"
+    "importFailed": "导入失败，请重试",
+    "noApisConfigured": "未配置 API"
   },
   "sidebar": {
     "home": "首页",

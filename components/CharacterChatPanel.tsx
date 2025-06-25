@@ -419,7 +419,7 @@ export default function CharacterChatPanel({
                                   </svg>
                                 </div>
                                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#2a261f] text-[#f4e8c1] text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap border border-[#534741] z-50">
-                                  {getCurrentConfig()?.name || "No API"}
+                                  {getCurrentConfig()?.name || t("modelSettings.noConfigs")}
                                 </div>
                               </button>
                               {showApiDropdown && (
@@ -438,7 +438,7 @@ export default function CharacterChatPanel({
                                       </button>
                                     ))
                                   ) : (
-                                    <div className="px-2 py-1.5 text-xs text-[#8a8a8a]">No APIs configured</div>
+                                    <div className="px-2 py-1.5 text-xs text-[#8a8a8a]">{t("common.noApisConfigured")}</div>
                                   )}
                                 </div>
                               )}
