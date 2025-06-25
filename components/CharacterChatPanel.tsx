@@ -26,6 +26,20 @@ import { CharacterAvatarBackground } from "@/components/CharacterAvatarBackgroun
 import { trackButtonClick, trackFormSubmit } from "@/utils/google-analytics";
 
 /**
+ * API Configuration types
+ */
+type LLMType = "openai" | "ollama";
+
+interface APIConfig {
+  id: string;
+  name: string;
+  type: LLMType;
+  baseUrl: string;
+  model: string;
+  apiKey?: string;
+}
+
+/**
  * Interface definitions for the component's data structures
  */
 interface Character {
@@ -86,6 +100,11 @@ export default function CharacterChatPanel({
 }: Props) {
   const [streamingTarget, setStreamingTarget] = useState<number>(-1);
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // API Configuration states
+  const [configs, setConfigs] = useState<APIConfig[]>([]);
+  const [activeConfigId, setActiveConfigId] = useState<string>("");
+  const [showApiDropdown, setShowApiDropdown] = useState(false);
 
   useEffect(() => {
     const savedStreaming = localStorage.getItem("streamingEnabled");
@@ -132,6 +151,103 @@ export default function CharacterChatPanel({
     return true;
   };
 
+  // API configuration helper functions
+  const getCurrentConfig = () => {
+    return configs.find(c => c.id === activeConfigId);
+  };
+
+  const getApiIcon = (configName: string) => {
+    const name = configName.toLowerCase();
+    
+    // Return image elements for local SVG files with circular background
+    if (name.includes("deepseek")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-[#4D6BFE] flex items-center justify-center">
+          <img 
+            src="/api-icons/deepseek.svg" 
+            alt="DeepSeek" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full"
+          />
+        </div>
+      );
+    } else if (name.includes("claude")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-[#DA7756] flex items-center justify-center">
+          <img 
+            src="/api-icons/anthropic.svg" 
+            alt="Anthropic" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full"
+          />
+        </div>
+      );
+    } else if (name.includes("gemini")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-[#242932] flex items-center justify-center">
+          <img 
+            src="/api-icons/gemini.svg" 
+            alt="Gemini" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full"
+          />
+        </div>
+      );
+    } else {
+      // Default OpenAI icon
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-[#242932] flex items-center justify-center">
+          <img 
+            src="/api-icons/openai.svg" 
+            alt="OpenAI" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full"
+          />
+        </div>
+      );
+    }
+  };
+
+  const handleApiSwitch = (configId: string) => {
+    console.log("CharacterChatPanel: Switching to config", configId);
+    setActiveConfigId(configId);
+    localStorage.setItem("activeConfigId", configId);
+    
+    const selectedConfig = configs.find(c => c.id === configId);
+    if (selectedConfig) {
+      console.log("CharacterChatPanel: Found config", selectedConfig);
+      
+      // Load configuration values to localStorage (same as ModelSidebar logic)
+      localStorage.setItem("llmType", selectedConfig.type);
+      localStorage.setItem(selectedConfig.type === "openai" ? "openaiBaseUrl" : "ollamaBaseUrl", selectedConfig.baseUrl);
+      localStorage.setItem(selectedConfig.type === "openai" ? "openaiModel" : "ollamaModel", selectedConfig.model);
+      localStorage.setItem("modelName", selectedConfig.model);
+      localStorage.setItem("modelBaseUrl", selectedConfig.baseUrl);
+      
+      // Store API key properly
+      if (selectedConfig.type === "openai" && selectedConfig.apiKey) {
+        localStorage.setItem("openaiApiKey", selectedConfig.apiKey);
+        localStorage.setItem("apiKey", selectedConfig.apiKey);
+      }
+      
+      console.log("CharacterChatPanel: Updated localStorage, dispatching event");
+      
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent("apiConfigChanged", { 
+        detail: { configId, config: selectedConfig }, 
+      }));
+    } else {
+      console.error("CharacterChatPanel: Config not found for id", configId);
+    }
+    
+    setShowApiDropdown(false);
+    trackButtonClick("CharacterChat", "切换API配置");
+  };
+
   useEffect(() => {
     const id = setTimeout(() => scrollToBottom(), 300);
     return () => clearTimeout(id);
@@ -143,6 +259,71 @@ export default function CharacterChatPanel({
     if (fastModelEnabled !== null) {
       setActiveModes(prev => ({ ...prev, fastModel: fastModelEnabled === "true" }));
     }
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (showApiDropdown && !target.closest(".api-dropdown-container")) {
+        setShowApiDropdown(false);
+      }
+    };
+
+    if (showApiDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showApiDropdown]);
+
+  // Load API configurations
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const loadConfigs = () => {
+      const savedConfigsStr = localStorage.getItem("apiConfigs");
+      let loadedConfigs: APIConfig[] = [];
+
+      if (savedConfigsStr) {
+        try {
+          loadedConfigs = JSON.parse(savedConfigsStr) as APIConfig[];
+        } catch (e) {
+          console.error("Error parsing saved API configs", e);
+        }
+      }
+
+      const storedActiveId = localStorage.getItem("activeConfigId");
+      const activeIdCandidate = storedActiveId && loadedConfigs.some((c) => c.id === storedActiveId)
+        ? storedActiveId
+        : (loadedConfigs[0]?.id || "");
+
+      setConfigs(loadedConfigs);
+      setActiveConfigId(activeIdCandidate);
+    };
+
+    // Initial load
+    loadConfigs();
+
+    // Listen for changes from ModelSidebar
+    const handleApiConfigChanged = (event: CustomEvent) => {
+      loadConfigs();
+    };
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === "apiConfigs" || event.key === "activeConfigId") {
+        loadConfigs();
+      }
+    };
+
+    window.addEventListener("apiConfigChanged", handleApiConfigChanged as EventListener);
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("apiConfigChanged", handleApiConfigChanged as EventListener);
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
   
   return (
@@ -218,6 +399,50 @@ export default function CharacterChatPanel({
                         </span>
                         {message.role === "assistant" && shouldShowRegenerateButton(message, index) && (
                           <>
+                            {/* API Configuration Selector */}
+                            <div className="relative mx-2 api-dropdown-container">
+                              <button
+                                onClick={() => setShowApiDropdown(!showApiDropdown)}
+                                className="p-1 rounded-md transition-all duration-300 group relative text-[#8a8a8a] hover:text-[#d1a35c] flex items-center"
+                              >
+                                <div className="flex items-center">
+                                  {getCurrentConfig() ? getApiIcon(getCurrentConfig()!.name) : getApiIcon("openai")}
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-2 w-2 ml-0.5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={3}
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                  </svg>
+                                </div>
+                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#2a261f] text-[#f4e8c1] text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap border border-[#534741] z-50">
+                                  {getCurrentConfig()?.name || "No API"}
+                                </div>
+                              </button>
+                              {showApiDropdown && (
+                                <div className="absolute top-full left-0 mt-1 bg-[#2a261f] border border-[#534741] rounded-md shadow-lg z-50 min-w-[120px]">
+                                  {configs.length > 0 ? (
+                                    configs.map((config) => (
+                                      <button
+                                        key={config.id}
+                                        onClick={() => handleApiSwitch(config.id)}
+                                        className={`w-full text-left px-2 py-1.5 text-xs hover:bg-[#3a3632] transition-colors flex items-center ${
+                                          activeConfigId === config.id ? "bg-[#3a3632] text-[#d1a35c]" : "text-[#f4e8c1]"
+                                        }`}
+                                      >
+                                        <span className="mr-2.5">{getApiIcon(config.name)}</span>
+                                        <span className="truncate">{config.name}</span>
+                                      </button>
+                                    ))
+                                  ) : (
+                                    <div className="px-2 py-1.5 text-xs text-[#8a8a8a]">No APIs configured</div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                             <button
                               onClick={() => {
                                 setActiveModes(prev => {
@@ -229,10 +454,10 @@ export default function CharacterChatPanel({
                                 localStorage.setItem("streamingEnabled", String(newStreaming));
                                 trackButtonClick("toggle_streaming", "流式输出切换");
                               }}
-                              className={`mx-1 p-1 rounded-md transition-all duration-300 group relative ${
+                              className={`mx-1 w-6 h-6 flex items-center justify-center bg-[#1c1c1c] rounded-lg border shadow-inner transition-all duration-300 group relative ${
                                 activeModes.streaming
-                                  ? "text-amber-400 hover:text-amber-300"
-                                  : "text-[#8a8a8a] hover:text-[#a8a8a8]"
+                                  ? "text-amber-400 hover:text-amber-300 border-amber-400/60 hover:border-amber-300/70 hover:shadow-[0_0_8px_rgba(252,211,77,0.4)]"
+                                  : "text-[#a18d6f] hover:text-[#c0a480] border-[#333333] hover:border-[#444444]"
                               }`}
                               data-tooltip={activeModes.streaming ? t("characterChat.disableStreaming") : t("characterChat.enableStreaming")}
                             >
@@ -241,17 +466,31 @@ export default function CharacterChatPanel({
                               </div>
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4"
+                                width="12"
+                                height="12"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
                                 strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
                               >
+                                {/* Stream/Flow icon - horizontal flowing lines */}
                                 <path
-                                  d="M13 2L3 14h7v8l8-12h-7z"
-                                  fill={activeModes.streaming ? "#FFC107" : "none"}
-                                  stroke={activeModes.streaming ? "#FFC107" : "#8a8a8a"}
-                                />
+                                  d="M3 6h18M3 12h18M3 18h18"
+                                  stroke={activeModes.streaming ? "#FFC107" : "currentColor"}
+                                  strokeLinecap="round"
+                                  strokeDasharray={activeModes.streaming ? "4,2" : "none"}
+                                >
+                                  {activeModes.streaming && (
+                                    <animate
+                                      attributeName="stroke-dashoffset"
+                                      values="0;6"
+                                      dur="1s"
+                                      repeatCount="indefinite"
+                                    />
+                                  )}
+                                </path>
                               </svg>
                             </button>
                             <button
@@ -264,29 +503,33 @@ export default function CharacterChatPanel({
                                 });
                                 trackButtonClick("toggle_fastmodel", "快速模式切换");
                               }}
-                              className={`mx-1 p-1 rounded-md transition-all duration-300 group relative ${
+                              className={`mx-1 w-6 h-6 flex items-center justify-center bg-[#1c1c1c] rounded-lg border shadow-inner transition-all duration-300 group relative ${
                                 activeModes.fastModel
-                                  ? "text-blue-500 hover:text-blue-400"
-                                  : "text-[#8a8a8a] hover:text-[#a8a8a8]"
+                                  ? "text-blue-500 hover:text-blue-400 border-blue-500/60 hover:border-blue-400/70 hover:shadow-[0_0_8px_rgba(59,130,246,0.4)]"
+                                  : "text-[#a18d6f] hover:text-[#c0a480] border-[#333333] hover:border-[#444444]"
                               }`}
                               data-tooltip={activeModes.fastModel ? t("characterChat.disableFastModel") : t("characterChat.enableFastModel")}
                             >
                               <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#2a261f] text-[#f4e8c1] text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap border border-[#534741]">
                                 {activeModes.fastModel ? t("characterChat.disableFastModel") : t("characterChat.enableFastModel")}
                               </div>
-                              {/* Lightning bolt SVG for fastmodel, blue when active */}
+                              {/* Lightning bolt SVG for fastmodel, blue when active - mirrored */}
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4"
+                                width="12"
+                                height="12"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
                                 strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                style={{ transform: "scaleX(-1)" }}
                               >
                                 <path
                                   d="M7 2L17 14h-7v8l-8-12h7z"
                                   fill={activeModes.fastModel ? "#3B82F6" : "none"}
-                                  stroke={activeModes.fastModel ? "#3B82F6" : "#8a8a8a"}
+                                  stroke={activeModes.fastModel ? "#3B82F6" : "currentColor"}
                                 />
                               </svg>
                             </button>

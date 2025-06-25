@@ -160,6 +160,30 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
     }
   }, []);
 
+  // Listen for API config changes from other components
+  useEffect(() => {
+    const handleApiConfigChanged = (event: CustomEvent) => {
+      const { configId } = event.detail;
+      console.log("ModelSidebar: Received apiConfigChanged event", configId, "current:", activeConfigId);
+      if (configId && configId !== activeConfigId) {
+        const selectedConfig = configs.find(c => c.id === configId);
+        if (selectedConfig) {
+          console.log("ModelSidebar: Switching to config", selectedConfig);
+          setActiveConfigId(configId);
+          loadConfigToForm(selectedConfig);
+        } else {
+          console.error("ModelSidebar: Config not found for id", configId);
+        }
+      }
+    };
+
+    window.addEventListener("apiConfigChanged", handleApiConfigChanged as EventListener);
+
+    return () => {
+      window.removeEventListener("apiConfigChanged", handleApiConfigChanged as EventListener);
+    };
+  }, [configs, activeConfigId]);
+
   /**
    * Loads a configuration into the form fields
    * @param {APIConfig} config - The configuration to load
@@ -169,6 +193,19 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
     setBaseUrl(config.baseUrl);
     setModel(config.model);
     setApiKey(config.apiKey || "");
+    
+    // Update localStorage with the selected configuration
+    localStorage.setItem("llmType", config.type);
+    localStorage.setItem(config.type === "openai" ? "openaiBaseUrl" : "ollamaBaseUrl", config.baseUrl);
+    localStorage.setItem(config.type === "openai" ? "openaiModel" : "ollamaModel", config.model);
+    localStorage.setItem("modelName", config.model);
+    localStorage.setItem("modelBaseUrl", config.baseUrl);
+    
+    if (config.type === "openai" && config.apiKey) {
+      localStorage.setItem("openaiApiKey", config.apiKey);
+      localStorage.setItem("apiKey", config.apiKey);
+    }
+    
     if (config.baseUrl && config.apiKey) {
       handleGetModelList(config.baseUrl, config.apiKey);
     }
@@ -362,12 +399,22 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
   const handleSwitchConfig = (id: string) => {
     if (id === activeConfigId) return;
     
+    console.log("ModelSidebar: Switching config from", activeConfigId, "to", id);
     setActiveConfigId(id);
     const selectedConfig = configs.find(config => config.id === id);
     if (selectedConfig) {
+      console.log("ModelSidebar: Loading config to form", selectedConfig);
       loadConfigToForm(selectedConfig);
       localStorage.setItem("activeConfigId", id);
       setShowNewConfigForm(false);
+      
+      // Dispatch custom event to notify other components
+      console.log("ModelSidebar: Dispatching apiConfigChanged event");
+      window.dispatchEvent(new CustomEvent("apiConfigChanged", { 
+        detail: { configId: id, config: selectedConfig }, 
+      }));
+    } else {
+      console.error("ModelSidebar: Config not found for id", id);
     }
   };
 
