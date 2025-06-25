@@ -126,7 +126,10 @@ export class PresetAssembler {
     finalUserMessageParts.push("<outputFormat>");
     if (language === "zh") {
       finalUserMessageParts.push("【输出格式要求】");
-      finalUserMessageParts.push(`请严格按照以下格式输出回复，输出${contextData.number}个字符的回复内容，并使用中文输出。`);
+      finalUserMessageParts.push(`请严格按照以下格式输出回复，输出${contextData.number}个字符的回复内容`);
+      finalUserMessageParts.push("");
+      finalUserMessageParts.push("【输出语言要求】");
+      finalUserMessageParts.push("使用中文输出，文本内容、状态栏内容都使用中文输出,如果先前使用英文输出，也依然使用中文输出。");
       finalUserMessageParts.push("");
       finalUserMessageParts.push("<output>");
       finalUserMessageParts.push("在这里输出你的主要回应内容，包括角色的对话、行动、心理描述等。");
@@ -146,6 +149,9 @@ export class PresetAssembler {
     } else {
       finalUserMessageParts.push("【Output Format Requirements】");
       finalUserMessageParts.push(`Please strictly follow the format below for your response, and output a response of ${contextData.number} characters, and output in English.`);
+      finalUserMessageParts.push("");
+      finalUserMessageParts.push("【Output Language Requirements】");
+      finalUserMessageParts.push("Output in English, text content, status bar content, and previous English output should still be output in English.");
       finalUserMessageParts.push("");
       finalUserMessageParts.push("<output>");
       finalUserMessageParts.push("Output your main response content here, including character dialogue, actions, psychological descriptions, etc.");
@@ -237,7 +243,10 @@ export class PresetAssembler {
     finalUserMessageParts.push("<outputFormat>");
     if (language === "zh") {
       finalUserMessageParts.push("【输出格式要求】");
-      finalUserMessageParts.push(`请严格按照以下格式输出回复，输出${contextData.number}个字符的回复内容，并使用中文输出。`);
+      finalUserMessageParts.push(`请严格按照以下格式输出回复，输出${contextData.number}个字符的回复内容`);
+      finalUserMessageParts.push("");
+      finalUserMessageParts.push("【输出语言要求】");
+      finalUserMessageParts.push("使用中文输出，文本内容、状态栏内容都使用中文输出,如果先前使用英文输出，也依然使用中文输出。");
       finalUserMessageParts.push("");
       finalUserMessageParts.push("<output>");
       finalUserMessageParts.push("在这里输出你的主要回应内容，包括角色的对话、行动、心理描述等。");
@@ -256,7 +265,10 @@ export class PresetAssembler {
       finalUserMessageParts.push("注意：必须严格遵循上述XML标签格式，所有内容都必须包含在output标签内。");
     } else {
       finalUserMessageParts.push("【Output Format Requirements】");
-      finalUserMessageParts.push(`Please strictly follow the format below for your response, and output a response of ${contextData.number} characters, and output in English.`);
+      finalUserMessageParts.push(`Please strictly follow the format below for your response, and output a response of ${contextData.number} characters`);
+      finalUserMessageParts.push("");
+      finalUserMessageParts.push("【Output Language Requirements】");
+      finalUserMessageParts.push("Output in English, text content, status bar content, and previous English output should still be output in English.");
       finalUserMessageParts.push("");
       finalUserMessageParts.push("<output>");
       finalUserMessageParts.push("Output your main response content here, including character dialogue, actions, psychological descriptions, etc.");
