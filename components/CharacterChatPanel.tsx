@@ -37,6 +37,7 @@ interface APIConfig {
   baseUrl: string;
   model: string;
   apiKey?: string;
+  availableModels?: string[]; // Available models for this config
 }
 
 /**
@@ -105,6 +106,9 @@ export default function CharacterChatPanel({
   const [configs, setConfigs] = useState<APIConfig[]>([]);
   const [activeConfigId, setActiveConfigId] = useState<string>("");
   const [showApiDropdown, setShowApiDropdown] = useState(false);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+  const [selectedConfigId, setSelectedConfigId] = useState<string>(""); // For the second level dropdown
+  const [currentModel, setCurrentModel] = useState<string>(""); // Current active model
 
   useEffect(() => {
     const savedStreaming = localStorage.getItem("streamingEnabled");
@@ -156,13 +160,13 @@ export default function CharacterChatPanel({
     return configs.find(c => c.id === activeConfigId);
   };
 
-  const getApiIcon = (configName: string) => {
+  // Get icon based on configuration name (for first level)
+  const getConfigIcon = (configName: string) => {
     const name = configName.toLowerCase();
     
-    // Return image elements for local SVG files with circular background
-    if (name.includes("deepseek")) {
+    if (name.includes("deepseek") || name.includes("deep-seek")) {
       return (
-        <div className="w-5 h-5 rounded-full overflow-hidden bg-[#4D6BFE] flex items-center justify-center">
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
           <img 
             src="/api-icons/deepseek.svg" 
             alt="DeepSeek" 
@@ -172,21 +176,21 @@ export default function CharacterChatPanel({
           />
         </div>
       );
-    } else if (name.includes("claude")) {
+    } else if (name.includes("claude") || name.includes("anthropic")) {
       return (
-        <div className="w-5 h-5 rounded-full overflow-hidden bg-[#DA7756] flex items-center justify-center">
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
           <img 
-            src="/api-icons/anthropic.svg" 
-            alt="Anthropic" 
+            src="/api-icons/claude.svg" 
+            alt="Claude" 
             width={20} 
             height={20} 
             className="object-cover w-full h-full"
           />
         </div>
       );
-    } else if (name.includes("gemini")) {
+    } else if (name.includes("gemini") || name.includes("google")) {
       return (
-        <div className="w-5 h-5 rounded-full overflow-hidden bg-[#242932] flex items-center justify-center">
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
           <img 
             src="/api-icons/gemini.svg" 
             alt="Gemini" 
@@ -196,10 +200,72 @@ export default function CharacterChatPanel({
           />
         </div>
       );
+    } 
+    else if (name.includes("gemma")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+          <img 
+            src="/api-icons/gemma.svg" 
+            alt="Gemma" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full"
+          />
+        </div>
+      );
+    } 
+    else if (name.includes("ollama")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+          <img 
+            src="/api-icons/ollama.svg" 
+            alt="Ollama" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full"
+          />
+        </div>
+      );
+    } else if (name.includes("qwen") || name.includes("qwq") || name.includes("tongyi")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+          <img 
+            src="/api-icons/qwen.svg" 
+            alt="Qwen" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full"
+          />
+        </div>
+      );
+    } else if (name.includes("grok") || name.includes("xai")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+          <img 
+            src="/api-icons/grok.svg" 
+            alt="Grok" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full text-white"
+          />
+        </div>
+      );
+    } else if (name.includes("kimi") || name.includes("moonshot")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+          <img 
+            src="/api-icons/kimi.svg" 
+            alt="Kimi" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full text-white"
+          />
+        </div>
+      );
     } else {
       // Default OpenAI icon
       return (
-        <div className="w-5 h-5 rounded-full overflow-hidden bg-[#242932] flex items-center justify-center">
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
           <img 
             src="/api-icons/openai.svg" 
             alt="OpenAI" 
@@ -212,40 +278,232 @@ export default function CharacterChatPanel({
     }
   };
 
-  const handleApiSwitch = (configId: string) => {
-    console.log("CharacterChatPanel: Switching to config", configId);
-    setActiveConfigId(configId);
-    localStorage.setItem("activeConfigId", configId);
+  // Get icon based on model name (for second level)
+  const getModelIcon = (modelName: string) => {
+    const name = modelName.toLowerCase();
     
-    const selectedConfig = configs.find(c => c.id === configId);
-    if (selectedConfig) {
-      console.log("CharacterChatPanel: Found config", selectedConfig);
-      
-      // Load configuration values to localStorage (same as ModelSidebar logic)
-      localStorage.setItem("llmType", selectedConfig.type);
-      localStorage.setItem(selectedConfig.type === "openai" ? "openaiBaseUrl" : "ollamaBaseUrl", selectedConfig.baseUrl);
-      localStorage.setItem(selectedConfig.type === "openai" ? "openaiModel" : "ollamaModel", selectedConfig.model);
-      localStorage.setItem("modelName", selectedConfig.model);
-      localStorage.setItem("modelBaseUrl", selectedConfig.baseUrl);
-      
-      // Store API key properly
-      if (selectedConfig.type === "openai" && selectedConfig.apiKey) {
-        localStorage.setItem("openaiApiKey", selectedConfig.apiKey);
-        localStorage.setItem("apiKey", selectedConfig.apiKey);
-      }
-      
-      console.log("CharacterChatPanel: Updated localStorage, dispatching event");
-      
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent("apiConfigChanged", { 
-        detail: { configId, config: selectedConfig }, 
-      }));
+    if (name.includes("deepseek") || name.includes("deep-seek")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+          <img 
+            src="/api-icons/deepseek.svg" 
+            alt="DeepSeek" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full"
+          />
+        </div>
+      );
+    } else if (name.includes("claude") || name.includes("anthropic")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+          <img 
+            src="/api-icons/claude.svg" 
+            alt="Claude" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full"
+          />
+        </div>
+      );
+    } else if (name.includes("gemini") || name.includes("google")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+          <img 
+            src="/api-icons/gemini.svg" 
+            alt="Gemini" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full"
+          />
+        </div>
+      );
+    } else if (name.includes("gemma")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+          <img 
+            src="/api-icons/gemma.svg" 
+            alt="Gemma" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full"
+          />
+        </div>
+      );
+    } else if (name.includes("ollama") || name.includes("llama") || name.includes("mistral") || name.includes("codellama") || name.includes("dolphin") || name.includes("vicuna") || name.includes("alpaca")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+          <img 
+            src="/api-icons/ollama.svg" 
+            alt="Ollama" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full"
+          />
+        </div>
+      );
+    } else if (name.includes("qwen") || name.includes("qwq") || name.includes("tongyi")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+          <img 
+            src="/api-icons/qwen.svg" 
+            alt="Qwen" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full"
+          />
+        </div>
+      );
+    } else if (name.includes("grok") || name.includes("xai")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+          <img 
+            src="/api-icons/grok.svg" 
+            alt="Grok" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full text-white"
+          />
+        </div>
+      );
+    } else if (name.includes("kimi") || name.includes("moonshot")) {
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+          <img 
+            src="/api-icons/kimi.svg" 
+            alt="Kimi" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full text-white"
+          />
+        </div>
+      );
     } else {
-      console.error("CharacterChatPanel: Config not found for id", configId);
+      // Default OpenAI icon for GPT models and others
+      return (
+        <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+          <img 
+            src="/api-icons/openai.svg" 
+            alt="OpenAI" 
+            width={20} 
+            height={20} 
+            className="object-cover w-full h-full"
+          />
+        </div>
+      );
+    }
+  };
+
+  // Fetch available models for a config
+  const fetchAvailableModels = async (config: APIConfig): Promise<string[]> => {
+    if (config.type === "ollama") {
+      // For Ollama, return the configured model
+      return [config.model || "default"];
     }
     
+    if (!config.baseUrl || !config.apiKey) {
+      return ["default"];
+    }
+
+    try {
+      const response = await fetch(`${config.baseUrl}/models`, {
+        headers: {
+          "Authorization": `Bearer ${config.apiKey}`,
+        },
+      });
+      const data = await response.json();
+      const modelList = data.data?.map((item: any) => item.id) || [];
+      return modelList.length > 0 ? modelList : ["default"];
+    } catch (error) {
+      console.error("Failed to fetch models for config", config.id, error);
+      return ["default"];
+    }
+  };
+
+  const handleConfigSelect = async (configId: string) => {
+    const selectedConfig = configs.find(c => c.id === configId);
+    if (!selectedConfig) return;
+
+    // If config doesn't have availableModels, fetch them
+    if (!selectedConfig.availableModels) {
+      const models = await fetchAvailableModels(selectedConfig);
+      selectedConfig.availableModels = models;
+      
+      // Update configs with available models
+      const updatedConfigs = configs.map(c => 
+        c.id === configId ? { ...c, availableModels: models } : c,
+      );
+      setConfigs(updatedConfigs);
+    }
+
+    if (selectedConfig.availableModels.length === 1) {
+      // If only one model available, switch directly
+      handleModelSwitch(configId, selectedConfig.availableModels[0]);
+      setShowApiDropdown(false);
+      setShowModelDropdown(false);
+    } else {
+      // Show model dropdown for this config
+      setSelectedConfigId(configId);
+      setShowModelDropdown(true);
+      setShowApiDropdown(false);
+    }
+  };
+
+  const handleModelSwitch = (configId: string, modelName?: string) => {
+    console.log("CharacterChatPanel: Switching to config", configId, "with model", modelName);
+    
+    const selectedConfig = configs.find(c => c.id === configId);
+    if (!selectedConfig) {
+      console.error("CharacterChatPanel: Config not found for id", configId);
+      return;
+    }
+
+    // If modelName is provided, update the config's model
+    // For "default", use the original configured model or "default" if none exists
+    if (modelName && modelName !== selectedConfig.model) {
+      const actualModelName = modelName === "default" ? (selectedConfig.model || "default") : modelName;
+      selectedConfig.model = actualModelName;
+      const updatedConfigs = configs.map(c => 
+        c.id === configId ? { ...c, model: actualModelName } : c,
+      );
+      setConfigs(updatedConfigs);
+      localStorage.setItem("apiConfigs", JSON.stringify(updatedConfigs));
+    }
+
+    setActiveConfigId(configId);
+    setCurrentModel(selectedConfig.model);
+    localStorage.setItem("activeConfigId", configId);
+    
+    console.log("CharacterChatPanel: Found config", selectedConfig);
+    
+    // Load configuration values to localStorage
+    localStorage.setItem("llmType", selectedConfig.type);
+    localStorage.setItem(selectedConfig.type === "openai" ? "openaiBaseUrl" : "ollamaBaseUrl", selectedConfig.baseUrl);
+    localStorage.setItem(selectedConfig.type === "openai" ? "openaiModel" : "ollamaModel", selectedConfig.model);
+    localStorage.setItem("modelName", selectedConfig.model);
+    localStorage.setItem("modelBaseUrl", selectedConfig.baseUrl);
+    
+    // Store API key properly
+    if (selectedConfig.type === "openai" && selectedConfig.apiKey) {
+      localStorage.setItem("openaiApiKey", selectedConfig.apiKey);
+      localStorage.setItem("apiKey", selectedConfig.apiKey);
+    }
+    
+    console.log("CharacterChatPanel: Updated localStorage, dispatching event");
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent("modelChanged", { 
+      detail: { 
+        configId, 
+        config: selectedConfig, 
+        modelName: selectedConfig.model,
+        configName: selectedConfig.name,
+      }, 
+    }));
+    
     setShowApiDropdown(false);
-    trackButtonClick("CharacterChat", "切换API配置");
+    setShowModelDropdown(false);
+    trackButtonClick("CharacterChat", "切换模型");
   };
 
   useEffect(() => {
@@ -265,18 +523,19 @@ export default function CharacterChatPanel({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      if (showApiDropdown && !target.closest(".api-dropdown-container")) {
+      if ((showApiDropdown || showModelDropdown) && !target.closest(".api-dropdown-container")) {
         setShowApiDropdown(false);
+        setShowModelDropdown(false);
       }
     };
 
-    if (showApiDropdown) {
+    if (showApiDropdown || showModelDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
       return () => {
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }
-  }, [showApiDropdown]);
+  }, [showApiDropdown, showModelDropdown]);
 
   // Load API configurations
   useEffect(() => {
@@ -301,13 +560,20 @@ export default function CharacterChatPanel({
 
       setConfigs(loadedConfigs);
       setActiveConfigId(activeIdCandidate);
+      
+      // Set current model
+      const activeConfig = loadedConfigs.find(c => c.id === activeIdCandidate);
+      if (activeConfig) {
+        setCurrentModel(activeConfig.model);
+      }
     };
 
     // Initial load
     loadConfigs();
 
     // Listen for changes from ModelSidebar
-    const handleApiConfigChanged = (event: CustomEvent) => {
+    const handleModelChanged = (event: CustomEvent) => {
+      console.log("CharacterChatPanel: Received modelChanged event", event.detail);
       loadConfigs();
     };
 
@@ -317,11 +583,11 @@ export default function CharacterChatPanel({
       }
     };
 
-    window.addEventListener("apiConfigChanged", handleApiConfigChanged as EventListener);
+    window.addEventListener("modelChanged", handleModelChanged as EventListener);
     window.addEventListener("storage", handleStorageChange);
 
     return () => {
-      window.removeEventListener("apiConfigChanged", handleApiConfigChanged as EventListener);
+      window.removeEventListener("modelChanged", handleModelChanged as EventListener);
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
@@ -399,14 +665,17 @@ export default function CharacterChatPanel({
                         </span>
                         {message.role === "assistant" && shouldShowRegenerateButton(message, index) && (
                           <>
-                            {/* API Configuration Selector */}
+                            {/* Two-Level API/Model Configuration Selector */}
                             <div className="relative mx-2 api-dropdown-container">
                               <button
-                                onClick={() => setShowApiDropdown(!showApiDropdown)}
+                                onClick={() => {
+                                  setShowApiDropdown(!showApiDropdown);
+                                  setShowModelDropdown(false);
+                                }}
                                 className="p-1 rounded-md transition-all duration-300 group relative text-[#8a8a8a] hover:text-[#d1a35c] flex items-center"
                               >
                                 <div className="flex items-center">
-                                  {getCurrentConfig() ? getApiIcon(getCurrentConfig()!.name) : getApiIcon("openai")}
+                                  {getCurrentConfig() ? getConfigIcon(getCurrentConfig()!.name) : getConfigIcon("openai")}
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     className="h-2 w-2 ml-0.5"
@@ -422,24 +691,107 @@ export default function CharacterChatPanel({
                                   {getCurrentConfig()?.name || t("modelSettings.noConfigs")}
                                 </div>
                               </button>
-                              {showApiDropdown && (
-                                <div className="absolute top-full left-0 mt-1 bg-[#2a261f] border border-[#534741] rounded-md shadow-lg z-50 min-w-[120px]">
+                              
+                              {/* First Level Dropdown - API Configurations */}
+                              {showApiDropdown && !showModelDropdown && (
+                                <div className="absolute top-full left-0 mt-1 bg-[#2a261f] border border-[#534741] rounded-md shadow-lg z-50 min-w-[160px]">
                                   {configs.length > 0 ? (
                                     configs.map((config) => (
                                       <button
                                         key={config.id}
-                                        onClick={() => handleApiSwitch(config.id)}
-                                        className={`w-full text-left px-2 py-1.5 text-xs hover:bg-[#3a3632] transition-colors flex items-center ${
+                                        onClick={() => handleConfigSelect(config.id)}
+                                        className={`w-full text-left px-2 py-1.5 text-xs hover:bg-[#3a3632] transition-colors flex items-center justify-between ${
                                           activeConfigId === config.id ? "bg-[#3a3632] text-[#d1a35c]" : "text-[#f4e8c1]"
                                         }`}
                                       >
-                                        <span className="mr-2.5">{getApiIcon(config.name)}</span>
-                                        <span className="truncate">{config.name}</span>
+                                        <div className="flex items-center">
+                                          <span className="mr-2.5">{getConfigIcon(config.name)}</span>
+                                          <span className="truncate" title={config.name}>
+                                            {config.name.length > 20 ? `${config.name.substring(0, 20)}...` : config.name}
+                                          </span>
+                                        </div>
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          className="h-3 w-3 ml-2"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                          stroke="currentColor"
+                                          strokeWidth={2}
+                                        >
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                        </svg>
                                       </button>
                                     ))
                                   ) : (
                                     <div className="px-2 py-1.5 text-xs text-[#8a8a8a]">{t("common.noApisConfigured")}</div>
                                   )}
+                                </div>
+                              )}
+
+                              {/* Second Level Dropdown - Models within Config */}
+                              {showModelDropdown && selectedConfigId && (
+                                <div className="absolute top-full left-0 mt-1 bg-[#2a261f] border border-[#534741] rounded-md shadow-lg z-50 min-w-[180px]">
+                                  <div className="px-2 py-1.5 text-xs text-[#8a8a8a] border-b border-[#534741] flex items-center justify-between">
+                                    <button
+                                      onClick={() => {
+                                        setShowModelDropdown(false);
+                                        setShowApiDropdown(true);
+                                      }}
+                                      className="flex items-center text-[#c0a480] hover:text-[#d1a35c] transition-colors"
+                                    >
+                                      <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-3 w-3 mr-1"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                      >
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                                      </svg>
+                                      {t("characterChat.back")}
+                                    </button>
+                                    <span>{t("characterChat.selectModel")}</span>
+                                  </div>
+                                  {(() => {
+                                    const selectedConfig = configs.find(c => c.id === selectedConfigId);
+                                    if (!selectedConfig || !selectedConfig.availableModels) {
+                                      return (
+                                        <div className="px-2 py-1.5 text-xs text-[#8a8a8a] flex items-center">
+                                          <svg className="animate-spin h-3 w-3 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                          </svg>
+                                          Loading models...
+                                        </div>
+                                      );
+                                    }
+                                    
+                                    return selectedConfig.availableModels.map((modelName) => (
+                                      <button
+                                        key={modelName}
+                                        onClick={() => handleModelSwitch(selectedConfigId, modelName)}
+                                        className={`w-full text-left px-2 py-1.5 text-xs hover:bg-[#3a3632] transition-colors flex items-center ${
+                                          (selectedConfig.model === modelName || (modelName === "default" && selectedConfig.model === "default")) 
+                                            ? "bg-[#3a3632] text-[#d1a35c]" 
+                                            : "text-[#f4e8c1]"
+                                        }`}
+                                      >
+                                        <span className="mr-2.5">
+                                          {modelName === "default" 
+                                            ? getConfigIcon(selectedConfig.name) 
+                                            : getModelIcon(modelName)
+                                          }
+                                        </span>
+                                        <span className="truncate" title={modelName === "default" ? t("characterChat.defaultModel") : modelName}>
+                                          {modelName === "default" 
+                                            ? t("characterChat.defaultModel") 
+                                            : (modelName.length > 25 ? `${modelName.substring(0, 25)}...` : modelName)
+                                          }
+                                        </span>
+                                      </button>
+                                    ));
+                                  })()}
                                 </div>
                               )}
                             </div>

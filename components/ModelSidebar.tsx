@@ -160,11 +160,11 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
     }
   }, []);
 
-  // Listen for API config changes from other components
+  // Listen for model changes from other components
   useEffect(() => {
-    const handleApiConfigChanged = (event: CustomEvent) => {
-      const { configId } = event.detail;
-      console.log("ModelSidebar: Received apiConfigChanged event", configId, "current:", activeConfigId);
+    const handleModelChanged = (event: CustomEvent) => {
+      const { configId, modelName, configName } = event.detail;
+      console.log("ModelSidebar: Received modelChanged event", { configId, modelName, configName }, "current:", activeConfigId);
       if (configId && configId !== activeConfigId) {
         const selectedConfig = configs.find(c => c.id === configId);
         if (selectedConfig) {
@@ -174,15 +174,21 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
         } else {
           console.error("ModelSidebar: Config not found for id", configId);
         }
+      } else if (configId === activeConfigId && modelName && modelName !== model) {
+        // Update model if it changed within the same config
+        console.log("ModelSidebar: Updating model for current config", modelName);
+        setModel(modelName);
+        localStorage.setItem(llmType === "openai" ? "openaiModel" : "ollamaModel", modelName);
+        localStorage.setItem("modelName", modelName);
       }
     };
 
-    window.addEventListener("apiConfigChanged", handleApiConfigChanged as EventListener);
+    window.addEventListener("modelChanged", handleModelChanged as EventListener);
 
     return () => {
-      window.removeEventListener("apiConfigChanged", handleApiConfigChanged as EventListener);
+      window.removeEventListener("modelChanged", handleModelChanged as EventListener);
     };
-  }, [configs, activeConfigId]);
+  }, [configs, activeConfigId, model, llmType]);
 
   /**
    * Loads a configuration into the form fields
@@ -277,6 +283,16 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
       localStorage.setItem("apiConfigs", JSON.stringify(updatedConfigs));
       localStorage.setItem("activeConfigId", newConfig.id);
       
+      // Dispatch model change event for new config
+      window.dispatchEvent(new CustomEvent("modelChanged", { 
+        detail: { 
+          configId: newConfig.id, 
+          config: newConfig,
+          modelName: newConfig.model,
+          configName: newConfig.name,
+        }, 
+      }));
+      
       setSaveSuccess(true);
       setTimeout(() => {
         setSaveSuccess(false);
@@ -305,6 +321,19 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
 
       setConfigs(updatedConfigs);
       localStorage.setItem("apiConfigs", JSON.stringify(updatedConfigs));
+      
+      // Dispatch model change event for updated config
+      const updatedConfig = updatedConfigs.find(c => c.id === activeConfigId);
+      if (updatedConfig) {
+        window.dispatchEvent(new CustomEvent("modelChanged", { 
+          detail: { 
+            configId: activeConfigId, 
+            config: updatedConfig,
+            modelName: updatedConfig.model,
+            configName: updatedConfig.name,
+          }, 
+        }));
+      }
     }
 
     localStorage.setItem("llmType", llmType);
@@ -409,9 +438,14 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
       setShowNewConfigForm(false);
       
       // Dispatch custom event to notify other components
-      console.log("ModelSidebar: Dispatching apiConfigChanged event");
-      window.dispatchEvent(new CustomEvent("apiConfigChanged", { 
-        detail: { configId: id, config: selectedConfig }, 
+      console.log("ModelSidebar: Dispatching modelChanged event");
+      window.dispatchEvent(new CustomEvent("modelChanged", { 
+        detail: { 
+          configId: id, 
+          config: selectedConfig,
+          modelName: selectedConfig.model,
+          configName: selectedConfig.name,
+        }, 
       }));
     } else {
       console.error("ModelSidebar: Config not found for id", id);

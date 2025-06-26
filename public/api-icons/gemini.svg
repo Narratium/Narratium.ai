@@ -1,16 +1,1 @@
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="256" height="256" fill="#242932"/>
-<g clip-path="url(#clip0_74_476)">
-<path d="M128 228C124.188 202.841 112.425 179.561 94.432 161.568C76.4386 143.575 53.1593 131.812 28 128C53.1593 124.188 76.4386 112.425 94.432 94.432C112.425 76.4386 124.188 53.1593 128 28C131.813 53.1588 143.576 76.4374 161.569 94.4306C179.563 112.424 202.841 124.187 228 128C202.841 131.813 179.563 143.576 161.569 161.569C143.576 179.563 131.813 202.841 128 228Z" fill="url(#paint0_linear_74_476)"/>
-</g>
-<defs>
-<linearGradient id="paint0_linear_74_476" x1="27.9996" y1="20028" x2="13774" y2="6107" gradientUnits="userSpaceOnUse">
-<stop stop-color="#1C7DFF"/>
-<stop offset="0.52021" stop-color="#1C69FF"/>
-<stop offset="1" stop-color="#F0DCD6"/>
-</linearGradient>
-<clipPath id="clip0_74_476">
-<rect width="200" height="200" fill="white" transform="translate(28 28)"/>
-</clipPath>
-</defs>
-</svg>
+<svg height="1em" style="flex:none;line-height:1" viewBox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><title>Gemini</title><defs><linearGradient id="lobe-icons-gemini-fill" x1="0%" x2="68.73%" y1="100%" y2="30.395%"><stop offset="0%" stop-color="#1C7DFF"></stop><stop offset="52.021%" stop-color="#1C69FF"></stop><stop offset="100%" stop-color="#F0DCD6"></stop></linearGradient></defs><path d="M12 24A14.304 14.304 0 000 12 14.304 14.304 0 0012 0a14.305 14.305 0 0012 12 14.305 14.305 0 00-12 12" fill="url(#lobe-icons-gemini-fill)" fill-rule="nonzero"></path></svg>

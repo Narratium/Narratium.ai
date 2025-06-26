@@ -359,7 +359,10 @@
     "jumpToMessage": "Jump to Message",
     "regenerateMessage": "Regenerate Message",
     "enableFastModel": "Enable Fast Mode",
-    "disableFastModel": "Disable Fast Mode"
+    "disableFastModel": "Disable Fast Mode",
+    "selectModel": "Select Model",
+    "back": "Back",
+    "defaultModel": "Default"
   },
   "preset": {
     "title": "Preset Manager",
