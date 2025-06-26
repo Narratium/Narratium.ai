@@ -1,3 +1,29 @@
+/**
+ * Import World Book Modal Component
+ * 
+ * This component provides a comprehensive world book import interface with the following features:
+ * - File-based import from JSON files with drag-and-drop support
+ * - Global world book import from shared library
+ * - Import result tracking and error handling
+ * - Save as global world book functionality
+ * - Tabbed interface for different import methods
+ * - Batch import processing and validation
+ * 
+ * The component handles:
+ * - File upload and drag-and-drop interactions
+ * - JSON parsing and validation
+ * - Global world book management and selection
+ * - Import result display and error reporting
+ * - Modal state management and animations
+ * - Character-specific world book integration
+ * 
+ * Dependencies:
+ * - useLanguage: For internationalization
+ * - importWorldBookFromJson: For file-based imports
+ * - Global world book functions: For shared library management
+ * - react-hot-toast: For notifications
+ */
+
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -6,6 +32,9 @@ import { useLanguage } from "@/app/i18n";
 import { importWorldBookFromJson } from "@/function/worldbook/import";
 import { listGlobalWorldBooks, importFromGlobalWorldBook, GlobalWorldBook, deleteGlobalWorldBook } from "@/function/worldbook/global";
 
+/**
+ * Interface definitions for the component's props
+ */
 interface ImportWorldBookModalProps {
   isOpen: boolean;
   characterId: string;
@@ -13,6 +42,19 @@ interface ImportWorldBookModalProps {
   onImportSuccess: () => void;
 }
 
+/**
+ * Import world book modal component
+ * 
+ * Provides a comprehensive world book import interface with:
+ * - File-based import with drag-and-drop support
+ * - Global world book import functionality
+ * - Import result tracking and validation
+ * - Save as global world book options
+ * - Tabbed interface for different import methods
+ * 
+ * @param {ImportWorldBookModalProps} props - Component props
+ * @returns {JSX.Element | null} The import world book modal or null if closed
+ */
 export default function ImportWorldBookModal({
   isOpen,
   characterId,

@@ -1,3 +1,28 @@
+/**
+ * Import Character Modal Component
+ * 
+ * This component provides a character import interface with the following features:
+ * - PNG file upload with drag-and-drop support
+ * - File validation and error handling
+ * - Upload progress tracking and loading states
+ * - Character upload integration
+ * - Modal-based import workflow
+ * 
+ * The component handles:
+ * - File upload and drag-and-drop interactions
+ * - PNG file validation and type checking
+ * - Upload progress and error state management
+ * - Character import functionality
+ * - Modal state management and animations
+ * - Form reset and cleanup
+ * 
+ * Dependencies:
+ * - useLanguage: For internationalization
+ * - handleCharacterUpload: For character upload functionality
+ * - trackButtonClick: For analytics tracking
+ * - framer-motion: For animations
+ */
+
 "use client";
 
 import { useState, useRef } from "react";
@@ -6,12 +31,28 @@ import { useLanguage } from "@/app/i18n";
 import { trackButtonClick } from "@/utils/google-analytics";
 import { handleCharacterUpload } from "@/function/character/import";
 
+/**
+ * Interface definitions for the component's props
+ */
 interface ImportCharacterModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImport: () => void;
 }
 
+/**
+ * Import character modal component
+ * 
+ * Provides a character import interface with:
+ * - PNG file upload with drag-and-drop support
+ * - File validation and error handling
+ * - Upload progress tracking
+ * - Character import integration
+ * - Modal-based workflow management
+ * 
+ * @param {ImportCharacterModalProps} props - Component props
+ * @returns {JSX.Element | null} The import character modal or null if closed
+ */
 export default function ImportCharacterModal({ isOpen, onClose, onImport }: ImportCharacterModalProps) {
   const { t, fontClass, serifFontClass } = useLanguage();
   const [isDragging, setIsDragging] = useState(false);

@@ -1,3 +1,27 @@
+/**
+ * Edit Prompt Modal Component
+ * 
+ * This component provides a prompt editing interface with the following features:
+ * - Preset prompt content editing
+ * - Real-time content validation
+ * - Save functionality with error handling
+ * - Modal-based editing workflow
+ * - Loading states and user feedback
+ * 
+ * The component handles:
+ * - Prompt content editing and validation
+ * - Preset prompt updates and persistence
+ * - Modal state management
+ * - Error handling and user notifications
+ * - Loading states during save operations
+ * - Form reset and cleanup
+ * 
+ * Dependencies:
+ * - useLanguage: For internationalization
+ * - updatePromptInPreset: For preset prompt updates
+ * - react-hot-toast: For notifications
+ */
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -5,6 +29,9 @@ import { toast } from "react-hot-toast";
 import { useLanguage } from "@/app/i18n";
 import { updatePromptInPreset } from "@/function/preset/edit";
 
+/**
+ * Interface definitions for the component's data structures
+ */
 interface PresetPromptData {
   identifier: string;
   name: string;
@@ -27,6 +54,18 @@ interface EditPromptModalProps {
   onSave: () => void;
 }
 
+/**
+ * Edit prompt modal component
+ * 
+ * Provides a prompt editing interface with:
+ * - Preset prompt content editing
+ * - Real-time validation and feedback
+ * - Save functionality with error handling
+ * - Modal-based workflow management
+ * 
+ * @param {EditPromptModalProps} props - Component props
+ * @returns {JSX.Element | null} The edit prompt modal or null if closed
+ */
 const EditPromptModal = ({
   isOpen,
   onClose,

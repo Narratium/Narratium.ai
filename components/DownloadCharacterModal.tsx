@@ -1,3 +1,28 @@
+/**
+ * Download Character Modal Component
+ * 
+ * This component provides a character download interface with the following features:
+ * - GitHub character repository integration
+ * - Character preview and selection
+ * - Download and import functionality
+ * - Character information extraction
+ * - Loading states and error handling
+ * - Grid-based character display
+ * 
+ * The component handles:
+ * - GitHub API integration for character fetching
+ * - Character file download and processing
+ * - Character information parsing and display
+ * - Import functionality integration
+ * - Loading states and error management
+ * - Modal state management and animations
+ * 
+ * Dependencies:
+ * - useLanguage: For internationalization
+ * - handleCharacterUpload: For character import functionality
+ * - framer-motion: For animations
+ */
+
 "use client";
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -6,6 +31,10 @@ import { useLanguage } from "@/app/i18n";
 
 const GITHUB_API_URL = "https://api.github.com/repos/Narratium/Character-Card/contents";
 const RAW_BASE_URL = "https://raw.githubusercontent.com/Narratium/Character-Card/main/";
+
+/**
+ * Interface definitions for the component's props and data structures
+ */
 interface DownloadCharacterModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -22,6 +51,19 @@ interface CharacterInfo {
   author: string;
 }
 
+/**
+ * Download character modal component
+ * 
+ * Provides a character download interface with:
+ * - GitHub character repository integration
+ * - Character preview and selection
+ * - Download and import functionality
+ * - Character information extraction
+ * - Grid-based display and loading states
+ * 
+ * @param {DownloadCharacterModalProps} props - Component props
+ * @returns {JSX.Element | null} The download character modal or null if closed
+ */
 export default function DownloadCharacterModal({ isOpen, onClose, onImport }: DownloadCharacterModalProps) {
   const { t, fontClass, serifFontClass } = useLanguage();
   const [characterFiles, setCharacterFiles] = useState<GithubFile[]>([]);

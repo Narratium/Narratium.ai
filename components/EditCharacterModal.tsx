@@ -1,9 +1,40 @@
+/**
+ * Edit Character Modal Component
+ * 
+ * This component provides a comprehensive character editing interface with the following features:
+ * - Character information editing (name, personality, scenario, etc.)
+ * - Avatar display and character preview
+ * - Form validation and error handling
+ * - Real-time character updates
+ * - Modal-based editing workflow
+ * - Responsive design with animations
+ * 
+ * The component handles:
+ * - Character data editing and validation
+ * - Character updates and persistence
+ * - Modal state management and animations
+ * - Error handling and user feedback
+ * - Form state management and cleanup
+ * - Avatar display and character preview
+ * 
+ * Dependencies:
+ * - useLanguage: For internationalization
+ * - updateCharacter: For character update functionality
+ * - trackButtonClick: For analytics tracking
+ * - framer-motion: For animations
+ * - CharacterAvatarBackground: For avatar display
+ */
+
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/app/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import { trackButtonClick } from "@/utils/google-analytics";
 import { updateCharacter } from "@/function/dialogue/update";
 import { CharacterAvatarBackground } from "@/components/CharacterAvatarBackground";
+
+/**
+ * Interface definitions for the component's props
+ */
 interface EditCharacterModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -19,6 +50,19 @@ interface EditCharacterModalProps {
   onSave: () => void;
 }
 
+/**
+ * Edit character modal component
+ * 
+ * Provides a comprehensive character editing interface with:
+ * - Character information editing
+ * - Avatar display and preview
+ * - Form validation and error handling
+ * - Real-time updates and persistence
+ * - Modal-based workflow management
+ * 
+ * @param {EditCharacterModalProps} props - Component props
+ * @returns {JSX.Element | null} The edit character modal or null if closed
+ */
 const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
   isOpen,
   onClose,

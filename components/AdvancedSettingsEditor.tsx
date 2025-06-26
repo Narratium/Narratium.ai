@@ -1,14 +1,51 @@
+/**
+ * Advanced Settings Editor Component
+ * 
+ * This component provides an advanced settings interface that includes:
+ * - Tag color editing capabilities
+ * - Modal-based settings management
+ * - Tabbed interface for different setting categories
+ * - Responsive design with backdrop blur effects
+ * - Smooth animations and transitions
+ * 
+ * The component handles:
+ * - Modal display and positioning
+ * - Tab navigation between different settings
+ * - Click outside to close functionality
+ * - Animation states and transitions
+ * 
+ * Dependencies:
+ * - useLanguage: For internationalization
+ * - TagColorEditor: For tag color management
+ * - fantasy-ui.css: For styling
+ */
+
 import React, { useState, useRef, useEffect } from "react";
 import { useLanguage } from "@/app/i18n";
 import { TagColorEditor } from "@/components/TagColorEditor";
 import "@/app/styles/fantasy-ui.css";
 
+/**
+ * Interface definitions for the component's props
+ */
 interface AdvancedSettingsEditorProps {
   isOpen: boolean;
   onClose: () => void;
   onViewSwitch?: () => void;
 }
 
+/**
+ * Advanced settings editor modal component
+ * 
+ * Provides a comprehensive settings interface with:
+ * - Modal overlay with backdrop blur
+ * - Tabbed navigation for different setting categories
+ * - Smooth animations and transitions
+ * - Responsive design adaptation
+ * 
+ * @param {AdvancedSettingsEditorProps} props - Component props
+ * @returns {JSX.Element | null} The advanced settings modal or null if closed
+ */
 const AdvancedSettingsEditor: React.FC<AdvancedSettingsEditorProps> = ({ isOpen, onClose, onViewSwitch }) => {
   const { t, fontClass, serifFontClass } = useLanguage();
   const [activeTab, setActiveTab] = useState<string>("tagColors");

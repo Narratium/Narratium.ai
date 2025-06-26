@@ -1,3 +1,28 @@
+/**
+ * Import Preset Modal Component
+ * 
+ * This component provides a preset import interface with the following features:
+ * - Single file import from JSON files with drag-and-drop support
+ * - Custom preset naming and preview functionality
+ * - Import result tracking and validation
+ * - File validation and error handling
+ * - Import guidelines and user instructions
+ * - Modal-based import workflow
+ * 
+ * The component handles:
+ * - File upload and drag-and-drop interactions
+ * - JSON parsing and validation
+ * - Custom preset naming with preview
+ * - Import result display and error reporting
+ * - Modal state management and animations
+ * - User guidance and import guidelines
+ * 
+ * Dependencies:
+ * - useLanguage: For internationalization
+ * - importPresetFromJson: For preset import functionality
+ * - react-hot-toast: For notifications
+ */
+
 "use client";
 
 import React, { useState, useRef } from "react";
@@ -5,12 +30,28 @@ import { toast } from "react-hot-toast";
 import { useLanguage } from "@/app/i18n";
 import { importPresetFromJson } from "@/function/preset/import";
 
+/**
+ * Interface definitions for the component's props
+ */
 interface ImportPresetModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImport: () => void;
 }
 
+/**
+ * Import preset modal component
+ * 
+ * Provides a preset import interface with:
+ * - File-based import with drag-and-drop support
+ * - Custom preset naming and preview
+ * - Import result tracking and validation
+ * - User guidance and import guidelines
+ * - Modal-based workflow management
+ * 
+ * @param {ImportPresetModalProps} props - Component props
+ * @returns {JSX.Element | null} The import preset modal or null if closed
+ */
 export default function ImportPresetModal({
   isOpen,
   onClose,

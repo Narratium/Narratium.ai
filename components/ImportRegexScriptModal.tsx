@@ -1,3 +1,30 @@
+/**
+ * Import Regex Script Modal Component
+ * 
+ * This component provides a comprehensive regex script import interface with the following features:
+ * - Multi-file import from JSON files with drag-and-drop support
+ * - Global regex script import from shared library
+ * - Batch import processing with detailed result tracking
+ * - Import result display with success/failure file lists
+ * - Save as global regex script functionality
+ * - Tabbed interface for different import methods
+ * 
+ * The component handles:
+ * - Multi-file upload and drag-and-drop interactions
+ * - JSON parsing and validation for multiple files
+ * - Global regex script management and selection
+ * - Batch import processing with error aggregation
+ * - Import result display with detailed file status
+ * - Modal state management and animations
+ * - Character-specific regex script integration
+ * 
+ * Dependencies:
+ * - useLanguage: For internationalization
+ * - importRegexScriptFromJson: For file-based imports
+ * - Global regex script functions: For shared library management
+ * - react-hot-toast: For notifications
+ */
+
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -6,6 +33,9 @@ import { useLanguage } from "@/app/i18n";
 import { importRegexScriptFromJson } from "@/function/regex/import";
 import { listGlobalRegexScripts, importFromGlobalRegexScript, GlobalRegexScript, deleteGlobalRegexScript } from "@/function/regex/global";
 
+/**
+ * Interface definitions for the component's props
+ */
 interface ImportRegexScriptModalProps {
   isOpen: boolean;
   characterId: string;
@@ -13,6 +43,20 @@ interface ImportRegexScriptModalProps {
   onImportSuccess: () => void;
 }
 
+/**
+ * Import regex script modal component
+ * 
+ * Provides a comprehensive regex script import interface with:
+ * - Multi-file import with drag-and-drop support
+ * - Global regex script import functionality
+ * - Batch import processing with detailed results
+ * - Import result tracking with file-level status
+ * - Save as global regex script options
+ * - Tabbed interface for different import methods
+ * 
+ * @param {ImportRegexScriptModalProps} props - Component props
+ * @returns {JSX.Element | null} The import regex script modal or null if closed
+ */
 export default function ImportRegexScriptModal({
   isOpen,
   characterId,

@@ -1,9 +1,35 @@
+/**
+ * Character Chat Header Component
+ * 
+ * This component provides the header interface for character chat interactions with the following features:
+ * - Character avatar and name display
+ * - View switching controls (chat, worldbook, regex, preset)
+ * - Sidebar toggle functionality
+ * - Responsive design with mobile adaptation
+ * - Interactive button states and animations
+ * 
+ * The component handles:
+ * - Header layout and positioning
+ * - View navigation controls
+ * - Sidebar collapse/expand functionality
+ * - Character information display
+ * - Button interactions and tracking
+ * 
+ * Dependencies:
+ * - useLanguage: For internationalization
+ * - CharacterAvatarBackground: For avatar display
+ * - trackButtonClick: For analytics tracking
+ */
+
 "use client";
 
 import { CharacterAvatarBackground } from "@/components/CharacterAvatarBackground";
 import { trackButtonClick } from "@/utils/google-analytics";
 import { useLanguage } from "@/app/i18n";
 
+/**
+ * Interface definitions for the component's props
+ */
 interface Props {
   character: {
     name: string;
@@ -18,6 +44,18 @@ interface Props {
   onToggleRegexEditor: () => void;
 }
 
+/**
+ * Character chat header component
+ * 
+ * Provides the main header interface for character interactions with:
+ * - Character information display
+ * - Navigation controls for different views
+ * - Sidebar toggle functionality
+ * - Responsive design adaptation
+ * 
+ * @param {Props} props - Component props
+ * @returns {JSX.Element} The character chat header interface
+ */
 export default function CharacterChatHeader({
   character,
   serifFontClass,

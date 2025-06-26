@@ -1,3 +1,26 @@
+/**
+ * Mobile Bottom Navigation Component
+ * 
+ * This component provides a mobile-specific bottom navigation bar with the following features:
+ * - Responsive mobile navigation interface
+ * - Home, character cards, creator, and login/logout navigation
+ * - User authentication state management
+ * - Smooth transitions and hover effects
+ * - Safe area handling for devices with home indicators
+ * 
+ * The component handles:
+ * - Mobile device detection and responsive behavior
+ * - User authentication state from localStorage
+ * - Navigation routing and active state management
+ * - Logout functionality and state clearing
+ * - Responsive design adaptation
+ * 
+ * Dependencies:
+ * - useLanguage: For internationalization
+ * - useRouter, usePathname: For navigation
+ * - fantasy-ui.css: For styling
+ */
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,10 +29,25 @@ import { useRouter, usePathname } from "next/navigation";
 import { useLanguage } from "@/app/i18n";
 import "@/app/styles/fantasy-ui.css";
 
+/**
+ * Interface definitions for the component's props
+ */
 interface MobileBottomNavProps {
   openLoginModal: () => void;
 }
 
+/**
+ * Mobile bottom navigation component
+ * 
+ * Provides a mobile-specific navigation interface with:
+ * - Bottom navigation bar with key app sections
+ * - User authentication state management
+ * - Responsive design with safe area handling
+ * - Smooth animations and transitions
+ * 
+ * @param {MobileBottomNavProps} props - Component props
+ * @returns {JSX.Element | null} The mobile bottom navigation or null on desktop
+ */
 export default function MobileBottomNav({ openLoginModal }: MobileBottomNavProps) {
   const router = useRouter();
   const pathname = usePathname();

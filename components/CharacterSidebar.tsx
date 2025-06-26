@@ -1,3 +1,30 @@
+/**
+ * Character Sidebar Component
+ * 
+ * This component provides a comprehensive sidebar interface for character management with the following features:
+ * - Character information display and navigation
+ * - Response length control slider
+ * - Preset management and GitHub integration
+ * - Advanced settings access
+ * - Dialogue tree modal integration
+ * - Collapsible sidebar functionality
+ * 
+ * The component handles:
+ * - Sidebar layout and responsive design
+ * - Character information display
+ * - Preset downloading and management
+ * - Response length configuration
+ * - Modal interactions and state management
+ * - Navigation and routing
+ * 
+ * Dependencies:
+ * - useLanguage: For internationalization
+ * - DialogueTreeModal: For conversation tree display
+ * - AdvancedSettingsEditor: For advanced configuration
+ * - CharacterAvatarBackground: For avatar display
+ * - Preset management functions: For GitHub preset integration
+ */
+
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/app/i18n";
 import Link from "next/link";
@@ -7,6 +34,9 @@ import { CharacterAvatarBackground } from "@/components/CharacterAvatarBackgroun
 import { getAvailableGithubPresets, isPresetDownloaded, downloadPresetFromGithub, doesPresetExist, getPresetDisplayName, getPresetDescription } from "@/function/preset/download";
 import AdvancedSettingsEditor from "@/components/AdvancedSettingsEditor";
 
+/**
+ * Interface definitions for the component's props
+ */
 interface CharacterSidebarProps {
   character: {
     id: string;
@@ -23,6 +53,19 @@ interface CharacterSidebarProps {
   onViewSwitch?: () => void;
 }
 
+/**
+ * Character sidebar component
+ * 
+ * Provides a comprehensive sidebar interface for character management with:
+ * - Character information and navigation
+ * - Response length configuration
+ * - Preset management and GitHub integration
+ * - Advanced settings access
+ * - Collapsible design with responsive layout
+ * 
+ * @param {CharacterSidebarProps} props - Component props
+ * @returns {JSX.Element} The character sidebar interface
+ */
 const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
   character,
   isCollapsed,
