@@ -19,16 +19,28 @@ const GITHUB_REPO_URL = "https://raw.githubusercontent.com/Narratium/Preset/main
 
 const AVAILABLE_PRESETS: GithubPreset[] = [
   {
-    name: "belle_cat",
+    name: "mirror_realm",
     displayName: {
-      zh: "贝露喵提示词",
-      en: "Belle Cat Prompt",
+      zh: "灵镜之境",
+      en: "Mirror Realm",
     },
     description: {
-      zh: "表演家——超强人物演绎",
-      en: "Performer - Exceptional Character Portrayal",
+      zh: "多面灵魂角色协议，情感互动专家",
+      en: "Multi-faceted soul character protocol, emotional interaction expert",
     },
-    filename: "贝露喵预设.json",
+    filename: "system_preset",
+  },
+  {
+    name: "novel_king",
+    displayName: {
+      zh: "小说之王",
+      en: "Novel King",
+    },
+    description: {
+      zh: "史诗织梦叙事大师，故事推进专家",
+      en: "Epic narrative master, story progression expert",
+    },
+    filename: "system_preset",
   },
 ];
 
@@ -50,6 +62,20 @@ export function getPresetDescription(presetName: string, language: "zh" | "en" =
 
 export async function isPresetDownloaded(presetName: string): Promise<boolean> {
   try {
+    const preset = AVAILABLE_PRESETS.find(p => p.name === presetName);
+    if (!preset) return false;
+
+    // Handle system presets
+    if (preset.filename === "system_preset") {
+      const downloadedPresets = localStorage.getItem("downloaded_github_presets");
+      if (downloadedPresets) {
+        const presets = JSON.parse(downloadedPresets);
+        return presets.includes(presetName);
+      }
+      return false;
+    }
+
+    // Handle GitHub presets (original logic)
     const downloadedPresets = localStorage.getItem("downloaded_github_presets");
     let isMarkedAsDownloaded = false;
     
@@ -96,6 +122,27 @@ export async function downloadPresetFromGithub(presetName: string, language: "zh
       return { success: false, message: "Preset not found" };
     }
 
+    // Handle system presets (built-in presets)
+    if (preset.filename === "system_preset") {
+      try {
+        // Set the system preset type in localStorage
+        localStorage.setItem("system_preset_type", presetName === "novel_king" ? "novel" : "mirror");
+        localStorage.setItem("system_preset_name", preset.displayName[language]);
+        
+        // Mark as downloaded
+        markPresetAsDownloaded(presetName);
+        
+        return { 
+          success: true, 
+          presetId: `system_${presetName}`,
+          message: `${preset.displayName[language]} 系统预设已启用`,
+        };
+      } catch (error) {
+        return { success: false, message: `Failed to set system preset: ${error instanceof Error ? error.message : String(error)}` };
+      }
+    }
+
+    // Handle GitHub presets (original logic)
     try {
       const apiResponse = await fetch(GITHUB_API_URL);
       if (apiResponse.ok) {
@@ -168,5 +215,24 @@ function markPresetAsDownloaded(presetName: string): void {
     }
   } catch (error) {
     console.error("Error marking preset as downloaded:", error);
+  }
+}
+
+export function getCurrentSystemPresetType(): "mirror" | "novel" {
+  try {
+    const presetType = localStorage.getItem("system_preset_type");
+    return presetType === "novel" ? "novel" : "mirror";
+  } catch (error) {
+    console.error("Error getting system preset type:", error);
+    return "mirror";
+  }
+}
+
+export function getCurrentSystemPresetName(): string | null {
+  try {
+    return localStorage.getItem("system_preset_name");
+  } catch (error) {
+    console.error("Error getting system preset name:", error);
+    return null;
   }
 }

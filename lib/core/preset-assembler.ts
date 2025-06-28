@@ -1,17 +1,25 @@
 import { PresetPrompt } from "@/lib/models/preset-model";
 import { adaptText } from "@/lib/adapter/tagReplacer";
-import { MULTI_MODE_PROMPT, MULTI_MODE_CHAIN_OF_THOUGHT, OUTPUT_STRUCTURE_SOFT_GUIDE } from "@/lib/prompts/preset-prompts";
+import { 
+  MULTI_MODE_PROMPT, 
+  MULTI_MODE_CHAIN_OF_THOUGHT, 
+  OUTPUT_STRUCTURE_SOFT_GUIDE,
+  NOVEL_KING_PROMPT,
+  NOVEL_KING_CHAIN_OF_THOUGHT,
+  NOVEL_KING_OUTPUT_STRUCTURE,
+} from "@/lib/prompts/preset-prompts";
 
 export class PresetAssembler {
   static assemblePrompts(
     prompts: PresetPrompt[],
     language: "zh" | "en" = "zh",
-    fastModel:boolean,
+    fastModel: boolean,
     contextData: { username?: string; charName?: string; number?: number } = {},
+    systemPresetType: "mirror" | "novel" = "mirror",
   ): { systemMessage: string; userMessage: string } {
     if (prompts.length === 0 || fastModel) {
       console.group("PresetAssembler", prompts.length, fastModel);
-      return PresetAssembler._getDefaultFramework(language, contextData);
+      return PresetAssembler._getDefaultFramework(language, contextData, systemPresetType);
     }
 
     const orderedSystemIdentifiers = [
@@ -79,8 +87,12 @@ export class PresetAssembler {
       
       finalSystemMessageParts.push(`<${id}>`);
 
-      if (sectionContent) {
-        finalSystemMessageParts.push(sectionContent);
+      if (id === "main") {
+        if (systemPresetType === "novel") {
+          finalSystemMessageParts.push(NOVEL_KING_PROMPT);
+        } else {
+          finalSystemMessageParts.push(MULTI_MODE_PROMPT);
+        }
       } else if (id === "worldInfoBefore" || id === "worldInfoAfter") {
         finalSystemMessageParts.push(`{{${id}}}`);
       }
@@ -95,16 +107,21 @@ export class PresetAssembler {
       
       finalUserMessageParts.push(`<${id}>`);
 
-      if (sectionContent) {
-        finalUserMessageParts.push(sectionContent);
+      if (id === "enhanceDefinitions") {
+        if (systemPresetType === "novel") {
+          finalUserMessageParts.push(NOVEL_KING_CHAIN_OF_THOUGHT);
+          finalUserMessageParts.push("\n\n");
+          finalUserMessageParts.push(NOVEL_KING_OUTPUT_STRUCTURE);
+        } else {
+          finalUserMessageParts.push(MULTI_MODE_CHAIN_OF_THOUGHT);
+          finalUserMessageParts.push("\n\n");
+          finalUserMessageParts.push(OUTPUT_STRUCTURE_SOFT_GUIDE);
+        }
+      } else if (id === "chatHistory" || id === "userInput") {
+        finalUserMessageParts.push(`{{${id}}}`);
         if (id === "userInput") {
           hasUserInputSection = true;
         }
-      } else if (id === "chatHistory") {
-        finalUserMessageParts.push(`{{${id}}}`);
-      } else if (id === "userInput") {
-        finalUserMessageParts.push(`{{${id}}}`);
-        hasUserInputSection = true;
       }
       finalUserMessageParts.push(`</${id}>`);
     }
@@ -177,7 +194,7 @@ export class PresetAssembler {
     };
   }
 
-  private static _getDefaultFramework(language: "zh" | "en" = "zh", contextData: { username?: string; charName?: string; number?: number } = {}): { systemMessage: string; userMessage: string } {
+  private static _getDefaultFramework(language: "zh" | "en" = "zh", contextData: { username?: string; charName?: string; number?: number }, systemPresetType: "mirror" | "novel" = "mirror"): { systemMessage: string; userMessage: string } {
     const orderedSystemIdentifiers = [
       "main",
       "worldInfoBefore",
@@ -200,7 +217,11 @@ export class PresetAssembler {
       finalSystemMessageParts.push(`<${id}>`);
 
       if (id === "main") {
-        finalSystemMessageParts.push(MULTI_MODE_PROMPT);
+        if (systemPresetType === "novel") {
+          finalSystemMessageParts.push(NOVEL_KING_PROMPT);
+        } else {
+          finalSystemMessageParts.push(MULTI_MODE_PROMPT);
+        }
       } else if (id === "worldInfoBefore" || id === "worldInfoAfter") {
         finalSystemMessageParts.push(`{{${id}}}`);
       }
@@ -215,9 +236,15 @@ export class PresetAssembler {
       finalUserMessageParts.push(`<${id}>`);
       
       if (id === "enhanceDefinitions") {
-        finalUserMessageParts.push(MULTI_MODE_CHAIN_OF_THOUGHT);
-        finalUserMessageParts.push("\n\n");
-        finalUserMessageParts.push(OUTPUT_STRUCTURE_SOFT_GUIDE);
+        if (systemPresetType === "novel") {
+          finalUserMessageParts.push(NOVEL_KING_CHAIN_OF_THOUGHT);
+          finalUserMessageParts.push("\n\n");
+          finalUserMessageParts.push(NOVEL_KING_OUTPUT_STRUCTURE);
+        } else {
+          finalUserMessageParts.push(MULTI_MODE_CHAIN_OF_THOUGHT);
+          finalUserMessageParts.push("\n\n");
+          finalUserMessageParts.push(OUTPUT_STRUCTURE_SOFT_GUIDE);
+        }
       } else if (id === "chatHistory" || id === "userInput") {
         finalUserMessageParts.push(`{{${id}}}`);
         if (id === "userInput") {

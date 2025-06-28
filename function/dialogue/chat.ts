@@ -1,6 +1,7 @@
 import { LocalCharacterDialogueOperations } from "@/lib/data/roleplay/character-dialogue-operation";
 import { ParsedResponse } from "@/lib/models/parsed-response";
 import { DialogueWorkflow, DialogueWorkflowParams } from "@/lib/workflow/examples/DialogueWorkflow";
+import { getCurrentSystemPresetType } from "@/function/preset/download";
 
 export async function handleCharacterChatRequest(payload: {
   username?: string;
@@ -49,7 +50,8 @@ export async function handleCharacterChatRequest(payload: {
         temperature: 0.7,
         streaming: false,
         number,
-        fastModel,  
+        fastModel,
+        systemPresetType: getCurrentSystemPresetType(),
       };
       const workflowResult = await workflow.execute(workflowParams);
       

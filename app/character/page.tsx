@@ -98,6 +98,9 @@ export default function CharacterPage() {
     "scene-setting": false,
   });
 
+  // Add loading phase tracking for better user feedback
+  const [loadingPhase, setLoadingPhase] = useState<string>("");
+
   const switchToView = (targetView: "chat" | "worldbook" | "regex" | "preset") => {
     setActiveView(targetView);
   };
@@ -262,12 +265,24 @@ export default function CharacterPage() {
         return;
       }
       
+      // Start loading immediately when characterId changes
       setIsLoading(true);
+      setIsInitializing(false);
       setError("");
+      setLoadingPhase(t("characterChat.loading"));
+      
+      // Reset initialization ref for new character
+      initializationRef.current = false;
+      
+      // Add minimum loading time to ensure user sees the loading animation
+      const startTime = Date.now();
+      const minLoadingTime = 500; // 500ms minimum loading time
       
       try {
         const username = localStorage.getItem("username") || undefined;
         const currentLanguage = localStorage.getItem("language") as "en" | "zh";
+        
+        setLoadingPhase(t("characterChat.loading"));
         const response = await getCharacterDialogue(characterId, currentLanguage, username);
         if (!response.success) {
           throw new Error(`Failed to load character: ${response}`);
@@ -282,9 +297,12 @@ export default function CharacterPage() {
           personality: character.data.personality,
           avatar_path: character.imagePath,
         };
+        
+        // Set character data but keep loading if we need to initialize dialogue
         setCharacter(characterInfo);
 
         if (dialogue && dialogue.messages) {
+          setLoadingPhase(t("characterChat.loadingDialogue"));
           const formattedMessages = dialogue.messages.map((msg: any) => ({
             id: msg.id,
             role: msg.role,
@@ -293,10 +311,31 @@ export default function CharacterPage() {
           }));
           setMessages(formattedMessages);
           setSuggestedInputs(dialogue.messages[dialogue.messages.length - 1].parsedContent?.nextPrompts || []);
+          
+          // Ensure minimum loading time has passed
+          const elapsedTime = Date.now() - startTime;
+          const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+          
+          if (remainingTime > 0) {
+            await new Promise(resolve => setTimeout(resolve, remainingTime));
+          }
+          
+          // All data loaded successfully
+          setIsLoading(false);
         }
         else if (!initializationRef.current) {
+          // Need to initialize new dialogue - keep loading state
+          setLoadingPhase(t("characterChat.initializing"));
+          setIsInitializing(true);
           initializationRef.current = true;
           await initializeNewDialogue(characterId);
+          
+          // Initialization complete
+          setIsInitializing(false);
+          setIsLoading(false);
+        } else {
+          // Fallback case
+          setIsLoading(false);
         }
       } catch (err) {
         console.error("Error loading character or dialogue:", err);
@@ -304,23 +343,24 @@ export default function CharacterPage() {
           ? (err as Error).message 
           : "Failed to load character";
         setError(errorMessage);
-      } finally {
         setIsLoading(false);
+        setIsInitializing(false);
       }
     };
 
     loadCharacterAndDialogue();
-  }, [characterId]);
+  }, [characterId, t]);
 
   const initializeNewDialogue = async (charId: string) => {
     try {
-      setIsInitializing(true);
+      setLoadingPhase(t("characterChat.extractingTemplate"));
       const username = localStorage.getItem("username") || "";
       const language = localStorage.getItem("language") || "zh";
       const llmType = localStorage.getItem("llmType") || "openai";
       const modelName = localStorage.getItem(llmType === "openai" ? "openaiModel" : "ollamaModel") || "";
       const baseUrl = localStorage.getItem(llmType === "openai" ? "openaiBaseUrl" : "ollamaBaseUrl") || "";
       const apiKey = llmType === "openai" ? (localStorage.getItem("openaiApiKey") || "") : "";
+      
       const initData = await initCharacterDialogue({
         username,
         characterId: charId,
@@ -339,14 +379,11 @@ export default function CharacterPage() {
           id: initData.nodeId,
           role: "assistant",
           content: initData.firstMessage,
-        },
-        ]);
+        }]);
       }
     } catch (error) {
       console.error("Error initializing dialogue:", error);
       throw error;
-    } finally {
-      setIsInitializing(false);
     }
   };
 
@@ -452,27 +489,22 @@ export default function CharacterPage() {
     };
   }, []);
 
-  if (isLoading && !character) {
-    return (
-      <div className="flex justify-center items-center h-full fantasy-bg">
-        <div className="relative w-12 h-12 flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full border-2 border-t-[#f9c86d] border-r-[#c0a480] border-b-[#a18d6f] border-l-transparent animate-spin"></div>
-          <div className="absolute inset-2 rounded-full border-2 border-t-[#a18d6f] border-r-[#f9c86d] border-b-[#c0a480] border-l-transparent animate-spin-slow"></div>
-        </div>
-      </div>
-    );
-  }
-  
-  if (isInitializing) {
+  // Show loading animation during any loading phase
+  if (isLoading || isInitializing) {
     return (
       <div className="flex flex-col justify-center items-center h-full fantasy-bg">
         <div className="relative w-12 h-12 flex items-center justify-center mb-4">
           <div className="absolute inset-0 rounded-full border-2 border-t-[#f9c86d] border-r-[#c0a480] border-b-[#a18d6f] border-l-transparent animate-spin"></div>
           <div className="absolute inset-2 rounded-full border-2 border-t-[#a18d6f] border-r-[#f9c86d] border-b-[#c0a480] border-l-transparent animate-spin-slow"></div>
         </div>
-        <p className={`text-[#f4e8c1] ${serifFontClass}`}>{t("characterChat.initializing")}</p>
-        <p className={`text-[#a18d6f] text-sm mt-2 ${fontClass}`}>{t("characterChat.extractingTemplate") || "提取状态模板中，请稍候..."}</p>
-        <p className={`text-[#a18d6f] text-xs mt-4 max-w-xs text-center ${fontClass}`}>{t("characterChat.loadingTimeHint") || "通常加载时间在 5-20 秒之间，如果超过 30 秒请检查 API 配置是否正确"}</p>
+        <p className={`text-[#f4e8c1] ${serifFontClass} text-center mb-2`}>
+          {loadingPhase}
+        </p>
+        {isInitializing && (
+          <p className={`text-[#a18d6f] text-xs mt-4 max-w-xs text-center ${fontClass}`}>
+            {t("characterChat.loadingTimeHint")}
+          </p>
+        )}
       </div>
     );
   }
@@ -480,13 +512,13 @@ export default function CharacterPage() {
   if (error || !character) {
     return (
       <div className="flex flex-col items-center justify-center h-full fantasy-bg">
-        <h1 className="text-2xl text-[#f4e8c1] mb-4">{t("characterChat.error") || "Error"}</h1>
-        <p className="text-[#c0a480] mb-6">{error || t("characterChat.characterNotFound") || "Character not found"}</p>
+        <h1 className="text-2xl text-[#f4e8c1] mb-4">{t("characterChat.error")}</h1>
+        <p className="text-[#c0a480] mb-6">{error || t("characterChat.characterNotFound")}</p>
         <a
           href="/character-cards"
           className="bg-[#252220] hover:bg-[#342f25] text-[#f4e8c1] font-medium py-2 px-4 rounded border border-[#534741]"
         >
-          {t("characterChat.backToCharacters") || "Back to Characters"}
+          {t("characterChat.backToCharacters")}
         </a>
       </div>
     );

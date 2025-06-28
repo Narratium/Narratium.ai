@@ -31,7 +31,7 @@ import Link from "next/link";
 import DialogueTreeModal from "@/components/DialogueTreeModal";
 import { trackButtonClick } from "@/utils/google-analytics";
 import { CharacterAvatarBackground } from "@/components/CharacterAvatarBackground";
-import { getAvailableGithubPresets, isPresetDownloaded, downloadPresetFromGithub, doesPresetExist, getPresetDisplayName, getPresetDescription } from "@/function/preset/download";
+import { getAvailableGithubPresets, getPresetDisplayName, getPresetDescription } from "@/function/preset/download";
 import AdvancedSettingsEditor from "@/components/AdvancedSettingsEditor";
 
 /**
@@ -78,7 +78,6 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
   const [githubPresets, setGithubPresets] = useState<any[]>([]);
   const [showGithubPresetDropdown, setShowGithubPresetDropdown] = useState(false);
   const [downloadedPresets, setDownloadedPresets] = useState<string[]>([]);
-  const [isDownloading, setIsDownloading] = useState(false);
   const [isAdvancedSettingsOpen, setIsAdvancedSettingsOpen] = useState(false);
 
   useEffect(() => {
@@ -110,25 +109,20 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
     }
   };
   
-  const handleDownloadAndEnablePreset = async (presetName: string) => {
-    if (isDownloading) return;
-    
-    setIsDownloading(true);
+  const handleSelectPreset = async (presetName: string) => {
     try {
-      const isDownloaded = await isPresetDownloaded(presetName);
-      const exists = await doesPresetExist(presetName);
-
-      if (isDownloaded && exists) {
-      } else {
-        const result = await downloadPresetFromGithub(presetName, language as "zh" | "en");
-        if (result.success) {
-          setDownloadedPresets(prev => [...prev, presetName]);
-        }
+      // Only handle system presets selection (comment out download logic)
+      const preset = githubPresets.find(p => p.name === presetName);
+      if (preset) {
+        // Set the system preset type in localStorage
+        localStorage.setItem("system_preset_type", presetName === "novel_king" ? "novel" : "mirror");
+        localStorage.setItem("system_preset_name", getPresetDisplayName(presetName, language as "zh" | "en"));
+        
+        // Mark as selected (using the existing downloaded state for UI consistency)
+        setDownloadedPresets([presetName]); // Only one can be selected at a time
       }
     } catch (error) {
-      console.error("Error handling preset:", error);
-    } finally {
-      setIsDownloading(false);
+      console.error("Error selecting preset:", error);
     }
   };
 
@@ -137,19 +131,12 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
       const presets = getAvailableGithubPresets();
       setGithubPresets(presets);
       
-      const downloaded: string[] = [];
-      for (const preset of presets) {
-        const isDownloaded = await isPresetDownloaded(preset.name);
-        if (isDownloaded) {
-          downloaded.push(preset.name);
-        }
-      }
-      setDownloadedPresets(downloaded);
-
-      if (downloaded.length === 0 && presets.length > 0) {
-        const firstPreset = presets[0];
-        await handleDownloadAndEnablePreset(firstPreset.name);
-      }
+      // Get current selected preset from localStorage
+      const currentPresetType = localStorage.getItem("system_preset_type");
+      const currentPresetName = currentPresetType === "novel" ? "novel_king" : "mirror_realm";
+      
+      // Set the selected preset
+      setDownloadedPresets([currentPresetName]);
     };
     
     loadGithubPresets();
@@ -459,7 +446,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                     </div>
                     <div className="ml-2 transition-all duration-300 ease-in-out overflow-hidden">
                       <span className={`magical-text whitespace-nowrap block text-xs md:text-sm group-hover:text-purple-400 transition-colors duration-300 ${fontClass}`}>
-                        {t("characterChat.githubPresets")}
+                        {t("characterChat.systemPresets")}
                       </span>
                     </div>
                   </div>
@@ -482,7 +469,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                       <div 
                         key={preset.name}
                         className="p-3 hover:bg-[#252525] cursor-pointer border-b border-[#333333] last:border-b-0"
-                        onClick={() => handleDownloadAndEnablePreset(preset.name)}
+                        onClick={() => handleSelectPreset(preset.name)}
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -494,21 +481,12 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                             </p>
                           </div>
                           <div>
-                            {isDownloading && (
-                              <div className="relative w-5 h-5 flex items-center justify-center">
-                                <div className="absolute inset-0 rounded-full border-2 border-t-[#a78bfa] border-r-[#c0a480] border-b-[#a18d6f] border-l-transparent animate-spin"></div>
-                              </div>
-                            )}
-                            {!isDownloading && downloadedPresets.includes(preset.name) ? (
+                            {downloadedPresets.includes(preset.name) ? (
                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M20 6L9 17l-5-5"></path>
                               </svg>
-                            ) : !isDownloading && (
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                              </svg>
+                            ) : (
+                              <div className="w-4 h-4 border border-[#555555] rounded"></div>
                             )}
                           </div>
                         </div>

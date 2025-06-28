@@ -323,8 +323,8 @@
     "customPrompt": "自定义提示词",
     "customPromptFor": "自定义提示词",
     "presets": "预设",
-    "presetEditor": "预设编辑器",
-    "githubPresets": "提示词选择",
+    "presetEditor": "外部提示词",
+    "systemPresets": "提示词选择",
     "noPresets": "没有可用的预设",
     "prefixPrompt": "前缀提示词",
     "chainOfThoughtPrompt": "思维链提示词",
@@ -364,7 +364,8 @@
     "back": "返回",
     "defaultModel": "默认",
     "thinking": "的思考",
-    "characters": "字符"
+    "characters": "字符",
+    "loadingDialogue": "加载对话中..."
   },
   "preset": {
     "title": "预设编辑器",

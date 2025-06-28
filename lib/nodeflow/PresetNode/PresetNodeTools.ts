@@ -38,6 +38,7 @@ export class PresetNodeTools extends NodeTool {
     charName?: string,
     number?: number,
     fastModel: boolean = false,
+    systemPresetType: "mirror" | "novel" = "mirror",
   ): Promise<{ systemMessage: string; userMessage: string; presetId?: string }> {
     try {
       const characterRecord = await LocalCharacterRecordOperations.getCharacterById(characterId);
@@ -53,7 +54,7 @@ export class PresetNodeTools extends NodeTool {
         orderedPrompts = await PresetOperations.getOrderedPrompts(enabledPreset.id);
         presetId = enabledPreset.id;
       } else {
-        console.log(`No enabled preset found, using default framework for character ${characterId}`);
+        console.log(`No enabled preset found, using ${systemPresetType} system framework for character ${characterId}`);
       }
       
       const enrichedPrompts = this.enrichPromptsWithCharacterInfo(orderedPrompts, character);
@@ -63,6 +64,7 @@ export class PresetNodeTools extends NodeTool {
         language,
         fastModel,
         { username, charName: charName || character.characterData.name, number },
+        systemPresetType,
       );
 
       return { 

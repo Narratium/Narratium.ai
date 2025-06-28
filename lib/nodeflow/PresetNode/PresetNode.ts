@@ -25,6 +25,7 @@ export class PresetNode extends NodeBase {
     const charName = input.charName;
     const number = input.number;
     const fastModel = input.fastModel;
+    const systemPresetType = input.systemPresetType || "mirror";
 
     if (!characterId) {
       throw new Error("Character ID is required for PresetNode");
@@ -38,6 +39,7 @@ export class PresetNode extends NodeBase {
       charName,
       number,
       fastModel,
+      systemPresetType,
     ) as { systemMessage: string; userMessage: string; presetId?: string };
 
     return {
