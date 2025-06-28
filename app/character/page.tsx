@@ -55,8 +55,8 @@ interface Character {
 interface Message {
   id: string;
   role: string;
+  thinkingContent?: string;
   content: string;
-  timestamp?: string;
 }
 
 /**
@@ -137,8 +137,8 @@ export default function CharacterPage() {
           const formattedMessages = dialogue.messages.map((msg: any) => ({
             id: msg.id,
             role: msg.role == "system" ? "assistant" : msg.role,
+            thinkingContent: msg.thinkingContent ?? "",
             content: msg.content,
-            timestamp: msg.timestamp || new Date(dialogue.created_at).toISOString(),
           }));
 
           setMessages(formattedMessages);
@@ -201,8 +201,8 @@ export default function CharacterPage() {
           const formattedMessages = dialogue.messages.map((msg: any) => ({
             id: msg.id,
             role: msg.role == "system" ? "assistant" : msg.role,
+            thinkingContent: msg.thinkingContent ?? "",
             content: msg.content,
-            timestamp: msg.timestamp || new Date(dialogue.created_at).toISOString(),
           }));
 
           setMessages(formattedMessages);
@@ -242,8 +242,8 @@ export default function CharacterPage() {
         const formattedMessages = dialogue.messages.map((msg: any) => ({
           id: msg.id,
           role: msg.role,
+          thinkingContent: msg.thinkingContent ?? "",
           content: msg.content,
-          timestamp: msg.timestamp || new Date(dialogue.created_at).toISOString(),
         }));
         setMessages(formattedMessages);
         setSuggestedInputs(dialogue.messages[dialogue.messages.length - 1].parsedContent?.nextPrompts || []);
@@ -288,8 +288,8 @@ export default function CharacterPage() {
           const formattedMessages = dialogue.messages.map((msg: any) => ({
             id: msg.id,
             role: msg.role,
+            thinkingContent: msg.thinkingContent ?? "",
             content: msg.content,
-            timestamp: new Date(dialogue.created_at).toISOString(),
           }));
           setMessages(formattedMessages);
           setSuggestedInputs(dialogue.messages[dialogue.messages.length - 1].parsedContent?.nextPrompts || []);
@@ -339,7 +339,6 @@ export default function CharacterPage() {
           id: initData.nodeId,
           role: "assistant",
           content: initData.firstMessage,
-          timestamp: new Date().toISOString(),
         },
         ]);
       }
@@ -362,8 +361,8 @@ export default function CharacterPage() {
       const userMessage = {
         id: new Date().toISOString() + "-user",
         role: "user",
+        thinkingContent: "",
         content: message,
-        timestamp: new Date().toISOString(),
       }; 
       setMessages((prev) => [...prev, userMessage]);
 
@@ -402,8 +401,8 @@ export default function CharacterPage() {
         const assistantMessage = {
           id: nodeId,
           role: "assistant",
+          thinkingContent: result.thinkingContent ?? "",
           content: result.content || "",
-          timestamp: new Date().toISOString(),
         };
         setMessages(prev => [...prev, assistantMessage]);
         

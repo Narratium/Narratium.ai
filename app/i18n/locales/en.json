@@ -362,7 +362,9 @@
     "disableFastModel": "Disable Fast Mode",
     "selectModel": "Select Model",
     "back": "Back",
-    "defaultModel": "Default"
+    "defaultModel": "Default",
+    "thinking": "'s thinking",
+    "characters": "characters"
   },
   "preset": {
     "title": "Preset Manager",

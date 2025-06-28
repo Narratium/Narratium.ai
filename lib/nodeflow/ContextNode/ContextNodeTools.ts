@@ -74,22 +74,22 @@ export class ContextNodeTools extends NodeTool {
         return { systemMessage, recentDialogue, historyDialogue };
       }
 
-      const nodePath = dialogueTree.current_node_id !== "root"
-        ? await LocalCharacterDialogueOperations.getDialoguePathToNode(characterId, dialogueTree.current_node_id)
+      const nodePath = dialogueTree.current_nodeId !== "root"
+        ? await LocalCharacterDialogueOperations.getDialoguePathToNode(characterId, dialogueTree.current_nodeId)
         : [];
       
       for (const node of nodePath) {
-        if (node.parent_node_id === "root" && node.assistant_response) {
-          systemMessage = node.assistant_response;
+        if (node.parentNodeId === "root" && node.assistantResponse) {
+          systemMessage = node.assistantResponse;
           continue;
         }
-        if (node.user_input) {
-          recentDialogue.userInput.push(node.user_input);
-          historyDialogue.userInput.push(node.user_input);
+        if (node.userInput) {
+          recentDialogue.userInput.push(node.userInput);
+          historyDialogue.userInput.push(node.userInput);
         }
-        if (node.assistant_response) {
-          recentDialogue.responses.push(node.assistant_response);
-          const compressedContent = node.parsed_content?.compressedContent || "";
+        if (node.assistantResponse) {
+          recentDialogue.responses.push(node.assistantResponse);
+          const compressedContent = node.parsedContent?.compressedContent || "";
           historyDialogue.responses.push(compressedContent);
         }
       }

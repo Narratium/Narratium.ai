@@ -362,7 +362,9 @@
     "disableFastModel": "关闭快速模式",
     "selectModel": "选择模型",
     "back": "返回",
-    "defaultModel": "默认"
+    "defaultModel": "默认",
+    "thinking": "的思考",
+    "characters": "字符"
   },
   "preset": {
     "title": "预设编辑器",

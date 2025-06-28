@@ -184,11 +184,6 @@ export default function CharacterCards() {
       const pngFiles = data.filter((item: any) => 
         item.name.endsWith(".png") && presetCharacterNames.includes(item.name),
       );
-      
-      if (pngFiles.length === 0) {
-        console.log("No preset character files found");
-        return;
-      }
 
       // Download and import each preset character
       for (const file of pngFiles) {
@@ -203,7 +198,6 @@ export default function CharacterCards() {
           const fileObj = new File([blob], file.name, { type: blob.type });
           
           await handleCharacterUpload(fileObj);
-          console.log(`Successfully imported ${file.name}`);
         } catch (error) {
           console.error(`Failed to import ${file.name}:`, error);
         }

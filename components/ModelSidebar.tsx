@@ -131,7 +131,6 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
 
     // If no configs exist and env variables are set, auto-create a default config
     if (mergedConfigs.length === 0 && (DEFAULT_API_URL || DEFAULT_API_KEY)) {
-      console.log(1);
       // Generate a default config name
       const defaultConfigName = `【1】${DEFAULT_API_URL ? "API" : "OpenAI"}`;
       const defaultConfig: APIConfig = {
@@ -164,11 +163,9 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
   useEffect(() => {
     const handleModelChanged = (event: CustomEvent) => {
       const { configId, modelName, configName } = event.detail;
-      console.log("ModelSidebar: Received modelChanged event", { configId, modelName, configName }, "current:", activeConfigId);
       if (configId && configId !== activeConfigId) {
         const selectedConfig = configs.find(c => c.id === configId);
         if (selectedConfig) {
-          console.log("ModelSidebar: Switching to config", selectedConfig);
           setActiveConfigId(configId);
           loadConfigToForm(selectedConfig);
         } else {
@@ -176,7 +173,6 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
         }
       } else if (configId === activeConfigId && modelName && modelName !== model) {
         // Update model if it changed within the same config
-        console.log("ModelSidebar: Updating model for current config", modelName);
         setModel(modelName);
         localStorage.setItem(llmType === "openai" ? "openaiModel" : "ollamaModel", modelName);
         localStorage.setItem("modelName", modelName);
@@ -428,17 +424,14 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
   const handleSwitchConfig = (id: string) => {
     if (id === activeConfigId) return;
     
-    console.log("ModelSidebar: Switching config from", activeConfigId, "to", id);
     setActiveConfigId(id);
     const selectedConfig = configs.find(config => config.id === id);
     if (selectedConfig) {
-      console.log("ModelSidebar: Loading config to form", selectedConfig);
       loadConfigToForm(selectedConfig);
       localStorage.setItem("activeConfigId", id);
       setShowNewConfigForm(false);
       
       // Dispatch custom event to notify other components
-      console.log("ModelSidebar: Dispatching modelChanged event");
       window.dispatchEvent(new CustomEvent("modelChanged", { 
         detail: { 
           configId: id, 

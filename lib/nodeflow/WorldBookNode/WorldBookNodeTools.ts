@@ -75,30 +75,30 @@ export class WorldBookNodeTools extends NodeTool {
         return [];
       }
 
-      const nodePath = dialogueTree.current_node_id !== "root"
-        ? await LocalCharacterDialogueOperations.getDialoguePathToNode(characterId, dialogueTree.current_node_id)
+      const nodePath = dialogueTree.current_nodeId !== "root"
+        ? await LocalCharacterDialogueOperations.getDialoguePathToNode(characterId, dialogueTree.current_nodeId)
         : [];
       
       const messages: DialogueMessage[] = [];
       let messageId = 0;
       
       for (const node of nodePath) {
-        if (node.parent_node_id === "root" && node.assistant_response) {
+        if (node.parentNodeId === "root" && node.assistantResponse) {
           continue;
         }
         
-        if (node.user_input) {
+        if (node.userInput) {
           messages.push({
             role: "user",
-            content: node.user_input,
+            content: node.userInput,
             id: messageId++,
           });
         }
         
-        if (node.assistant_response) {
+        if (node.assistantResponse) {
           messages.push({
             role: "assistant", 
-            content: node.assistant_response,
+            content: node.assistantResponse,
             id: messageId++,
           });
         }

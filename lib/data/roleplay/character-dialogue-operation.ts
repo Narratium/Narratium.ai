@@ -19,7 +19,7 @@ export class LocalCharacterDialogueOperations {
     filteredDialogues.push(dialogueTree); 
     await writeData(CHARACTER_DIALOGUES_FILE, filteredDialogues);
 
-    await this.addNodeToDialogueTree(characterId, "", "", "", "", undefined, "root");
+    await this.addNodeToDialogueTree(characterId, "", "", "", "", "", undefined, "root");
     return dialogueTree;
   }
   
@@ -33,17 +33,15 @@ export class LocalCharacterDialogueOperations {
       dialogue.id,
       dialogue.character_id,
       dialogue.nodes?.map((node: any) => new DialogueNode(
-        node.node_id,
-        node.parent_node_id,
-        node.user_input,
-        node.assistant_response,
-        node.full_response,
-        node.parsed_content,
-        node.created_at,
+        node.nodeId,
+        node.parentNodeId,
+        node.userInput,
+        node.assistantResponse,
+        node.fullResponse,
+        node.thinkingContent,
+        node.parsedContent,
       )) || [],
-      dialogue.current_node_id,
-      dialogue.created_at,
-      dialogue.updated_at,
+      dialogue.current_nodeId,
     );
   }
   
@@ -53,6 +51,7 @@ export class LocalCharacterDialogueOperations {
     userInput: string,
     assistantResponse: string,
     fullResponse: string,
+    thinkingContent?: string,
     parsedContent?: ParsedResponse,
     nodeId?: string,
   ): Promise<string> {
@@ -69,6 +68,7 @@ export class LocalCharacterDialogueOperations {
       userInput,
       assistantResponse,
       fullResponse,
+      thinkingContent,
       parsedContent,
     );
     
@@ -77,8 +77,7 @@ export class LocalCharacterDialogueOperations {
     }
     
     dialogues[index].nodes.push(newNode);
-    dialogues[index].current_node_id = nodeId;
-    dialogues[index].updated_at = new Date().toISOString();
+    dialogues[index].current_nodeId = nodeId;
     
     await writeData(CHARACTER_DIALOGUES_FILE, dialogues);
     
@@ -95,7 +94,6 @@ export class LocalCharacterDialogueOperations {
     
     dialogues[index] = {
       ...updatedDialogue,
-      updated_at: new Date().toISOString(),
     };
     
     await writeData(CHARACTER_DIALOGUES_FILE, dialogues);
@@ -113,7 +111,7 @@ export class LocalCharacterDialogueOperations {
       return null;
     }
     
-    const nodeIndex = dialogueTree.nodes.findIndex(node => node.node_id === nodeId);
+    const nodeIndex = dialogueTree.nodes.findIndex(node => node.nodeId === nodeId);
     
     if (nodeIndex === -1) {
       return null;
@@ -123,8 +121,6 @@ export class LocalCharacterDialogueOperations {
       ...dialogueTree.nodes[nodeIndex],
       ...updates,
     };
-    
-    dialogueTree.updated_at = new Date().toISOString();
     
     await this.updateDialogueTree(dialogueId, dialogueTree);
     
@@ -138,14 +134,13 @@ export class LocalCharacterDialogueOperations {
       return null;
     }
     
-    const node = dialogueTree.nodes.find(n => n.node_id === nodeId);
+    const node = dialogueTree.nodes.find(n => n.nodeId === nodeId);
     
     if (!node) {
       return null;
     }
     
-    dialogueTree.current_node_id = nodeId;
-    dialogueTree.updated_at = new Date().toISOString();
+    dialogueTree.current_nodeId = nodeId;
     
     await this.updateDialogueTree(dialogueId, dialogueTree);
     
@@ -160,8 +155,7 @@ export class LocalCharacterDialogueOperations {
     }
     
     dialogueTree.nodes = [];
-    dialogueTree.current_node_id = "root";
-    dialogueTree.updated_at = new Date().toISOString();
+    dialogueTree.current_nodeId = "root";
     
     await this.updateDialogueTree(dialogueId, dialogueTree);
     
@@ -190,7 +184,7 @@ export class LocalCharacterDialogueOperations {
       return null;
     }
     
-    const nodeToDelete = dialogueTree.nodes.find(node => node.node_id === nodeId);
+    const nodeToDelete = dialogueTree.nodes.find(node => node.nodeId === nodeId);
     if (!nodeToDelete) {
       return null;
     }
@@ -198,18 +192,16 @@ export class LocalCharacterDialogueOperations {
     const nodesToDelete = new Set<string>();
     const collectNodesToDelete = (currentNodeId: string) => {
       nodesToDelete.add(currentNodeId);
-      const children = dialogueTree.nodes.filter(node => node.parent_node_id === currentNodeId);
-      children.forEach(child => collectNodesToDelete(child.node_id));
+      const children = dialogueTree.nodes.filter(node => node.parentNodeId === currentNodeId);
+      children.forEach(child => collectNodesToDelete(child.nodeId));
     };
     
     collectNodesToDelete(nodeId);
-    dialogueTree.nodes = dialogueTree.nodes.filter(node => !nodesToDelete.has(node.node_id));
-    if (nodesToDelete.has(dialogueTree.current_node_id)) {
-      dialogueTree.current_node_id = nodeToDelete.parent_node_id;
-      const newCurrentNode = dialogueTree.nodes.find(node => node.node_id === dialogueTree.current_node_id);
+    dialogueTree.nodes = dialogueTree.nodes.filter(node => !nodesToDelete.has(node.nodeId));
+    if (nodesToDelete.has(dialogueTree.current_nodeId)) {
+      dialogueTree.current_nodeId = nodeToDelete.parentNodeId;
+      const newCurrentNode = dialogueTree.nodes.find(node => node.nodeId === dialogueTree.current_nodeId);
     }
-    
-    dialogueTree.updated_at = new Date().toISOString();
     
     await this.updateDialogueTree(dialogueId, dialogueTree);
     
@@ -224,16 +216,16 @@ export class LocalCharacterDialogueOperations {
     }
     
     const path: DialogueNode[] = [];
-    let currentNode = dialogueTree.nodes.find(node => node.node_id === nodeId);
+    let currentNode = dialogueTree.nodes.find(node => node.nodeId === nodeId);
     
     while (currentNode) {
       path.unshift(currentNode);
       
-      if (currentNode.node_id === "root") {
+      if (currentNode.nodeId === "root") {
         break;
       }
       
-      currentNode = dialogueTree.nodes.find(node => node.node_id === currentNode?.parent_node_id);
+      currentNode = dialogueTree.nodes.find(node => node.nodeId === currentNode?.parentNodeId);
     }
     
     return path;
@@ -246,33 +238,7 @@ export class LocalCharacterDialogueOperations {
       return [];
     }
     
-    return dialogueTree.nodes.filter(node => node.parent_node_id === parentNodeId);
-  }
-  
-  static async getAllDialoguesForCharacter(characterId: string): Promise<DialogueTree[]> {
-    const dialogues = await readData(CHARACTER_DIALOGUES_FILE);
-    return dialogues
-      .filter((d: any) => d.character_id === characterId)
-      .map((d: any) => this.convertToDialogueTree(d));
-  }
-  
-  private static convertToDialogueTree(data: any): DialogueTree {
-    return new DialogueTree(
-      data.id,
-      data.character_id,
-      data.nodes?.map((node: any) => new DialogueNode(
-        node.node_id,
-        node.parent_node_id,
-        node.user_input,
-        node.assistant_response,
-        node.response_summary,
-        node.parsed_content,
-        node.created_at,
-      )) || [],
-      data.current_node_id,
-      data.created_at,
-      data.updated_at,
-    );
+    return dialogueTree.nodes.filter(node => node.parentNodeId === parentNodeId);
   }
 
   static async getSystemMessage(characterId: string): Promise<string> {
@@ -280,13 +246,13 @@ export class LocalCharacterDialogueOperations {
     if (!dialogueTree || !dialogueTree.nodes || dialogueTree.nodes.length === 0) {
       return "";
     }
-    const rootNode = dialogueTree.nodes.find(node => node.parent_node_id === "root");
-    return rootNode?.assistant_response || "";
+    const rootNode = dialogueTree.nodes.find(node => node.parentNodeId === "root");
+    return rootNode?.assistantResponse || "";
   }
   
   static async getLastNodeId(characterId: string): Promise<string> {
     const dialogueTree = await this.getDialogueTreeById(characterId);
-    return dialogueTree?.current_node_id || "root";
+    return dialogueTree?.current_nodeId || "root";
   }
 
   static async nodeExists(characterId: string, nodeId: string): Promise<boolean> {
@@ -297,6 +263,6 @@ export class LocalCharacterDialogueOperations {
       return false;
     }
 
-    return dialogueTree.nodes.some(node => node.node_id === nodeId);
+    return dialogueTree.nodes.some(node => node.nodeId === nodeId);
   }
 }

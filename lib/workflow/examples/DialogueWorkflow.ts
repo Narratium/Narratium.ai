@@ -118,7 +118,7 @@ export class DialogueWorkflow extends BaseWorkflow {
           next: ["output-1"],
           initParams: [],
           inputFields: ["llmResponse", "characterId"],
-          outputFields: ["replacedText", "screenContent", "fullResponse", "nextPrompts", "event"],
+          outputFields: ["thinkingContent", "screenContent", "fullResponse", "nextPrompts", "event"],
         },
         {
           id: "output-1",
@@ -126,8 +126,8 @@ export class DialogueWorkflow extends BaseWorkflow {
           category: NodeCategory.EXIT,
           next: [],
           initParams: [],
-          inputFields: ["replacedText", "screenContent", "fullResponse", "nextPrompts", "event", "presetId"],
-          outputFields: ["replacedText", "screenContent", "fullResponse", "nextPrompts", "event", "presetId"],
+          inputFields: ["thinkingContent", "screenContent", "fullResponse", "nextPrompts", "event"],
+          outputFields: ["thinkingContent", "screenContent", "fullResponse", "nextPrompts", "event"],
         },
       ],
     };

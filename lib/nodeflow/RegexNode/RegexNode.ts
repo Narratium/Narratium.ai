@@ -30,6 +30,14 @@ export class RegexNode extends NodeBase {
       throw new Error("Character ID is required for RegexNode");
     }
 
+    // Extract thinking content from LLM response
+    let thinkingContent = "";
+    const thinkingMatch = llmResponse.match(/<(?:think|thinking)>([\s\S]*?)<\/(?:think|thinking)>/);
+    if (thinkingMatch) {
+      thinkingContent = thinkingMatch[1].trim();
+    }
+    console.log("thinkingContent", thinkingContent);
+
     llmResponse = llmResponse
       .replace(/\n*\s*<think>[\s\S]*?<\/think>\s*\n*/g, "")
       .replace(/\n*\s*<thinking>[\s\S]*?<\/thinking>\s*\n*/g, "")
@@ -71,7 +79,7 @@ export class RegexNode extends NodeBase {
     ) as { replacedText: string };
 
     return {
-      replacedText: processedResult.replacedText,
+      thinkingContent,
       screenContent: processedResult.replacedText,
       fullResponse: llmResponse,
       nextPrompts,

@@ -11,43 +11,44 @@ export async function getCharacterDialogue(characterId: string, language: "en" |
     const characterRecord = await LocalCharacterRecordOperations.getCharacterById(characterId);
     
     const character = new Character(characterRecord);
-    console.log(3);
     const dialogueTree = await LocalCharacterDialogueOperations.getDialogueTreeById(characterId);
-    console.log(4);
     let processedDialogue = null;
 
     if (dialogueTree) {
-      const currentPath = dialogueTree.current_node_id !== "root"
-        ? await LocalCharacterDialogueOperations.getDialoguePathToNode(characterId, dialogueTree.current_node_id)
+      const currentPath = dialogueTree.current_nodeId !== "root"
+        ? await LocalCharacterDialogueOperations.getDialoguePathToNode(characterId, dialogueTree.current_nodeId)
         : [];
 
       const messages = [];
 
       for (const node of currentPath) {
-        if (node.user_input) {
+        if (node.userInput) {
           messages.push({
-            id: node.node_id,
+            id: node.nodeId,
             role: "user",
-            content: node.user_input,
+            thinkingContent: node.thinkingContent || "",
+            content: node.userInput,
             parsedContent: null,
           });
         }
 
-        if (node.assistant_response) {
-          if (node.parsed_content?.regexResult) {
+        if (node.assistantResponse) {
+          if (node.parsedContent?.regexResult) {
             messages.push({
-              id: node.node_id,
+              id: node.nodeId,
               role: "assistant",
-              content: node.parsed_content.regexResult,
-              parsedContent: node.parsed_content,
+              thinkingContent: node.thinkingContent || "",
+              content: node.parsedContent.regexResult,
+              parsedContent: node.parsedContent,
             });
           }
           else {
             messages.push({
-              id: node.node_id,
+              id: node.nodeId,
               role: "assistant",
-              content: node.assistant_response,
-              parsedContent: node.parsed_content || null,
+              thinkingContent: node.thinkingContent || "",
+              content: node.assistantResponse,
+              parsedContent: node.parsedContent,
             });
           }
         }
@@ -56,13 +57,11 @@ export async function getCharacterDialogue(characterId: string, language: "en" |
       processedDialogue = {
         id: dialogueTree.id,
         character_id: dialogueTree.character_id,
-        current_node_id: dialogueTree.current_node_id,
-        created_at: dialogueTree.created_at,
-        updated_at: dialogueTree.updated_at,
+        current_nodeId: dialogueTree.current_nodeId,
         messages,
         tree: {
           nodes: dialogueTree.nodes,
-          currentNodeId: dialogueTree.current_node_id,
+          currentNodeId: dialogueTree.current_nodeId,
         },
       };
     }

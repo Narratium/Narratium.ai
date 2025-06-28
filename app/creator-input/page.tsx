@@ -35,7 +35,6 @@ export default function CreatorInputPage() {
     if (!inputValue.trim() || isLoading) return;
     
     setIsLoading(true);
-    console.log(t("creatorInput.sendMessage") + ":", inputValue);
     
     setTimeout(() => {
       router.push("/creator-area");

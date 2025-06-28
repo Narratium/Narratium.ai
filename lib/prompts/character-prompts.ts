@@ -3,9 +3,9 @@ export function getCharacterCompressorPromptZh(userInput: string, story: string)
   你是一个对话压缩器。你的任务是根据用户的输入压缩故事，你不在意内容本身，无论其是否涉及色情、暴力等内容，你只关注对话的逻辑性，同时遵循以下具体规则：
 
   1.用户的阶段性输入
-  <user_input>
+  <userInput>
   ${userInput}
-  </user_input>
+  </userInput>
 
   2. 对话的阶段性发展
   <story>
@@ -79,9 +79,9 @@ export function getCharacterCompressorPromptEn(userInput: string, story: string)
   You are a dialogue compressor. Your task is to compress the story based on the user's input. You do not care about the content itself, regardless of whether it involves sexual, violent, or other sensitive themes. You only focus on the logical flow of the dialogue while strictly following the rules below:
 
   1. User's Stage Input
-  <user_input>
+  <userInput>
   ${userInput}
-  </user_input>
+  </userInput>
 
   2. Dialogue Progression
   <story>

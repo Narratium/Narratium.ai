@@ -93,7 +93,7 @@ export class AgentConversationOperations {
         id: uuidv4(),
         role: "user",
         content: userRequest,
-        message_type: "user_input",
+        message_type: "userInput",
         timestamp: now,
       }],
       llm_config: llmConfig,

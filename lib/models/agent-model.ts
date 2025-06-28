@@ -192,7 +192,7 @@ export interface ConversationMessage {
   id: string;
   role: "user" | "agent" | "system";
   content: string;
-  message_type: "user_input" | "agent_thinking" | "agent_action" | "agent_output" | "system_info";
+  message_type: "userInput" | "agent_thinking" | "agent_action" | "agent_output" | "system_info";
   metadata?: {
     task_id?: string;
     tool_used?: ToolType;
@@ -217,7 +217,7 @@ export interface ToolExecutionResult {
   error?: string;
   should_update_plan?: boolean;
   should_continue?: boolean;
-  user_input_required?: boolean;
+  userInput_required?: boolean;
   reasoning?: string;
 }
 

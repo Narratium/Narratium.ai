@@ -58,19 +58,20 @@ export async function handleCharacterChatRequest(payload: {
       }
 
       const {
-        replacedText,
+        thinkingContent,
         screenContent,
         fullResponse,
         nextPrompts,
         event,
       } = workflowResult.outputData;
 
-      await processPostResponseAsync({ characterId, message, fullResponse, screenContent, event, nextPrompts, nodeId })
+      await processPostResponseAsync({ characterId, message, thinkingContent, fullResponse, screenContent, event, nextPrompts, nodeId })
         .catch((e) => console.error("Post-processing error:", e));
 
       return new Response(JSON.stringify({
         type: "complete",
         success: true,
+        thinkingContent,
         content: screenContent,
         parsedContent: { nextPrompts },
         isRegexProcessed: true,
@@ -108,6 +109,7 @@ export async function handleCharacterChatRequest(payload: {
 async function processPostResponseAsync({
   characterId,
   message,
+  thinkingContent,
   fullResponse,
   screenContent,
   event,
@@ -116,6 +118,7 @@ async function processPostResponseAsync({
 }: {
   characterId: string;
   message: string;
+  thinkingContent: string;
   fullResponse: string;
   screenContent: string;
   event: string;
@@ -128,13 +131,14 @@ async function processPostResponseAsync({
       nextPrompts,
     };
     const dialogueTree = await LocalCharacterDialogueOperations.getDialogueTreeById(characterId);
-    const parentNodeId = dialogueTree ? dialogueTree.current_node_id : "root";
+    const parentNodeId = dialogueTree ? dialogueTree.current_nodeId : "root";
     await LocalCharacterDialogueOperations.addNodeToDialogueTree(
       characterId,
       parentNodeId,
       message,
       screenContent,
       fullResponse,
+      thinkingContent,
       parsed,
       nodeId,
     );
@@ -146,7 +150,7 @@ async function processPostResponseAsync({
           characterId,
           nodeId,
           {
-            parsed_content: {
+            parsedContent: {
               ...parsed,
               compressedContent: event,
             },

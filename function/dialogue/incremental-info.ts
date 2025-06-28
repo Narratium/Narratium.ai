@@ -52,7 +52,7 @@ export async function getIncrementalDialogue(params: IncrementalDialogueParams):
     const lastKnownNodeIdsSet = new Set(lastKnownNodeIds);
     
     // Find new nodes (not in lastKnownNodeIds)
-    const newNodes = allNodes.filter(node => !lastKnownNodeIdsSet.has(node.node_id));
+    const newNodes = allNodes.filter(node => !lastKnownNodeIdsSet.has(node.nodeId));
     
     // Find updated nodes (if lastUpdateTime is provided)
     let updatedNodes: any[] = [];
@@ -60,25 +60,15 @@ export async function getIncrementalDialogue(params: IncrementalDialogueParams):
       const lastUpdateTimeMs = new Date(lastUpdateTime).getTime();
       updatedNodes = allNodes.filter(node => {
         const nodeUpdateTime = (node as any).updated_at ? new Date((node as any).updated_at).getTime() : 0;
-        return lastKnownNodeIdsSet.has(node.node_id) && nodeUpdateTime > lastUpdateTimeMs;
+        return lastKnownNodeIdsSet.has(node.nodeId) && nodeUpdateTime > lastUpdateTimeMs;
       });
     }
 
     // Find deleted nodes (in lastKnownNodeIds but not in current nodes)
-    const currentNodeIds = new Set(allNodes.map(node => node.node_id));
+    const currentNodeIds = new Set(allNodes.map(node => node.nodeId));
     const deletedNodeIds = Array.from(lastKnownNodeIdsSet).filter(nodeId => !currentNodeIds.has(nodeId));
 
     const hasNewData = newNodes.length > 0 || updatedNodes.length > 0 || deletedNodeIds.length > 0;
-
-    console.log("Incremental dialogue check:", {
-      characterId,
-      totalNodes: allNodes.length,
-      lastKnownCount: lastKnownNodeIds.length,
-      newNodesCount: newNodes.length,
-      updatedNodesCount: updatedNodes.length,
-      deletedNodesCount: deletedNodeIds.length,
-      hasNewData,
-    });
 
     return {
       success: true,
@@ -86,7 +76,7 @@ export async function getIncrementalDialogue(params: IncrementalDialogueParams):
       newNodes,
       updatedNodes,
       deletedNodeIds,
-      currentNodeId: dialogueTree.current_node_id || "root",
+      currentNodeId: dialogueTree.current_nodeId || "root",
       totalNodeCount: allNodes.length,
       lastUpdateTime: new Date().toISOString(),
     };

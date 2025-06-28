@@ -10,8 +10,6 @@ export class Character {
   imagePath: string;
   
   constructor(characterRecord: CharacterRecord) {
-    console.log("Character constructor called with:", characterRecord);
-    
     if (!characterRecord) {
       throw new Error("Character record is required");
     }
@@ -19,14 +17,6 @@ export class Character {
     if (!characterRecord.data) {
       throw new Error("Character data is missing");
     }
-    
-    console.log("Character data structure:", {
-      id: characterRecord.id,
-      hasData: !!characterRecord.data,
-      hasNestedData: !!characterRecord.data.data,
-      topLevelName: characterRecord.data.name,
-      nestedName: characterRecord.data.data?.name,
-    });
     
     this.id = characterRecord.id;
     this.imagePath = characterRecord.imagePath;

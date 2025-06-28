@@ -22,6 +22,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import ChatHtmlBubble from "@/components/ChatHtmlBubble";
+import ThinkBubble from "@/components/ThinkBubble";
 import { CharacterAvatarBackground } from "@/components/CharacterAvatarBackground";
 import { trackButtonClick, trackFormSubmit } from "@/utils/google-analytics";
 
@@ -53,6 +54,7 @@ interface Character {
 interface Message {
   id: string;
   role: string;
+  thinkingContent?: string;
   content: string;
   timestamp?: string;
   isUser?: boolean;
@@ -450,7 +452,6 @@ export default function CharacterChatPanel({
   };
 
   const handleModelSwitch = (configId: string, modelName?: string) => {
-    console.log("CharacterChatPanel: Switching to config", configId, "with model", modelName);
     
     const selectedConfig = configs.find(c => c.id === configId);
     if (!selectedConfig) {
@@ -474,8 +475,6 @@ export default function CharacterChatPanel({
     setCurrentModel(selectedConfig.model);
     localStorage.setItem("activeConfigId", configId);
     
-    console.log("CharacterChatPanel: Found config", selectedConfig);
-    
     // Load configuration values to localStorage
     localStorage.setItem("llmType", selectedConfig.type);
     localStorage.setItem(selectedConfig.type === "openai" ? "openaiBaseUrl" : "ollamaBaseUrl", selectedConfig.baseUrl);
@@ -488,8 +487,6 @@ export default function CharacterChatPanel({
       localStorage.setItem("openaiApiKey", selectedConfig.apiKey);
       localStorage.setItem("apiKey", selectedConfig.apiKey);
     }
-    
-    console.log("CharacterChatPanel: Updated localStorage, dispatching event");
     
     // Dispatch custom event to notify other components
     window.dispatchEvent(new CustomEvent("modelChanged", { 
@@ -573,7 +570,6 @@ export default function CharacterChatPanel({
 
     // Listen for changes from ModelSidebar
     const handleModelChanged = (event: CustomEvent) => {
-      console.log("CharacterChatPanel: Received modelChanged event", event.detail);
       loadConfigs();
     };
 
@@ -947,6 +943,16 @@ export default function CharacterChatPanel({
                         </button>
                       </div>
                     </div>
+                    
+                    {/* Think Bubble - Show thinking content if available */}
+                    <ThinkBubble
+                      thinkingContent={message.thinkingContent || ""}
+                      characterName={character.name}
+                      fontClass={fontClass}
+                      serifFontClass={serifFontClass}
+                      t={t}
+                    />
+                    
                     <ChatHtmlBubble
                       key={message.id}
                       html={message.content}

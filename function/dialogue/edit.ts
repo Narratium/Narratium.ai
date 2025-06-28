@@ -34,7 +34,7 @@ export async function editDialaogueNodeContent(input: EditDialogueNodeRequest) {
       throw new Error("Dialogue tree not found");
     }
     
-    const node = dialogueTree.nodes.find((n) => n.node_id === nodeId);
+    const node = dialogueTree.nodes.find((n) => n.nodeId === nodeId);
     if (!node) {
       throw new Error("Node not found");
     }
@@ -57,7 +57,7 @@ export async function editDialaogueNodeContent(input: EditDialogueNodeRequest) {
     let summary = "";
     try {
       const compressedResult = await dialogue.compressStory(
-        node.user_input || "",
+        node.userInput || "",
         assistantResponse,
       );
       summary = parseEvent(compressedResult);
@@ -67,8 +67,8 @@ export async function editDialaogueNodeContent(input: EditDialogueNodeRequest) {
     }
 
     const nodeUpdates: Partial<DialogueNode> = {
-      assistant_response: assistantResponse,
-      parsed_content: {
+      assistantResponse: assistantResponse,
+      parsedContent: {
         compressedContent: summary,
       },
     };

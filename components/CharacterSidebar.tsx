@@ -117,8 +117,6 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
     try {
       const isDownloaded = await isPresetDownloaded(presetName);
       const exists = await doesPresetExist(presetName);
-      
-      console.log(`Preset "${presetName}" download status: `, { isDownloaded, exists });
 
       if (isDownloaded && exists) {
       } else {
@@ -136,26 +134,20 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
 
   useEffect(() => {
     const loadGithubPresets = async () => {
-      console.log("Loading github presets");
       const presets = getAvailableGithubPresets();
-      console.log("Github presets:", presets);
       setGithubPresets(presets);
       
       const downloaded: string[] = [];
       for (const preset of presets) {
-        console.log("Checking preset:", preset.name);
         const isDownloaded = await isPresetDownloaded(preset.name);
-        console.log("Preset:", preset.name, "isDownloaded:", isDownloaded);
         if (isDownloaded) {
           downloaded.push(preset.name);
         }
       }
-      console.log("Downloaded presets:", downloaded);
       setDownloadedPresets(downloaded);
 
       if (downloaded.length === 0 && presets.length > 0) {
         const firstPreset = presets[0];
-        console.log("Auto-downloading first preset:", firstPreset.name);
         await handleDownloadAndEnablePreset(firstPreset.name);
       }
     };

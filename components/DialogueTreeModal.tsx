@@ -130,7 +130,7 @@ function DialogueNodeComponent({ id, data }: NodeProps<DialogueNode["data"]>) {
   const [showRootTooltip, setShowRootTooltip] = useState(false);
   
   const steps = data.label
-    .split(/——>|-->|->/)
+    .split(/——>|-->|->|→/)
     .map(step => step.trim())
     .filter(step => step.length > 0);
 
@@ -574,7 +574,6 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
       const elkLayout = await calculateELKLayout(allNodes, allEdges);
 
       if (elkLayout?.children?.length) {
-        console.log("ELK layout successful for progressive layout");
         
         // Apply layout but preserve user-adjusted positions
         const layoutedNodes = allNodes.map(node => {
@@ -631,7 +630,6 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
       const elkLayout = await calculateELKLayout(nodes, edges);
       
       if (elkLayout?.children?.length) {
-        console.log("ELK layout successful for reset");
         const layoutedNodes = nodes.map(node => {
           const elkNode = elkLayout.children?.find(child => child.id === node.id);
           if (elkNode && typeof elkNode.x === "number" && typeof elkNode.y === "number") {
@@ -652,7 +650,6 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
         nodesRef.current = fallbackNodes;
       }
       
-      console.log("Layout reset successfully");
     } catch (error) {
       console.error("Error resetting layout:", error);
       // Fallback to grid layout on error
@@ -701,9 +698,9 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
       
       while (tempNodeId !== "root") {
         currentPathNodeIds.push(tempNodeId);
-        const node = allNodes.find((n: any) => n.node_id === tempNodeId);
+        const node = allNodes.find((n: any) => n.nodeId === tempNodeId);
         if (!node) break;
-        tempNodeId = node.parent_node_id;
+        tempNodeId = node.parentNodeId;
       }
 
       // Update only the isCurrentPath data property of existing nodes
@@ -763,7 +760,6 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
         }),
       );
 
-      console.log("Updated current path colors without affecting layout");
     } catch (error) {
       console.error("Error updating current path colors:", error);
     }
@@ -820,7 +816,7 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
       setEditContent(nodeToEdit.data.assistantResponse || "");
       setIsEditModalOpen(true);
     } else {
-      console.error("Node not found with ID:", nodeId, "Available nodes:", nodesRef.current.map(n => n.id));
+      console.error("Node not found with ID:", nodeId);
     }
   }, []);
   
@@ -940,7 +936,6 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
       });
 
       if (!incrementalResponse.success || !incrementalResponse.hasNewData) {
-        console.log("No new dialogue data available");
         setDataLoaded(true);
         return;
       }
@@ -1002,9 +997,9 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
       
       while (tempNodeId !== "root") {
         currentPathNodeIds.push(tempNodeId);
-        const node = allNodes.find((n: { node_id: any; }) => n.node_id === tempNodeId);
+        const node = allNodes.find((n: { nodeId: any; }) => n.nodeId === tempNodeId);
         if (!node) break;
-        tempNodeId = node.parent_node_id;
+        tempNodeId = node.parentNodeId;
       }
       
       const nodeWidth = 220;
@@ -1014,32 +1009,32 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
 
       const nodeMap: Record<string, any> = {};
       allNodes.forEach((node: any) => {
-        nodeMap[node.node_id] = node;
+        nodeMap[node.nodeId] = node;
       });
       
       // Create initial nodes with temporary positions
       const tempNodes: DialogueNode[] = [];
       
       allNodes.forEach((node: any) => {
-        const nodeId = node.node_id;
+        const nodeId = node.nodeId;
         const isCurrentPath = currentPathNodeIds.includes(nodeId);
         
         let label = "";
-        if (node.node_id === "root") {
+        if (node.nodeId === "root") {
           label = "root";
-        } else if (node.parent_node_id === "root") {
-          const rootChildren = allNodes.filter((n: any) => n.parent_node_id === "root");
-          const rootChildIndex = rootChildren.findIndex((n: any) => n.node_id === node.node_id);
+        } else if (node.parentNodeId === "root") {
+          const rootChildren = allNodes.filter((n: any) => n.parentNodeId === "root");
+          const rootChildIndex = rootChildren.findIndex((n: any) => n.nodeId === node.nodeId);
           const rootChildrenCount = rootChildren.length;
           
           label = `${t("dialogue.startingPoint")}${rootChildrenCount - rootChildIndex}${rootChildrenCount > 1 ? `/${rootChildrenCount}` : ""}`;
-        } else if (node.assistant_response) {
-          if (node.parsed_content?.compressedContent) {
-            label = node.parsed_content.compressedContent;
+        } else if (node.assistantResponse) {
+          if (node.parsedContent?.compressedContent) {
+            label = node.parsedContent.compressedContent;
           } else {
-            const shortResponse = node.assistant_response.length > 30 
-              ? node.assistant_response.substring(0, 30) + "..." 
-              : node.assistant_response;
+            const shortResponse = node.assistantResponse.length > 30 
+              ? node.assistantResponse.substring(0, 30) + "..." 
+              : node.assistantResponse;
             label = shortResponse;
           }
         } else {
@@ -1051,10 +1046,10 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
           type: "dialogueNode",
           data: {
             label: label,
-            fullContent: node.assistant_response || "",
-            userInput: (node.user_input.match(/<input_message>([\s\S]*?)<\/input_message>/)?.[1] || "").replace(/^[\s\n\r]*((<[^>]+>\s*)*)?(玩家输入指令|Player Input)[:：]\s*/i, ""),
-            assistantResponse: node.assistant_response || "",
-            parsedContent: node.parsed_content || {},
+            fullContent: node.assistantResponse || "",
+            userInput: (node.userInput.match(/<input_message>([\s\S]*?)<\/input_message>/)?.[1] || "").replace(/^[\s\n\r]*((<[^>]+>\s*)*)?(玩家输入指令|Player Input)[:：]\s*/i, ""),
+            assistantResponse: node.assistantResponse || "",
+            parsedContent: node.parsedContent || {},
             onEditClick: (id: string) => handleEditNode(id),
             onJumpClick: (id: string) => handleJumpToNode(id),
             isCurrentPath: isCurrentPath,
@@ -1072,9 +1067,9 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
       const tempEdges: Edge[] = [];
       
       allNodes.forEach((node: any) => {
-        if (node.node_id && node.node_id !== "root") {
-          const sourceId = node.parent_node_id;
-          const targetId = node.node_id;
+        if (node.nodeId && node.nodeId !== "root") {
+          const sourceId = node.parentNodeId;
+          const targetId = node.nodeId;
           
           if (nodeMap[sourceId] && nodeMap[targetId]) {
             const isCurrentPathEdge = currentPathNodeIds.includes(sourceId) && currentPathNodeIds.includes(targetId);
@@ -1107,7 +1102,7 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
               id: `edge-${sourceId}-${targetId}`,
               source: sourceId,
               target: targetId,
-              label: node.user_input.match(/<input_message>([\s\S]*?)<\/input_message>/)?.[1].replace(/^[\s\n\r]*((<[^>]+>\s*)*)?(玩家输入指令|Player Input)[:：]\s*/i, "") || "",
+              label: node.userInput.match(/<input_message>([\s\S]*?)<\/input_message>/)?.[1].replace(/^[\s\n\r]*((<[^>]+>\s*)*)?(玩家输入指令|Player Input)[:：]\s*/i, "") || "",
               labelBgPadding: [8, 4],
               labelBgBorderRadius: 4,
               labelBgStyle: { 
@@ -1136,13 +1131,6 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
       try {
         const currentNodeIds = new Set(tempNodes.map(n => n.id));
         const hasNewNodes = !Array.from(currentNodeIds).every(id => lastKnownNodeIds.has(id));
-        
-        console.log("Layout calculation:", {
-          totalNodes: tempNodes.length,
-          newNodes: tempNodes.filter(n => !lastKnownNodeIds.has(n.id)).length,
-          hasNewNodes,
-          hasExistingNodes: nodesRef.current.length > 0,
-        });
 
         let layoutedNodes;
         
@@ -1154,7 +1142,6 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
           const elkLayout = await calculateELKLayout(tempNodes, tempEdges);
           
           if (elkLayout?.children?.length) {
-            console.log("ELK layout successful for full layout");
             layoutedNodes = tempNodes.map(node => {
               const elkNode = elkLayout.children?.find(child => child.id === node.id);
               if (elkNode && typeof elkNode.x === "number" && typeof elkNode.y === "number") {
@@ -1214,14 +1201,6 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
       if (newNodes.length === 0 && updatedNodes.length === 0 && deletedNodeIds.length === 0) {
         return;
       }
-
-      console.log("Processing incremental nodes:", {
-        newNodes: newNodes.length,
-        updatedNodes: updatedNodes.length,
-        deletedNodes: deletedNodeIds.length,
-        currentNodeId,
-      });
-
       // Handle deleted nodes first
       if (deletedNodeIds.length > 0) {
         const deletedNodeIdsSet = new Set(deletedNodeIds);
@@ -1245,8 +1224,6 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
           deletedNodeIds.forEach((nodeId: string) => delete updated[nodeId]);
           return updated;
         });
-        
-        console.log("Removed deleted nodes:", deletedNodeIds);
       }
 
       // Get current path for highlighting
@@ -1256,9 +1233,9 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
       const allExistingNodes = [...newNodes, ...updatedNodes];
       while (tempNodeId !== "root") {
         currentPathNodeIds.push(tempNodeId);
-        const node = allExistingNodes.find((n: any) => n.node_id === tempNodeId);
+        const node = allExistingNodes.find((n: any) => n.nodeId === tempNodeId);
         if (!node) break;
-        tempNodeId = node.parent_node_id;
+        tempNodeId = node.parentNodeId;
       }
 
       // Create new React Flow nodes
@@ -1269,29 +1246,29 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
       const allNodes = [...newNodes, ...updatedNodes];
       const nodeMap: Record<string, any> = {};
       allNodes.forEach((node: any) => {
-        nodeMap[node.node_id] = node;
+        nodeMap[node.nodeId] = node;
       });
 
       allNodes.forEach((node: any) => {
-        const nodeId = node.node_id;
+        const nodeId = node.nodeId;
         const isCurrentPath = currentPathNodeIds.includes(nodeId);
         
         let label = "";
-        if (node.node_id === "root") {
+        if (node.nodeId === "root") {
           label = "root";
-        } else if (node.parent_node_id === "root") {
-          const rootChildren = allNodes.filter((n: any) => n.parent_node_id === "root");
-          const rootChildIndex = rootChildren.findIndex((n: any) => n.node_id === node.node_id);
+        } else if (node.parentNodeId === "root") {
+          const rootChildren = allNodes.filter((n: any) => n.parentNodeId === "root");
+          const rootChildIndex = rootChildren.findIndex((n: any) => n.nodeId === node.nodeId);
           const rootChildrenCount = rootChildren.length;
           
           label = `${t("dialogue.startingPoint")}${rootChildrenCount - rootChildIndex}${rootChildrenCount > 1 ? `/${rootChildrenCount}` : ""}`;
-        } else if (node.assistant_response) {
-          if (node.parsed_content?.compressedContent) {
-            label = node.parsed_content.compressedContent;
+        } else if (node.assistantResponse) {
+          if (node.parsedContent?.compressedContent) {
+            label = node.parsedContent.compressedContent;
           } else {
-            const shortResponse = node.assistant_response.length > 30 
-              ? node.assistant_response.substring(0, 30) + "..." 
-              : node.assistant_response;
+            const shortResponse = node.assistantResponse.length > 30 
+              ? node.assistantResponse.substring(0, 30) + "..." 
+              : node.assistantResponse;
             label = shortResponse;
           }
         } else {
@@ -1303,10 +1280,10 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
           type: "dialogueNode",
           data: {
             label: label,
-            fullContent: node.assistant_response || "",
-            userInput: (node.user_input.match(/<input_message>([\s\S]*?)<\/input_message>/)?.[1] || "").replace(/^[\s\n\r]*((<[^>]+>\s*)*)?(玩家输入指令|Player Input)[:：]\s*/i, ""),
-            assistantResponse: node.assistant_response || "",
-            parsedContent: node.parsed_content || {},
+            fullContent: node.assistantResponse || "",
+            userInput: (node.userInput.match(/<input_message>([\s\S]*?)<\/input_message>/)?.[1] || "").replace(/^[\s\n\r]*((<[^>]+>\s*)*)?(玩家输入指令|Player Input)[:：]\s*/i, ""),
+            assistantResponse: node.assistantResponse || "",
+            parsedContent: node.parsedContent || {},
             onEditClick: (id: string) => handleEditNode(id),
             onJumpClick: (id: string) => handleJumpToNode(id),
             isCurrentPath: isCurrentPath,
@@ -1320,9 +1297,9 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
         });
 
         // Create edges for new nodes
-        if (node.node_id && node.node_id !== "root") {
-          const sourceId = node.parent_node_id;
-          const targetId = node.node_id;
+        if (node.nodeId && node.nodeId !== "root") {
+          const sourceId = node.parentNodeId;
+          const targetId = node.nodeId;
           
           if (nodeMap[sourceId] || nodes.some(n => n.id === sourceId)) {
             const isCurrentPathEdge = currentPathNodeIds.includes(sourceId) && currentPathNodeIds.includes(targetId);
@@ -1355,7 +1332,7 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
               id: `edge-${sourceId}-${targetId}`,
               source: sourceId,
               target: targetId,
-              label: node.user_input.match(/<input_message>([\s\S]*?)<\/input_message>/)?.[1].replace(/^[\s\n\r]*((<[^>]+>\s*)*)?(玩家输入指令|Player Input)[:：]\s*/i, "") || "",
+              label: node.userInput.match(/<input_message>([\s\S]*?)<\/input_message>/)?.[1].replace(/^[\s\n\r]*((<[^>]+>\s*)*)?(玩家输入指令|Player Input)[:：]\s*/i, "") || "",
               labelBgPadding: [8, 4],
               labelBgBorderRadius: 4,
               labelBgStyle: { 
@@ -1394,7 +1371,7 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
       setEdges(prev => [...prev, ...newEdges]);
       
       // Update tracking state
-      const currentNodeIds = new Set(allNodes.map((n: any) => n.node_id));
+      const currentNodeIds = new Set(allNodes.map((n: any) => n.nodeId));
       // Add new nodes and remove deleted nodes from tracking
       const updatedKnownNodeIds = new Set([...lastKnownNodeIds, ...currentNodeIds]);
       deletedNodeIds.forEach((nodeId: string) => updatedKnownNodeIds.delete(nodeId));
@@ -1639,7 +1616,7 @@ export default function DialogueTreeModal({ isOpen, onClose, characterId, onDial
                 <h5 className={`text-amber-400 text-sm mb-2 ${serifFontClass}`}>{t("dialogue.memorySummary")}:</h5>
                 <div className="ml-2">
                   <ol className={`list-decimal list-inside ${fontClass} text-[#f4e8c1] text-sm`}>
-                    {selectedNode.data.label.split(/——>|-->|->/).map((step, index) => (
+                    {selectedNode.data.label.split(/——>|-->|->|→/).map((step, index) => (
                       <li key={index} className="mb-1">{step.trim()}</li>
                     ))}
                   </ol>

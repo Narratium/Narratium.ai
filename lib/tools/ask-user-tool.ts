@@ -36,7 +36,7 @@ export class AskUserTool extends BaseTool {
             currentTasks: context.plan_pool.current_tasks.length,
           },
         },
-        user_input_required: true,
+        userInput_required: true,
         should_continue: false,
       };
     } catch (error) {
@@ -50,7 +50,7 @@ export class AskUserTool extends BaseTool {
       return {
         success: true,
         result: { message: fallbackQuestions },
-        user_input_required: true,
+        userInput_required: true,
         should_continue: false,
       };
     }

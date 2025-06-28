@@ -92,6 +92,7 @@ export async function initCharacterDialogue(options: InitCharacterDialogueOption
           "",
           adaptedMessage,
           adaptedMessage,
+          "",
           {
             nextPrompts: [],
             regexResult: processedMessage,

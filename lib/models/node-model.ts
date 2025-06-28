@@ -1,55 +1,48 @@
 import { ParsedResponse } from "@/lib/models/parsed-response";
 
 export class DialogueNode {
-  node_id: string;
-  parent_node_id: string;
-  user_input: string;
-  assistant_response: string;
-  full_response: string;
-  parsed_content?: ParsedResponse;
-  created_at: string;
-  
+  nodeId: string;
+  parentNodeId: string;
+  userInput: string;
+  assistantResponse: string;
+  fullResponse: string;
+  thinkingContent?: string;
+  parsedContent?: ParsedResponse;
   constructor(
-    node_id: string,
-    parent_node_id: string,
-    user_input: string,
-    assistant_response: string,
-    full_response: string,
-    parsed_content?: ParsedResponse,
-    created_at: string = new Date().toISOString(),
+    nodeId: string,
+    parentNodeId: string,
+    userInput: string,
+    assistantResponse: string,
+    fullResponse: string,
+    thinkingContent?: string,
+    parsedContent?: ParsedResponse,
   ) {
-    this.node_id = node_id;
-    this.parent_node_id = parent_node_id;
-    this.user_input = user_input;
-    this.assistant_response = assistant_response;
-    this.full_response = full_response;
-    this.parsed_content = parsed_content;
-    this.created_at = created_at;
+    this.nodeId = nodeId;
+    this.parentNodeId = parentNodeId;
+    this.userInput = userInput;
+    this.assistantResponse = assistantResponse;
+    this.fullResponse = fullResponse;
+    this.thinkingContent = thinkingContent;
+    this.parsedContent = parsedContent;
   }
 }
 
 export class DialogueTree {
   id: string;
   character_id: string;
-  current_node_id: string;
+  current_nodeId: string;
   
   nodes: DialogueNode[];
-  created_at: string;
-  updated_at: string;
   
   constructor(
     id: string,
     character_id: string,
     nodes: DialogueNode[] = [],
-    current_node_id: string = "root",
-    created_at: string = new Date().toISOString(),
-    updated_at: string = new Date().toISOString(),
+    current_nodeId: string = "root",
   ) {
     this.id = id;
     this.character_id = character_id;
     this.nodes = nodes;
-    this.current_node_id = current_node_id;
-    this.created_at = created_at;
-    this.updated_at = updated_at;
+    this.current_nodeId = current_nodeId;
   }
 }

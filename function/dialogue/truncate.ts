@@ -25,32 +25,34 @@ export async function switchDialogueBranch({ characterId, nodeId }: SwitchDialog
     }
 
     const currentPath =
-      updatedDialogueTree.current_node_id !== "root"
+      updatedDialogueTree.current_nodeId !== "root"
         ? await LocalCharacterDialogueOperations.getDialoguePathToNode(
           characterId,
-          updatedDialogueTree.current_node_id,
+          updatedDialogueTree.current_nodeId,
         )
         : [];
 
     const messages = currentPath.flatMap((node) => {
       const msgs = [];
 
-      if (node.user_input) {
+      if (node.userInput) {
         msgs.push({
-          id: node.node_id,
+          id: node.nodeId,
           role: "user",
-          content: node.user_input,
+          thinkingContent: node.thinkingContent ?? "",
+          content: node.userInput,
           parsedContent: null,
         });
       }
 
-      if (node.assistant_response) {
+      if (node.assistantResponse) {
         msgs.push({
-          id: node.node_id,
+          id: node.nodeId,
           role: "assistant",
-          content: node.assistant_response,
-          parsedContent: node.parsed_content || null,
-          node_id: node.node_id,
+          thinkingContent: node.thinkingContent ?? "",
+          content: node.assistantResponse,
+          parsedContent: node.parsedContent || null, 
+          nodeId: node.nodeId,
         });
       }
 
@@ -60,13 +62,11 @@ export async function switchDialogueBranch({ characterId, nodeId }: SwitchDialog
     const processedDialogue = {
       id: updatedDialogueTree.id,
       character_id: updatedDialogueTree.character_id,
-      current_node_id: updatedDialogueTree.current_node_id,
-      created_at: updatedDialogueTree.created_at,
-      updated_at: updatedDialogueTree.updated_at,
+      current_nodeId: updatedDialogueTree.current_nodeId,
       messages,
       tree: {
         nodes: updatedDialogueTree.nodes,
-        currentNodeId: updatedDialogueTree.current_node_id,
+        currentNodeId: updatedDialogueTree.current_nodeId,
       },
     };
 

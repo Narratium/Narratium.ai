@@ -67,7 +67,7 @@ export class AgentEngine {
       await AgentConversationOperations.addMessage(this.conversationId, {
         role: "user",
         content: userInput,
-        message_type: "user_input",
+        message_type: "userInput",
       });
 
       // Add user input to thought buffer
@@ -141,7 +141,7 @@ export class AgentEngine {
       const task = readyTasks[0];
       const result = await this.executeTask(task);
 
-      if (result.user_input_required) {
+      if (result.userInput_required) {
         await AgentConversationOperations.updateStatus(this.conversationId, AgentStatus.WAITING_USER);
         return {
           success: true,
