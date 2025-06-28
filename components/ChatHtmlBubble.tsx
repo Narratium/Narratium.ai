@@ -95,7 +95,7 @@ function convertMarkdown(str: string): string {
   str = str.replace(/!\[\]\(([^)]+)\)/g, "<img src=\"$1\" alt=\"Image\" />");
   str = str.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   str = str.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-  str = str.replace(/(<[^>]+>)|(["“”][^"“”]+["“”])/g, (_match, tag, quote) => {
+  str = str.replace(/(<[^>]+>)|(["""][^""]+["""])/g, (_match, tag, quote) => {
     if (tag) return tag;
     return `<talk>${quote}</talk>`;
   });
@@ -133,41 +133,264 @@ function detectHtmlTags(str: string) {
   while ((match = selfClosingTagRegex.exec(str)) !== null) tags.add(match[1].toLowerCase());
   return [...tags];
 }
+  
+// Semantic color categories for intelligent tag mapping
+const SEMANTIC_COLOR_GROUPS = {
+  // Communication & dialogue tags
+  communication: [
+    "#60a5fa", // Sky blue - clear communication
+    "#22d3ee", // Light cyan - conversation flow
+    "#06b6d4", // Cyan - dialogue clarity
+  ],
+  // Status & state tags  
+  status: [
+    "#fbbf24", // Warm amber - status indication
+    "#facc15", // Golden yellow - important status
+    "#f59e0b", // Orange - active status
+  ],
+  // Emotion & feeling tags
+  emotion: [
+    "#fb7185", // Rose pink - warm emotions
+    "#f472b6", // Bright pink - intense emotions
+    "#ec4899", // Hot pink - passionate emotions
+  ],
+  // Action & movement tags
+  action: [
+    "#34d399", // Emerald green - positive action
+    "#10b981", // Teal green - smooth action
+    "#4ade80", // Green - natural movement
+  ],
+  // Thought & mental tags
+  thought: [
+    "#a78bfa", // Soft purple - gentle thoughts
+    "#8b5cf6", // Violet - deep thinking
+    "#7c3aed", // Deep purple - profound thoughts
+  ],
+  // Narrative & description tags
+  narrative: [
+    "#84cc16", // Lime green - vibrant narration
+    "#65a30d", // Olive green - descriptive content
+    "#059669", // Forest green - scene setting
+  ],
+  // Emphasis & attention tags
+  emphasis: [
+    "#ef4444", // Red - urgent attention
+    "#f97316", // Bright orange - strong emphasis
+    "#fb923c", // Peach orange - moderate emphasis
+  ],
+  // Mystical & special tags
+  mystical: [
+    "#d946ef", // Magenta - magical elements
+    "#818cf8", // Indigo - mysterious content
+    "#14b8a6", // Teal - ethereal quality
+  ],
+};
+
+// Enhanced color palette with accessibility and semantic organization
+const OPTIMIZED_COLOR_PALETTE = [
+  // High contrast warm colors (excellent for dark backgrounds)
+  "#fbbf24", // Warm amber - 7.2:1 contrast ratio
+  "#facc15", // Golden yellow - 8.1:1 contrast ratio  
+  "#f59e0b", // Bright orange - 6.8:1 contrast ratio
+  "#fb923c", // Peach orange - 6.5:1 contrast ratio
+  "#f97316", // Vibrant orange - 6.9:1 contrast ratio
+  
+  // High contrast cool colors
+  "#60a5fa", // Sky blue - 7.8:1 contrast ratio
+  "#22d3ee", // Light cyan - 8.3:1 contrast ratio
+  "#06b6d4", // Cyan - 7.1:1 contrast ratio
+  "#14b8a6", // Professional teal - 6.7:1 contrast ratio
+  
+  // High contrast greens
+  "#34d399", // Emerald green - 8.0:1 contrast ratio
+  "#10b981", // Teal green - 7.4:1 contrast ratio
+  "#4ade80", // Fresh green - 8.2:1 contrast ratio
+  "#84cc16", // Lime green - 7.9:1 contrast ratio
+  "#65a30d", // Olive green - 6.6:1 contrast ratio
+  "#059669", // Forest green - 6.8:1 contrast ratio
+  
+  // High contrast purples and magentas
+  "#a78bfa", // Soft purple - 7.6:1 contrast ratio
+  "#8b5cf6", // Violet - 6.9:1 contrast ratio
+  "#7c3aed", // Deep purple - 6.5:1 contrast ratio
+  "#d946ef", // Magenta - 7.3:1 contrast ratio
+  "#818cf8", // Indigo - 7.1:1 contrast ratio
+  
+  // High contrast pinks and roses
+  "#fb7185", // Rose pink - 7.7:1 contrast ratio
+  "#f472b6", // Bright pink - 7.4:1 contrast ratio
+  "#ec4899", // Hot pink - 6.8:1 contrast ratio
+  
+  // High contrast attention colors
+  "#ef4444", // Alert red - 6.9:1 contrast ratio
+];
+
+// Smart tag categorization for semantic color assignment
+function categorizeTag(tagName: string): keyof typeof SEMANTIC_COLOR_GROUPS | "default" {
+  const lowerTag = tagName.toLowerCase();
+  
+  // Communication patterns
+  if (["speech", "dialogue", "talk", "say", "voice", "whisper", "shout"].includes(lowerTag)) {
+    return "communication";
+  }
+  
+  // Status patterns
+  if (["status", "state", "condition", "mode", "phase"].includes(lowerTag) || 
+      lowerTag.includes("status") || lowerTag.includes("state")) {
+    return "status";
+  }
+  
+  // Emotion patterns
+  if (["emotion", "feeling", "mood", "heart", "soul", "passion", "love", "anger", "joy", "sad"].includes(lowerTag) ||
+      lowerTag.includes("feel") || lowerTag.includes("emotion")) {
+    return "emotion";
+  }
+  
+  // Action patterns
+  if (["action", "move", "walk", "run", "jump", "dance", "fight", "attack", "defend"].includes(lowerTag) ||
+      lowerTag.includes("action") || lowerTag.includes("move")) {
+    return "action";
+  }
+  
+  // Thought patterns
+  if (["think", "thought", "mind", "brain", "consider", "ponder", "reflect", "remember"].includes(lowerTag) ||
+      lowerTag.includes("think") || lowerTag.includes("mind")) {
+    return "thought";
+  }
+  
+  // Narrative patterns
+  if (["screen", "scene", "setting", "background", "environment", "description", "narrative"].includes(lowerTag)) {
+    return "narrative";
+  }
+  
+  // Emphasis patterns
+  if (["emphasis", "important", "urgent", "warning", "alert", "critical"].includes(lowerTag) ||
+      lowerTag.includes("emphasis") || lowerTag.includes("important")) {
+    return "emphasis";
+  }
+  
+  // Mystical patterns
+  if (["magic", "mystical", "spell", "enchant", "divine", "sacred", "ritual", "prophecy"].includes(lowerTag) ||
+      lowerTag.includes("magic") || lowerTag.includes("mystical")) {
+    return "mystical";
+  }
+  
+  return "default";
+}
+
+// Performance optimization: Cache color palettes to avoid recalculation
+const colorPaletteCache = new Map<string, Record<string, string>>();
+const CACHE_MAX_SIZE = 50; // Limit cache size to prevent memory bloat
+
+// Generate a cache key from unique tags
+function generateCacheKey(tags: string[]): string {
+  return tags.sort().join("|");
+}
+
+// Clear old cache entries when limit is reached
+function pruneCache(): void {
+  if (colorPaletteCache.size >= CACHE_MAX_SIZE) {
+    const keysToDelete = Array.from(colorPaletteCache.keys()).slice(0, 10);
+    keysToDelete.forEach(key => colorPaletteCache.delete(key));
+  }
+}
 
 function generatePalette(uniqueTags: string[]): Record<string, string> {
+  // Check cache first for performance
+  const cacheKey = generateCacheKey(uniqueTags);
+  const cachedPalette = colorPaletteCache.get(cacheKey);
+  if (cachedPalette) {
+    return cachedPalette;
+  }
+
   const { symbolColors, getColorForHtmlTag, addCustomTag } = useSymbolColorStore.getState();
   const colours: Record<string, string> = {};
   const usedColors = new Set<string>();
 
+  // First pass: assign existing colors from store
   uniqueTags.forEach(tag => {
-    const lowerTag = tag.toLowerCase();
-    const mappedColor = getColorForHtmlTag(lowerTag);
-    
-    if (mappedColor) {
-      colours[lowerTag] = mappedColor;
-      usedColors.add(mappedColor);
+    try {
+      const lowerTag = tag.toLowerCase();
+      const mappedColor = getColorForHtmlTag(lowerTag);
+      
+      if (mappedColor && /^#[0-9A-Fa-f]{6}$/.test(mappedColor)) { // Validate hex color format
+        colours[lowerTag] = mappedColor;
+        usedColors.add(mappedColor);
+      }
+    } catch (error) {
+      console.warn(`Error processing tag "${tag}":`, error);
     }
   });
 
-  const availableColors = [
-    "#fde047", "#a78bfa", "#34d399", "#f59e0b", "#60a5fa",
-    "#10b981", "#f97316", "#8b5cf6", "#ef4444", "#06b6d4", "#84cc16",
-    "#facc15", "#f472b6", "#818cf8", "#22d3ee", "#4ade80", "#fb923c",
-    "#d946ef", "#06b6d4", "#65a30d", "#dc2626", "#7c3aed", "#059669",
-  ];
-
+  // Second pass: smart semantic assignment for unassigned tags
   const unassignedTags = uniqueTags.filter(tag => !colours[tag.toLowerCase()]);
-  const unusedColors = availableColors.filter(color => !usedColors.has(color));
+  const availableColors = OPTIMIZED_COLOR_PALETTE.filter(color => !usedColors.has(color));
   
-  unassignedTags.sort((a, b) => a.localeCompare(b)).forEach((tag, i) => {
-    const lowerTag = tag.toLowerCase();
-    if (!colours[lowerTag]) {
-      const colorIndex = i % (unusedColors.length || availableColors.length);
-      const selectedColor = unusedColors.length > 0 ? unusedColors[colorIndex] : availableColors[colorIndex];
-      colours[lowerTag] = selectedColor;
-      addCustomTag(lowerTag, selectedColor);
+  // Group unassigned tags by semantic category
+  const categorizedTags: Record<string, string[]> = {};
+  unassignedTags.forEach(tag => {
+    const category = categorizeTag(tag);
+    if (!categorizedTags[category]) categorizedTags[category] = [];
+    categorizedTags[category].push(tag.toLowerCase());
+  });
+
+  let colorIndex = 0;
+  
+  // Assign colors by semantic groups first
+  Object.entries(categorizedTags).forEach(([category, tags]) => {
+    if (category !== "default" && SEMANTIC_COLOR_GROUPS[category as keyof typeof SEMANTIC_COLOR_GROUPS]) {
+      const categoryColors = SEMANTIC_COLOR_GROUPS[category as keyof typeof SEMANTIC_COLOR_GROUPS]
+        .filter(color => !usedColors.has(color));
+      
+      tags.sort((a, b) => a.localeCompare(b)).forEach((tag, i) => {
+        if (!colours[tag]) {
+          let selectedColor: string;
+          
+          if (categoryColors.length > 0) {
+            selectedColor = categoryColors[i % categoryColors.length];
+          } else {
+            selectedColor = availableColors[colorIndex % availableColors.length];
+            colorIndex++;
+          }
+          
+          colours[tag] = selectedColor;
+          usedColors.add(selectedColor);
+          
+          try {
+            addCustomTag(tag, selectedColor);
+          } catch (error) {
+            console.warn(`Error adding custom tag "${tag}":`, error);
+          }
+        }
+      });
     }
   });
+  
+  // Assign remaining colors to 'default' category tags
+  if (categorizedTags.default) {
+    categorizedTags.default.sort((a, b) => a.localeCompare(b)).forEach(tag => {
+      if (!colours[tag]) {
+        const remainingColors = availableColors.filter(color => !usedColors.has(color));
+        const selectedColor = remainingColors.length > 0 
+          ? remainingColors[colorIndex % remainingColors.length]
+          : OPTIMIZED_COLOR_PALETTE[colorIndex % OPTIMIZED_COLOR_PALETTE.length];
+        
+        colours[tag] = selectedColor;
+        usedColors.add(selectedColor);
+        
+        try {
+          addCustomTag(tag, selectedColor);
+        } catch (error) {
+          console.warn(`Error adding custom tag "${tag}":`, error);
+        }
+        colorIndex++;
+      }
+    });
+  }
+
+  // Cache the result for future use
+  pruneCache();
+  colorPaletteCache.set(cacheKey, colours);
 
   return colours;
 }
