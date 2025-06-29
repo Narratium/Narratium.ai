@@ -54,3 +54,4 @@ export default function ErrorToast({ message, isVisible, onClose }: ErrorToastPr
     </div>
   );
 } 
+ 

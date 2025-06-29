@@ -128,6 +128,46 @@ export default function CharacterCards() {
       setIsLoading(false);
     }
   };
+
+  /**
+   * Migrates data structure by deleting all character cards
+   * This is a one-time operation triggered by localStorage flag
+   * Used when data structure changes from parsed_content to parsedContent
+   */
+  const migrateDataStructure = async () => {
+    const migrationFlag = localStorage.getItem("characterCardsDataMigration");
+    
+    // Check if migration is needed and hasn't been performed yet
+    if (migrationFlag !== "completed") {
+      console.log("Starting data structure migration - deleting all character cards");
+      
+      try {
+        // Fetch all characters first
+        const username = localStorage.getItem("username") || "";
+        const language = localStorage.getItem("language") || "zh";
+        const characters = await getAllCharacters(language as "zh" | "en", username);
+        
+        if (characters && characters.length > 0) {
+          // Delete all character cards
+          for (const character of characters) {
+            try {
+              await deleteCharacter(character.id);
+              console.log(`Deleted character: ${character.name}`);
+            } catch (error) {
+              console.error(`Failed to delete character ${character.name}:`, error);
+            }
+          }
+        }
+        
+        // Mark migration as completed
+        localStorage.setItem("characterCardsDataMigration", "completed");
+        console.log("Data structure migration completed");
+        
+      } catch (error) {
+        console.error("Error during data structure migration:", error);
+      }
+    }
+  };
     
   const handleDeleteCharacter = async (characterId: string) => {
     setIsLoading(true);
@@ -220,7 +260,14 @@ export default function CharacterCards() {
   };
 
   useEffect(() => {
-    fetchCharacters();
+    const initializeData = async () => {
+      // First run data structure migration if needed
+      await migrateDataStructure();
+      // Then fetch characters
+      await fetchCharacters();
+    };
+    
+    initializeData();
   }, []);
 
   // Check if this is the first visit and auto-download preset characters
