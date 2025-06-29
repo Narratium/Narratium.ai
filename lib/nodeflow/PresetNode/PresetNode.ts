@@ -25,7 +25,7 @@ export class PresetNode extends NodeBase {
     const charName = input.charName;
     const number = input.number;
     const fastModel = input.fastModel;
-    const systemPresetType = input.systemPresetType || "mirror";
+    const systemPresetType = input.systemPresetType || "mirror_realm";
 
     if (!characterId) {
       throw new Error("Character ID is required for PresetNode");

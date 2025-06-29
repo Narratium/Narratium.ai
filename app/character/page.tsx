@@ -24,8 +24,8 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams, useParams } from "next/navigation";
 import { useLanguage } from "@/app/i18n";
 import CharacterSidebar from "@/components/CharacterSidebar";
 import { v4 as uuidv4 } from "uuid";
@@ -41,6 +41,7 @@ import PresetEditor from "@/components/PresetEditor";
 import CharacterChatHeader from "@/components/CharacterChatHeader";
 import UserTour from "@/components/UserTour";
 import { useTour } from "@/hooks/useTour";
+import ErrorToast from "@/components/ErrorToast";
 
 /**
  * Interface definitions for the component's data structures
@@ -100,6 +101,26 @@ export default function CharacterPage() {
 
   // Add loading phase tracking for better user feedback
   const [loadingPhase, setLoadingPhase] = useState<string>("");
+  
+  // Add error toast state
+  const [errorToast, setErrorToast] = useState({
+    isVisible: false,
+    message: "",
+  });
+
+  const showErrorToast = useCallback((message: string) => {
+    setErrorToast({
+      isVisible: true,
+      message,
+    });
+  }, []);
+
+  const hideErrorToast = useCallback(() => {
+    setErrorToast({
+      isVisible: false,
+      message: "",
+    });
+  }, []);
 
   const switchToView = (targetView: "chat" | "worldbook" | "regex" | "preset") => {
     setActiveView(targetView);
@@ -429,7 +450,8 @@ export default function CharacterPage() {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to send message: ${response.status}`);
+        showErrorToast(t("characterChat.checkNetworkOrAPI"));
+        return;
       }
 
       const result = await response.json();
@@ -447,11 +469,11 @@ export default function CharacterPage() {
           setSuggestedInputs(result.parsedContent.nextPrompts);
         }
       } else {
-        throw new Error(result.message || "Failed to get response");
+        showErrorToast(result.message || t("characterChat.checkNetworkOrAPI"));
       }
     } catch (err) {
       console.error("Error sending message:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
+      showErrorToast(t("characterChat.checkNetworkOrAPI"));
     } finally {
       setIsSending(false);
     }
@@ -660,6 +682,11 @@ export default function CharacterPage() {
           skipTour();
           localStorage.setItem("narratium_character_tour_completed", "true");
         }}
+      />
+      <ErrorToast 
+        message={errorToast.message} 
+        isVisible={errorToast.isVisible} 
+        onClose={hideErrorToast} 
       />
     </div>
   );

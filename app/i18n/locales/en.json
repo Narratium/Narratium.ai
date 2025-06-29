@@ -228,7 +228,9 @@
     "startSessionFirst": "Please start a game session first to view memories",
     "loadingMemories": "Loading memories...",
     "jumpToNode": "Jump to this node",
-    "expandMemory": "Expand memory content"
+    "expandMemory": "Expand memory content",
+    "requestFailed": "Request Failed",
+    "checkNetworkOrAPI": "Please check your network connection or API configuration"
   },
   "characterCardsPage": {
     "title": "Character Cards",
@@ -365,7 +367,9 @@
     "defaultModel": "Default",
     "thinking": "'s thinking",
     "characters": "characters",
-    "loadingDialogue": "Loading dialogue..."
+    "loadingDialogue": "Loading dialogue...",
+    "requestFailed": "Request Failed",
+    "checkNetworkOrAPI": "Please check your network connection or API configuration"
   },
   "preset": {
     "title": "Preset Manager",

@@ -218,13 +218,13 @@ function markPresetAsDownloaded(presetName: string): void {
   }
 }
 
-export function getCurrentSystemPresetType(): "mirror" | "novel" {
+export function getCurrentSystemPresetType(): "mirror_realm" | "novel_king" {
   try {
     const presetType = localStorage.getItem("system_preset_type");
-    return presetType === "novel" ? "novel" : "mirror";
+    return presetType === "novel_king" ? "novel_king" : "mirror_realm";
   } catch (error) {
     console.error("Error getting system preset type:", error);
-    return "mirror";
+    return "mirror_realm";
   }
 }
 

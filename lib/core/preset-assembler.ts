@@ -1,13 +1,6 @@
 import { PresetPrompt } from "@/lib/models/preset-model";
 import { adaptText } from "@/lib/adapter/tagReplacer";
-import { 
-  MULTI_MODE_PROMPT, 
-  MULTI_MODE_CHAIN_OF_THOUGHT, 
-  OUTPUT_STRUCTURE_SOFT_GUIDE,
-  NOVEL_KING_PROMPT,
-  NOVEL_KING_CHAIN_OF_THOUGHT,
-  NOVEL_KING_OUTPUT_STRUCTURE,
-} from "@/lib/prompts/preset-prompts";
+import { PromptLibrary } from "@/lib/prompts/preset-prompts";
 
 export class PresetAssembler {
   static assemblePrompts(
@@ -15,7 +8,7 @@ export class PresetAssembler {
     language: "zh" | "en" = "zh",
     fastModel: boolean,
     contextData: { username?: string; charName?: string; number?: number } = {},
-    systemPresetType: "mirror" | "novel" = "mirror",
+    systemPresetType: "mirror_realm" | "novel_king" = "mirror_realm",
   ): { systemMessage: string; userMessage: string } {
     if (prompts.length === 0 || fastModel) {
       console.group("PresetAssembler", prompts.length, fastModel);
@@ -87,12 +80,8 @@ export class PresetAssembler {
       
       finalSystemMessageParts.push(`<${id}>`);
 
-      if (id === "main") {
-        if (systemPresetType === "novel") {
-          finalSystemMessageParts.push(NOVEL_KING_PROMPT);
-        } else {
-          finalSystemMessageParts.push(MULTI_MODE_PROMPT);
-        }
+      if (sectionContent) {
+        finalSystemMessageParts.push(sectionContent);
       } else if (id === "worldInfoBefore" || id === "worldInfoAfter") {
         finalSystemMessageParts.push(`{{${id}}}`);
       }
@@ -107,21 +96,16 @@ export class PresetAssembler {
       
       finalUserMessageParts.push(`<${id}>`);
 
-      if (id === "enhanceDefinitions") {
-        if (systemPresetType === "novel") {
-          finalUserMessageParts.push(NOVEL_KING_CHAIN_OF_THOUGHT);
-          finalUserMessageParts.push("\n\n");
-          finalUserMessageParts.push(NOVEL_KING_OUTPUT_STRUCTURE);
-        } else {
-          finalUserMessageParts.push(MULTI_MODE_CHAIN_OF_THOUGHT);
-          finalUserMessageParts.push("\n\n");
-          finalUserMessageParts.push(OUTPUT_STRUCTURE_SOFT_GUIDE);
-        }
-      } else if (id === "chatHistory" || id === "userInput") {
-        finalUserMessageParts.push(`{{${id}}}`);
+      if (sectionContent) {
+        finalUserMessageParts.push(sectionContent);
         if (id === "userInput") {
           hasUserInputSection = true;
         }
+      } else if (id === "chatHistory") {
+        finalUserMessageParts.push(`{{${id}}}`);
+      } else if (id === "userInput") {
+        finalUserMessageParts.push(`{{${id}}}`);
+        hasUserInputSection = true;
       }
       finalUserMessageParts.push(`</${id}>`);
     }
@@ -138,15 +122,12 @@ export class PresetAssembler {
     finalUserMessageParts.push("{{memory}}");
     finalUserMessageParts.push("</memory>");
     
-    finalUserMessageParts.push(OUTPUT_STRUCTURE_SOFT_GUIDE);
+    finalUserMessageParts.push(PromptLibrary.get("mirror_realm", language, "structure"));
     finalUserMessageParts.push("");
     finalUserMessageParts.push("<outputFormat>");
     if (language === "zh") {
       finalUserMessageParts.push("【输出格式要求】");
-      finalUserMessageParts.push(`请严格按照以下格式输出回复，输出${contextData.number}个字符的回复内容`);
-      finalUserMessageParts.push("");
-      finalUserMessageParts.push("【输出语言要求】");
-      finalUserMessageParts.push("使用中文输出，文本内容、状态栏内容都使用中文输出,如果先前使用英文输出，也依然使用中文输出。");
+      finalUserMessageParts.push(`请严格按照以下格式输出回复，输出${contextData.number}个字符的回复内容，并使用中文输出。`);
       finalUserMessageParts.push("");
       finalUserMessageParts.push("<output>");
       finalUserMessageParts.push("在这里输出你的主要回应内容，包括角色的对话、行动、心理描述等。");
@@ -166,9 +147,6 @@ export class PresetAssembler {
     } else {
       finalUserMessageParts.push("【Output Format Requirements】");
       finalUserMessageParts.push(`Please strictly follow the format below for your response, and output a response of ${contextData.number} characters, and output in English.`);
-      finalUserMessageParts.push("");
-      finalUserMessageParts.push("【Output Language Requirements】");
-      finalUserMessageParts.push("Output in English, text content, status bar content, and previous English output should still be output in English.");
       finalUserMessageParts.push("");
       finalUserMessageParts.push("<output>");
       finalUserMessageParts.push("Output your main response content here, including character dialogue, actions, psychological descriptions, etc.");
@@ -194,7 +172,7 @@ export class PresetAssembler {
     };
   }
 
-  private static _getDefaultFramework(language: "zh" | "en" = "zh", contextData: { username?: string; charName?: string; number?: number }, systemPresetType: "mirror" | "novel" = "mirror"): { systemMessage: string; userMessage: string } {
+  private static _getDefaultFramework(language: "zh" | "en" = "zh", contextData: { username?: string; charName?: string; number?: number }, systemPresetType: "mirror_realm" | "novel_king" = "mirror_realm"): { systemMessage: string; userMessage: string } {
     const orderedSystemIdentifiers = [
       "main",
       "worldInfoBefore",
@@ -217,11 +195,7 @@ export class PresetAssembler {
       finalSystemMessageParts.push(`<${id}>`);
 
       if (id === "main") {
-        if (systemPresetType === "novel") {
-          finalSystemMessageParts.push(NOVEL_KING_PROMPT);
-        } else {
-          finalSystemMessageParts.push(MULTI_MODE_PROMPT);
-        }
+        finalSystemMessageParts.push(PromptLibrary.get(systemPresetType, language, "prompt"));
       } else if (id === "worldInfoBefore" || id === "worldInfoAfter") {
         finalSystemMessageParts.push(`{{${id}}}`);
       }
@@ -236,15 +210,9 @@ export class PresetAssembler {
       finalUserMessageParts.push(`<${id}>`);
       
       if (id === "enhanceDefinitions") {
-        if (systemPresetType === "novel") {
-          finalUserMessageParts.push(NOVEL_KING_CHAIN_OF_THOUGHT);
-          finalUserMessageParts.push("\n\n");
-          finalUserMessageParts.push(NOVEL_KING_OUTPUT_STRUCTURE);
-        } else {
-          finalUserMessageParts.push(MULTI_MODE_CHAIN_OF_THOUGHT);
-          finalUserMessageParts.push("\n\n");
-          finalUserMessageParts.push(OUTPUT_STRUCTURE_SOFT_GUIDE);
-        }
+        finalUserMessageParts.push(PromptLibrary.get(systemPresetType, language, "cot"));
+        finalUserMessageParts.push("\n\n");
+        finalUserMessageParts.push(PromptLibrary.get(systemPresetType, language, "structure"));
       } else if (id === "chatHistory" || id === "userInput") {
         finalUserMessageParts.push(`{{${id}}}`);
         if (id === "userInput") {

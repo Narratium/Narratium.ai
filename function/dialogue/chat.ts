@@ -50,7 +50,7 @@ export async function handleCharacterChatRequest(payload: {
         temperature: 0.7,
         streaming: false,
         number,
-        fastModel,
+        fastModel,  
         systemPresetType: getCurrentSystemPresetType(),
       };
       const workflowResult = await workflow.execute(workflowParams);

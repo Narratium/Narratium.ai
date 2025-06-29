@@ -365,7 +365,9 @@
     "defaultModel": "默认",
     "thinking": "的思考",
     "characters": "字符",
-    "loadingDialogue": "加载对话中..."
+    "loadingDialogue": "加载对话中...",
+    "requestFailed": "请求失败",
+    "checkNetworkOrAPI": "请检查网络连接或API配置"
   },
   "preset": {
     "title": "预设编辑器",
