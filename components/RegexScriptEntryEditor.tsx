@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/app/i18n";
 import { RegexScript } from "@/lib/models/regex-script-model";
 import { toast } from "react-hot-toast";
@@ -23,6 +23,7 @@ export default function RegexScriptEntryEditor({
   onScriptChange,
 }: RegexScriptEntryEditorProps) {
   const { t, fontClass, serifFontClass } = useLanguage();
+  const modalRef = useRef<HTMLDivElement>(null);
   const [localScript, setLocalScript] = useState<Partial<RegexScript>>({
     scriptName: "",
     findRegex: "",
@@ -46,6 +47,21 @@ export default function RegexScriptEntryEditor({
       });
     }
   }, [editingScript]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isOpen, onClose]);
 
   const updateScript = (updates: Partial<RegexScript>) => {
     const newScript = { ...localScript, ...updates };
@@ -71,7 +87,10 @@ export default function RegexScriptEntryEditor({
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-[#1a1816] via-[#252220] to-[#1a1816] rounded-xl p-5 w-full max-w-2xl border border-[#534741]/60 shadow-2xl shadow-black/30 relative overflow-hidden">
+      <div 
+        ref={modalRef}
+        className="bg-gradient-to-br from-[#1a1816] via-[#252220] to-[#1a1816] rounded-xl p-5 w-full max-w-2xl border border-[#534741]/60 shadow-2xl shadow-black/30 relative overflow-hidden"
+      >
         <div className="absolute inset-0 bg-gradient-to-r from-amber-500/3 via-transparent to-amber-500/3 opacity-50"></div>
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
         

@@ -1,7 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/app/i18n";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface EditingEntry {
   entry_id: string;
@@ -38,6 +38,32 @@ export default function WorldBookEntryEditor({
 }: WorldBookEntryEditorProps) {
   const { t, fontClass, serifFontClass } = useLanguage();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const fullscreenModalRef = useRef<HTMLDivElement>(null);
+
+  // Add click outside handler effect
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isFullscreen) {
+        // Handle fullscreen modal click outside
+        if (fullscreenModalRef.current && !fullscreenModalRef.current.contains(event.target as Node)) {
+          setIsFullscreen(false);
+        }
+      } else {
+        // Handle main modal click outside
+        if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+          onClose();
+        }
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isOpen, isFullscreen, onClose]);
 
   if (!isOpen || !editingEntry) return null;
 
@@ -74,7 +100,10 @@ export default function WorldBookEntryEditor({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div className="absolute inset-0 backdrop-blur-sm"></div>
-      <div className="bg-[#1e1c1b] bg-opacity-75 border border-[#534741] rounded-xl w-full max-w-3xl max-h-[85vh] overflow-hidden shadow-2xl shadow-black/50 relative z-10 backdrop-filter backdrop-blur-sm">
+      <div 
+        ref={modalRef}
+        className="bg-[#1e1c1b] bg-opacity-75 border border-[#534741] rounded-xl w-full max-w-3xl max-h-[85vh] overflow-hidden shadow-2xl shadow-black/50 relative z-10 backdrop-filter backdrop-blur-sm"
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-orange-500/5 pointer-events-none"></div>
         
         <div className="relative border-b border-[#534741]/60">
@@ -335,8 +364,11 @@ export default function WorldBookEntryEditor({
 
       {isFullscreen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 animate-in fade-in duration-300">
-          <div className="absolute inset-0 backdrop-blur-md" onClick={() => setIsFullscreen(false)}></div>
-          <div className="relative w-full max-w-5xl h-[85vh] bg-[#1e1c1b] bg-opacity-95 border border-[#534741] rounded-xl overflow-hidden shadow-2xl shadow-black/50 backdrop-filter backdrop-blur-sm">
+          <div className="absolute inset-0 backdrop-blur-md"></div>
+          <div 
+            ref={fullscreenModalRef}
+            className="relative w-full max-w-5xl h-[85vh] bg-[#1e1c1b] bg-opacity-95 border border-[#534741] rounded-xl overflow-hidden shadow-2xl shadow-black/50 backdrop-filter backdrop-blur-sm"
+          >
             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-orange-500/5 pointer-events-none"></div>
             <div className="relative border-b border-[#534741]/60">
               <div className="p-4 bg-[#252220]/90">
