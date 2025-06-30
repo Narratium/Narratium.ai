@@ -138,91 +138,57 @@ function detectHtmlTags(str: string) {
 const SEMANTIC_COLOR_GROUPS = {
   // Communication & dialogue tags
   communication: [
-    "#60a5fa", // Sky blue - clear communication
-    "#22d3ee", // Light cyan - conversation flow
-    "#06b6d4", // Cyan - dialogue clarity
+    "#e5d7b5",
   ],
   // Status & state tags  
   status: [
-    "#fbbf24", // Warm amber - status indication
-    "#facc15", // Golden yellow - important status
-    "#f59e0b", // Orange - active status
+    "#d4c4a8", // Muted gold - similar brightness to #f4e8c1
   ],
   // Emotion & feeling tags
   emotion: [
-    "#fb7185", // Rose pink - warm emotions
-    "#f472b6", // Bright pink - intense emotions
-    "#ec4899", // Hot pink - passionate emotions
+    "#e8c8b0", // Soft peach - similar brightness to #f4e8c1
   ],
   // Action & movement tags
   action: [
-    "#34d399", // Emerald green - positive action
-    "#10b981", // Teal green - smooth action
-    "#4ade80", // Green - natural movement
+    "#c8d4b0", // Muted sage - similar brightness to #f4e8c1
   ],
   // Thought & mental tags
   thought: [
-    "#a78bfa", // Soft purple - gentle thoughts
-    "#8b5cf6", // Violet - deep thinking
-    "#7c3aed", // Deep purple - profound thoughts
+    "#d0c8e0", // Soft lavender - similar brightness to #f4e8c1
   ],
   // Narrative & description tags
   narrative: [
-    "#84cc16", // Lime green - vibrant narration
-    "#65a30d", // Olive green - descriptive content
-    "#059669", // Forest green - scene setting
+    "#f4e8c1", // Default narrative color - same as base text
   ],
   // Emphasis & attention tags
   emphasis: [
-    "#ef4444", // Red - urgent attention
-    "#f97316", // Bright orange - strong emphasis
-    "#fb923c", // Peach orange - moderate emphasis
+    "#e0b8a8", // Muted coral - similar brightness to #f4e8c1
   ],
   // Mystical & special tags
   mystical: [
-    "#d946ef", // Magenta - magical elements
-    "#818cf8", // Indigo - mysterious content
-    "#14b8a6", // Teal - ethereal quality
+    "#d8c0e8", // Soft violet - similar brightness to #f4e8c1
   ],
 };
 
-// Enhanced color palette with accessibility and semantic organization
+// Simplified color palette with similar brightness to #f4e8c1
 const OPTIMIZED_COLOR_PALETTE = [
-  // High contrast warm colors (excellent for dark backgrounds)
-  "#fbbf24", // Warm amber - 7.2:1 contrast ratio
-  "#facc15", // Golden yellow - 8.1:1 contrast ratio  
-  "#f59e0b", // Bright orange - 6.8:1 contrast ratio
-  "#fb923c", // Peach orange - 6.5:1 contrast ratio
-  "#f97316", // Vibrant orange - 6.9:1 contrast ratio
+  // Warm colors with similar brightness to #f4e8c1
+  "#e5d7b5", // Warm beige
+  "#d4c4a8", // Muted gold
+  "#e8c8b0", // Soft peach
+  "#e0b8a8", // Muted coral
   
-  // High contrast cool colors
-  "#60a5fa", // Sky blue - 7.8:1 contrast ratio
-  "#22d3ee", // Light cyan - 8.3:1 contrast ratio
-  "#06b6d4", // Cyan - 7.1:1 contrast ratio
-  "#14b8a6", // Professional teal - 6.7:1 contrast ratio
+  // Cool colors with similar brightness to #f4e8c1
+  "#c8d4b0", // Muted sage
+  "#d0c8e0", // Soft lavender
+  "#d8c0e8", // Soft violet
+  "#c0d8e0", // Soft blue-gray
   
-  // High contrast greens
-  "#34d399", // Emerald green - 8.0:1 contrast ratio
-  "#10b981", // Teal green - 7.4:1 contrast ratio
-  "#4ade80", // Fresh green - 8.2:1 contrast ratio
-  "#84cc16", // Lime green - 7.9:1 contrast ratio
-  "#65a30d", // Olive green - 6.6:1 contrast ratio
-  "#059669", // Forest green - 6.8:1 contrast ratio
-  
-  // High contrast purples and magentas
-  "#a78bfa", // Soft purple - 7.6:1 contrast ratio
-  "#8b5cf6", // Violet - 6.9:1 contrast ratio
-  "#7c3aed", // Deep purple - 6.5:1 contrast ratio
-  "#d946ef", // Magenta - 7.3:1 contrast ratio
-  "#818cf8", // Indigo - 7.1:1 contrast ratio
-  
-  // High contrast pinks and roses
-  "#fb7185", // Rose pink - 7.7:1 contrast ratio
-  "#f472b6", // Bright pink - 7.4:1 contrast ratio
-  "#ec4899", // Hot pink - 6.8:1 contrast ratio
-  
-  // High contrast attention colors
-  "#ef4444", // Alert red - 6.9:1 contrast ratio
+  // Neutral colors with similar brightness to #f4e8c1
+  "#d8d0c0", // Warm gray
+  "#e0d8c8", // Light beige
+  "#d0c8c0", // Muted taupe
+  "#e8e0d0", // Cream
 ];
 
 // Smart tag categorization for semantic color assignment
@@ -259,7 +225,7 @@ function categorizeTag(tagName: string): keyof typeof SEMANTIC_COLOR_GROUPS | "d
   }
   
   // Narrative patterns
-  if (["screen", "scene", "setting", "background", "environment", "description", "narrative"].includes(lowerTag)) {
+  if (["screen", "scene", "setting", "background", "environment", "description", "narrative","content"].includes(lowerTag)) {
     return "narrative";
   }
   
@@ -1010,6 +976,9 @@ window.addEventListener('message', function(e) {
 
   // Cleanup virtual queue on unmount
   useEffect(() => {
+    // Clear color cache to ensure new color configuration takes effect
+    colorPaletteCache.clear();
+    
     return () => {
       if (pendingUpdateRef.current) {
         clearTimeout(pendingUpdateRef.current);

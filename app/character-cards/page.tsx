@@ -128,7 +128,7 @@ export default function CharacterCards() {
       setIsLoading(false);
     }
   };
-
+    
   /**
    * Migrates data structure by deleting all character cards
    * This is a one-time operation triggered by localStorage flag
