@@ -44,11 +44,15 @@ export class Character {
           comment: entry.comment || "",
           content: entry.content || "",
           enabled: entry.enabled || true,
-          position: (entry.extensions.position || 0) as 0 | 1 | 2 | 3 | 4,
+          position: (entry.extensions && typeof entry.extensions.position !== "undefined"
+            ? entry.extensions.position
+            : (typeof entry.position !== "undefined" ? entry.position : 0)) as 0 | 1 | 2 | 3 | 4,
           constant: entry.constant || false,
           keys: entry.keys || [],
-          insertion_order: entry.insertion_order || 0,
-          depth: entry.extensions.depth || 0,
+          insertion_order: typeof entry.insertion_order !== "undefined"
+            ? entry.insertion_order
+            : (typeof entry.order !== "undefined" ? entry.order : 0),
+          depth: (entry.extensions && typeof entry.extensions.depth !== "undefined") ? entry.extensions.depth : 0,
         }));
       } else {
         return characterBook.entries;

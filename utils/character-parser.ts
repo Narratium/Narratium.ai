@@ -1,5 +1,5 @@
 import extract from "png-chunks-extract";
-import encode from "png-chunks-encode";
+// import encode from "png-chunks-encode";
 import PNGtext from "png-chunk-text";
 
 const encodeBase64 = (str: string): string => {
@@ -14,32 +14,32 @@ const decodeBase64 = (b64: string): string => {
   return new TextDecoder().decode(bytes);
 };
 
-export const writeCharacterToPng = async (file: File, data: string): Promise<Blob> => {
-  const buffer = new Uint8Array(await file.arrayBuffer());
-  const chunks = extract(buffer);
+// export const writeCharacterToPng = async (file: File, data: string): Promise<Blob> => {
+//   const buffer = new Uint8Array(await file.arrayBuffer());
+//   const chunks = extract(buffer);
 
-  const filteredChunks = chunks.filter(chunk => {
-    if (chunk.name !== "tEXt") return true;
-    const { keyword } = PNGtext.decode(chunk.data);
-    return !["chara", "ccv3"].includes(keyword.toLowerCase());
-  });
+//   const filteredChunks = chunks.filter(chunk => {
+//     if (chunk.name !== "tEXt") return true;
+//     const { keyword } = PNGtext.decode(chunk.data);
+//     return !["chara", "ccv3"].includes(keyword.toLowerCase());
+//   });
 
-  const base64Data = encodeBase64(data);
-  filteredChunks.splice(-1, 0, PNGtext.encode("chara", base64Data));
+//   const base64Data = encodeBase64(data);
+//   filteredChunks.splice(-1, 0, PNGtext.encode("chara", base64Data));
 
-  try {
-    const v3Data = JSON.parse(data);
-    v3Data.spec = "chara_card_v3";
-    v3Data.spec_version = "3.0";
-    const base64V3 = encodeBase64(JSON.stringify(v3Data));
-    filteredChunks.splice(-1, 0, PNGtext.encode("ccv3", base64V3));
-  } catch (err) {
-    console.warn("Failed to add ccv3 chunk:", err);
-  }
+//   try {
+//     const v3Data = JSON.parse(data);
+//     v3Data.spec = "chara_card_v3";
+//     v3Data.spec_version = "3.0";
+//     const base64V3 = encodeBase64(JSON.stringify(v3Data));
+//     filteredChunks.splice(-1, 0, PNGtext.encode("ccv3", base64V3));
+//   } catch (err) {
+//     console.warn("Failed to add ccv3 chunk:", err);
+//   }
 
-  const newBuffer = encode(filteredChunks);
-  return new Blob([newBuffer], { type: "image/png" });
-};
+//   const newBuffer = encode(filteredChunks);
+//   return new Blob([newBuffer], { type: "image/png" });
+// };
 
 export const readCharacterFromPng = async (file: File): Promise<string> => {
   const buffer = new Uint8Array(await file.arrayBuffer());
