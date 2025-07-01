@@ -1,209 +1,492 @@
 import { 
-  readData, 
-  writeData, 
-  AGENT_CONVERSATIONS_FILE, 
-} from "@/lib/data/local-storage";
-import { 
-  AgentConversation,
-  AgentStatus,
-  PlanPool,
-  ThoughtBuffer,
-  AgentResult,
-  ConversationMessage,
-} from "@/lib/models/agent-model";
+  ResearchSession, 
+  SessionStatus, 
+  Message, 
+  ResearchState,      
+  KnowledgeEntry,
+  GenerationOutput,
+  TaskEntry,
+} from "../../models/agent-model";
+import { readData, writeData, AGENT_CONVERSATIONS_FILE } from "../local-storage";
 import { v4 as uuidv4 } from "uuid";
 
 /**
- * Agent Conversation Operations - New simplified architecture
+ * Agent Conversation Operations - Simplified for Real-time Architecture
  */
-export class AgentConversationOperations {
+export class ResearchSessionOperations {
+
   /**
-   * Create a new agent conversation
+   * Create a new agent conversation with simplified initial state
    */
-  static async createConversation(
+  static async createSession(
     title: string,
-    userRequest: string,
-    llmConfig: AgentConversation["llm_config"],
-  ): Promise<AgentConversation> {
-    const conversations = await readData(AGENT_CONVERSATIONS_FILE);
+    llmConfig: ResearchSession["llm_config"],
+    initialUserRequest: string,
+  ): Promise<ResearchSession> {
     const conversationId = uuidv4();
-    const now = new Date().toISOString();
-    
-    // Initialize plan pool
-    const planPool: PlanPool = {
+
+    // Create initial task state
+    const ResearchState: ResearchState = {
       id: uuidv4(),
-      conversation_id: conversationId,
-      goal_tree: [{
-        id: uuidv4(),
-        description: "Create character and worldbook based on user request",
-        type: "main_goal",
-        children: [],
-        status: "pending",
-        metadata: { user_request: userRequest },
-      }],
-      current_tasks: [],
+      session_id: conversationId,
+      main_objective: initialUserRequest,
+      // Sequential task management - will be populated by task decomposition
+      task_queue: [], // Empty initially - will be filled by task decomposition
       completed_tasks: [],
-      context: {
-        user_request: userRequest,
-        current_focus: "Analyzing user request and creating initial plan",
-        constraints: [],
-        preferences: {},
-      },
-      created_at: now,
-      updated_at: now,
+      knowledge_base: [],
     };
 
-    // Initialize thought buffer
-    const thoughtBuffer: ThoughtBuffer = {
-      id: uuidv4(),
-      conversation_id: conversationId,
-      thoughts: [{
-        id: uuidv4(),
-        type: "observation",
-        content: `User requested: ${userRequest}`,
-        timestamp: now,
-      }],
-      current_reasoning: "Starting analysis of user request",
-      decision_history: [],
-      reflection_notes: [],
-      created_at: now,
-      updated_at: now,
+    // Create initial character progress
+    const GenerationOutput: GenerationOutput = {
     };
 
-    // Initialize result
-    const result: AgentResult = {
+    // Create initial user message
+    const initialMessage: Message = {
       id: uuidv4(),
-      conversation_id: conversationId,
-      generation_metadata: {
-        total_iterations: 0,
-        tools_used: [],
-      },
-      created_at: now,
-      updated_at: now,
+      role: "user",
+      content: initialUserRequest,
+      type: "user_input",
     };
-    
-    const newConversation: AgentConversation = {
+
+    const session: ResearchSession = {
       id: conversationId,
       title,
-      status: AgentStatus.IDLE,
-      plan_pool: planPool,
-      thought_buffer: thoughtBuffer,
-      result,
-      messages: [{
-        id: uuidv4(),
-        role: "user",
-        content: userRequest,
-        message_type: "userInput",
-        timestamp: now,
-      }],
+      status: SessionStatus.IDLE,
+      messages: [initialMessage],
+      research_state: ResearchState,
+      generation_output: GenerationOutput,
       llm_config: llmConfig,
-      context: {
+      execution_info: {
         current_iteration: 0,
         max_iterations: 50,
-        start_time: now,
-        last_activity: now,
         error_count: 0,
+        total_tokens_used: 0,
+        token_budget: 100000, // 100K tokens default budget
       },
-      created_at: now,
-      updated_at: now,
     };
-    
-    conversations.push(newConversation);
-    await writeData(AGENT_CONVERSATIONS_FILE, conversations);
-    
-    return newConversation;
+
+    await this.saveSession(session);
+    return session;
   }
 
   /**
    * Get conversation by ID
    */
-  static async getConversationById(id: string): Promise<AgentConversation | null> {
-    const conversations = await readData(AGENT_CONVERSATIONS_FILE);
-    return conversations.find((conv: AgentConversation) => conv.id === id) || null;
+  static async getSessionById(sessionId: string): Promise<ResearchSession | null> {
+    const sessions = await this.getAllSessions();
+    return sessions.find(s => s.id === sessionId) || null;
   }
 
   /**
    * Get all conversations
    */
-  static async getAllConversations(): Promise<AgentConversation[]> {
-    const conversations = await readData(AGENT_CONVERSATIONS_FILE);
-    return conversations.sort((a: AgentConversation, b: AgentConversation) => 
-      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-    );
+  static async getAllSessions(): Promise<ResearchSession[]> {
+    try {
+      const data = await readData(AGENT_CONVERSATIONS_FILE);
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error("Failed to load sessions:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Save conversation to storage
+   */
+  static async saveSession(session: ResearchSession): Promise<void> {
+    const sessions = await this.getAllSessions();
+    const existingIndex = sessions.findIndex(s => s.id === session.id);
+    
+    if (existingIndex >= 0) {
+      sessions[existingIndex] = session;
+    } else {
+      sessions.push(session);
+    }
+
+    await writeData(AGENT_CONVERSATIONS_FILE, sessions);
   }
 
   /**
    * Update conversation status
    */
-  static async updateStatus(conversationId: string, status: AgentStatus): Promise<void> {
-    const conversations = await readData(AGENT_CONVERSATIONS_FILE);
-    const index = conversations.findIndex((conv: AgentConversation) => conv.id === conversationId);
-    
-    if (index === -1) {
-      throw new Error(`Conversation not found: ${conversationId}`);
+  static async updateStatus(sessionId: string, status: SessionStatus): Promise<void> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
     }
-    
-    conversations[index].status = status;
-    conversations[index].context.last_activity = new Date().toISOString();
-    conversations[index].updated_at = new Date().toISOString();
-    
-    await writeData(AGENT_CONVERSATIONS_FILE, conversations);
-  }
 
-  /**
-   * Update entire conversation
-   */
-  static async updateConversation(conversation: AgentConversation): Promise<void> {
-    const conversations = await readData(AGENT_CONVERSATIONS_FILE);
-    const index = conversations.findIndex((conv: AgentConversation) => conv.id === conversation.id);
-    
-    if (index === -1) {
-      throw new Error(`Conversation not found: ${conversation.id}`);
-    }
-    
-    conversation.updated_at = new Date().toISOString();
-    conversation.context.last_activity = new Date().toISOString();
-    conversations[index] = conversation;
-    
-    await writeData(AGENT_CONVERSATIONS_FILE, conversations);
+    session.status = status;
+    await this.saveSession(session);
   }
 
   /**
    * Add message to conversation
    */
   static async addMessage(
-    conversationId: string, 
-    message: Omit<ConversationMessage, "id" | "timestamp">,
-  ): Promise<void> {
-    const conversations = await readData(AGENT_CONVERSATIONS_FILE);
-    const index = conversations.findIndex((conv: AgentConversation) => conv.id === conversationId);
-    
-    if (index === -1) {
-      throw new Error(`Conversation not found: ${conversationId}`);
+    sessionId: string,
+    messageData: Omit<Message, "id">,
+  ): Promise<Message> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
     }
-    
-    const newMessage: ConversationMessage = {
-      ...message,
+
+    const message: Message = {
+      ...messageData,
       id: uuidv4(),
-      timestamp: new Date().toISOString(),
     };
+
+    session.messages.push(message);
+    await this.saveSession(session);
     
-    conversations[index].messages.push(newMessage);
-    conversations[index].updated_at = new Date().toISOString();
+    return message;
+  }
+
+  /**
+   * Update task state
+   */
+  static async updateResearchState(
+    sessionId: string,
+    updates: Partial<Omit<ResearchState, "id" | "session_id">>,
+  ): Promise<void> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+
+    // Update task state
+    Object.assign(session.research_state, updates);
+
+    await this.saveSession(session);
+  }
+
+  /**
+   * Update generation output with intelligent merging
+   * For character_data: merges new fields with existing ones, overwrites existing fields with new values
+   * For other fields: performs direct assignment
+   */
+  static async updateGenerationOutput(
+    sessionId: string,
+    updates: Partial<GenerationOutput>,
+  ): Promise<void> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+
+    // Handle character_data with intelligent merging
+    if (updates.character_data) {
+      const existingCharacterData = session.generation_output.character_data || {};
+      // Merge new character fields with existing ones, new fields override existing ones
+      session.generation_output.character_data = {
+        ...existingCharacterData,
+        ...updates.character_data,
+      };
+      
+      // Remove character_data from updates to avoid double processing
+      const { character_data, ...otherUpdates } = updates;
+      
+      // Apply other updates normally
+      if (Object.keys(otherUpdates).length > 0) {
+        Object.assign(session.generation_output, otherUpdates);
+      }
+    } else {
+      // No character_data to merge, apply updates normally
+      Object.assign(session.generation_output, updates);
+    }
+
+    await this.saveSession(session);
+  }
+
+  /**
+   * Add knowledge entries to the knowledge base
+   */
+  static async addKnowledgeEntries(
+    sessionId: string,
+    entries: KnowledgeEntry[],
+  ): Promise<void> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+
+    session.research_state.knowledge_base.push(...entries);
+
+    await this.saveSession(session);
+  }
+
+  /**
+   * Increment iteration counter
+   */
+  static async incrementIteration(sessionId: string): Promise<number> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+
+    session.execution_info.current_iteration++;
+    await this.saveSession(session);
     
-    await writeData(AGENT_CONVERSATIONS_FILE, conversations);
+    return session.execution_info.current_iteration;
+  }
+
+  /**
+   * Record token usage
+   */
+  static async recordTokenUsage(sessionId: string, tokensUsed: number): Promise<void> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+
+    session.execution_info.total_tokens_used += tokensUsed;
+    await this.saveSession(session);
+  }
+
+  /**
+   * Record error
+   */
+  static async recordError(sessionId: string, error: string): Promise<void> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+
+    session.execution_info.error_count++;
+    session.execution_info.last_error = error;
+    await this.saveSession(session);
   }
 
   /**
    * Delete conversation
    */
-  static async deleteConversation(id: string): Promise<boolean> {
-    const conversations = await readData(AGENT_CONVERSATIONS_FILE);
-    const filteredConversations = conversations.filter((conv: AgentConversation) => conv.id !== id);
+  static async deleteSession(sessionId: string): Promise<void> {
+    const sessions = await this.getAllSessions();
+    const updatedSessions = sessions.filter(s => s.id !== sessionId);
+    await writeData(AGENT_CONVERSATIONS_FILE, updatedSessions);
+  }
+
+  /**
+   * Clear all sessions from the data file
+   */
+  static async clearAll(): Promise<void> {
+    await writeData(AGENT_CONVERSATIONS_FILE, []);
+  }
+
+  /**
+   * Get conversation summary for display
+   */
+  static async getSessionSummary(sessionId: string): Promise<{
+    title: string;
+    status: SessionStatus;
+    messageCount: number;
+    hasCharacter: boolean;
+    hasWorldbook: boolean;
+    completionPercentage: number;
+    knowledgeBaseSize: number;
+  } | null> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) return null;
+
+    const averageCompletion = 0;
+
+    return {
+      title: session.title,
+      status: session.status,
+      messageCount: session.messages.length,
+      hasCharacter: !!session.generation_output.character_data,
+      hasWorldbook: !!session.generation_output.worldbook_data && session.generation_output.worldbook_data.length > 0,
+      completionPercentage: Math.round(averageCompletion),
+      knowledgeBaseSize: session.research_state.knowledge_base.length,
+    };
+  }
+
+  /**
+   * Add new tasks to the task queue efficiently
+   */
+  static async addTasksToQueue(
+    sessionId: string,
+    newTasks: TaskEntry[],
+  ): Promise<void> {
+    const sessions = await this.getAllSessions();
+    const sessionIndex = sessions.findIndex(s => s.id === sessionId);
     
-    if (filteredConversations.length === conversations.length) return false;
+    if (sessionIndex === -1) {
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+
+    const session = sessions[sessionIndex];
+    const currentQueue = session.research_state.task_queue || [];
     
-    await writeData(AGENT_CONVERSATIONS_FILE, filteredConversations);
-    return true;
+    // Add new tasks to the end of current queue
+    session.research_state.task_queue = [...currentQueue, ...newTasks];
+    
+    // Save only the updated session
+    await writeData(AGENT_CONVERSATIONS_FILE, sessions);
+  }
+  
+  /**
+   * Complete current task efficiently by moving it to completed_tasks
+   */
+  static async completeCurrentTask(
+    sessionId: string,
+  ): Promise<void> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+
+    const taskQueue = session.research_state.task_queue || [];
+    
+    if (taskQueue.length > 0) {
+      const completedTask = taskQueue[0];
+      const remainingTasks = taskQueue.slice(1);
+      
+      // Update research state
+      session.research_state.task_queue = remainingTasks;
+      session.research_state.completed_tasks.push(completedTask.description);
+      
+      await this.saveSession(session);
+    }
+  }
+
+  /**
+   * Append new worldbook entries to existing worldbook data efficiently
+   */
+  static async appendWorldbookData(
+    sessionId: string,
+    newEntries: any[],
+  ): Promise<void> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+
+    const currentWorldbookData = session.generation_output.worldbook_data || [];
+    const updatedWorldbookData = [...currentWorldbookData, ...newEntries];
+    
+    session.generation_output.worldbook_data = updatedWorldbookData;
+    await this.saveSession(session);
+  }
+
+  /**
+   * Get generation output without fetching entire session
+   */
+  static async getGenerationOutput(sessionId: string): Promise<GenerationOutput | null> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) return null;
+    
+    return session.generation_output;
+  }
+
+  /**
+   * Complete current sub-problem by removing it from the latest task
+   */
+  static async completeCurrentSubProblem(sessionId: string): Promise<void> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+
+    const taskQueue = session.research_state.task_queue || [];
+    
+    if (taskQueue.length > 0 && taskQueue[0].sub_problems.length > 0) {
+      const currentTask = taskQueue[0];
+      const completedSubProblem = currentTask.sub_problems[0]; // First sub-problem
+      
+      // Remove the first sub-problem
+      currentTask.sub_problems = currentTask.sub_problems.slice(1);
+      
+      // If no more sub-problems in this task, move the task to completed
+      if (currentTask.sub_problems.length === 0) {
+        session.research_state.task_queue = taskQueue.slice(1);
+        session.research_state.completed_tasks.push(currentTask.description);
+      }
+      
+      await this.saveSession(session);
+      
+      console.log(`✅ Sub-problem completed: ${completedSubProblem.description}`);
+      if (currentTask.sub_problems.length === 0) {
+        console.log(`✅ Task completed: ${currentTask.description}`);
+      }
+    }
+  }
+
+  /**
+   * Get current sub-problem from the first task in queue
+   */
+  static async getCurrentSubProblem(sessionId: string): Promise<{ 
+    task?: TaskEntry, 
+    subProblem?: any 
+  }> {
+    const session = await this.getSessionById(sessionId);
+    if (!session || !session.research_state.task_queue || session.research_state.task_queue.length === 0) {
+      return {};
+    }
+
+    const currentTask = session.research_state.task_queue[0];
+    if (!currentTask.sub_problems || currentTask.sub_problems.length === 0) {
+      return { task: currentTask };
+    }
+
+    return { 
+      task: currentTask, 
+      subProblem: currentTask.sub_problems[0], 
+    };
+  }
+
+  /**
+   * Modify current task description and replace sub-problems
+   */
+  static async modifyCurrentTaskAndSubproblems(sessionId: string, newDescription: string, newSubproblems: string[]): Promise<void> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+
+    const taskQueue = session.research_state.task_queue || [];
+    
+    if (taskQueue.length > 0) {
+      const currentTask = taskQueue[0];
+      
+      // Update task description
+      currentTask.description = newDescription;
+      
+      // Replace sub-problems with new ones
+      if (newSubproblems.length > 0) {
+        currentTask.sub_problems = newSubproblems.map((description, index) => ({
+          id: `modified_sub_${Date.now()}_${index}`,
+          description: description,
+          reasoning: "Updated by task adjustment",
+        }));
+      } else {
+        // If no new sub-problems provided, clear existing ones and mark task as complete
+        currentTask.sub_problems = [];
+        session.research_state.task_queue = taskQueue.slice(1);
+        session.research_state.completed_tasks.push(currentTask.description);
+      }
+      
+      await this.saveSession(session);
+      console.log(`✅ Modified current task to: ${newDescription}`);
+      
+      if (newSubproblems.length > 0) {
+        console.log(`✅ Updated with ${newSubproblems.length} new sub-problems`);
+      } else {
+        console.log(`✅ Task completed with no sub-problems: ${currentTask.description}`);
+      }
+    }
+  }
+
+  /**
+   * Clear all tasks from the task queue
+   */
+  static async clearAllTasks(sessionId: string): Promise<void> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) {
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+
+    session.research_state.task_queue = [];
+    await this.saveSession(session);
   }
 } 

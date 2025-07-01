@@ -1,20 +1,39 @@
 import { AgentEngine } from "@/lib/core/agent-engine";
-import { AgentConversationOperations } from "@/lib/data/agent/agent-conversation-operations";
-import { AgentConversation, AgentStatus } from "@/lib/models/agent-model";
+import { ResearchSessionOperations } from "@/lib/data/agent/agent-conversation-operations";
+import { ResearchSession, SessionStatus } from "@/lib/models/agent-model";
+
+// Define user input callback type
+type UserInputCallback = (message?: string) => Promise<string>;
 
 /**
- * Agent Service - High-level API for character+worldbook generation
- * Simplified architecture with plan-based execution
+ * Agent Service - Simplified for Real-time Decision Architecture
+ * High-level API for character+worldbook generation with real-time planning
  */
 export class AgentService {
   private engines: Map<string, AgentEngine> = new Map();
 
+  constructor() {
+    // Initialize storage on construction
+    this.initialize();
+  }
+
   /**
-   * Start a new character generation conversation
+   * Initialize service with storage
+   */
+  private async initialize(): Promise<void> {
+    try {
+      const { initializeDataFiles } = await import("../data/local-storage");
+      await initializeDataFiles();
+    } catch (error) {
+      console.error("Failed to initialize AgentService:", error);
+    }
+  }
+
+  /**
+   * Start a new character generation conversation with user input callback
    */
   async startGeneration(
-    title: string,
-    userRequest: string,
+    initialUserRequest: string,
     llmConfig: {
       model_name: string;
       api_key: string;
@@ -22,20 +41,19 @@ export class AgentService {
       llm_type: "openai" | "ollama";
       temperature?: number;
       max_tokens?: number;
+      tavily_api_key?: string;
     },
+    userInputCallback?: UserInputCallback,
   ): Promise<{
     conversationId: string;
     success: boolean;
     result?: any;
     error?: string;
-    needsUserInput?: boolean;
-    message?: string;
   }> {
     try {
-      // Create new conversation with proper LLM config format
-      const conversation = await AgentConversationOperations.createConversation(
-        title, 
-        userRequest, 
+      // Create new conversation with fixed title and story as user request
+      const session = await ResearchSessionOperations.createSession(
+        "Character & Worldbook Generation", // Fixed title
         {
           model_name: llmConfig.model_name,
           api_key: llmConfig.api_key,
@@ -43,23 +61,23 @@ export class AgentService {
           llm_type: llmConfig.llm_type,
           temperature: llmConfig.temperature || 0.7,
           max_tokens: llmConfig.max_tokens,
+          tavily_api_key: llmConfig.tavily_api_key,
         },
+        initialUserRequest, // Story description as user request
       );
       
-      // Create and start agent engine
-      const engine = new AgentEngine(conversation.id);
-      this.engines.set(conversation.id, engine);
+      // Create agent engine with user input callback
+      const engine = new AgentEngine(session.id, userInputCallback);
+      this.engines.set(session.id, engine);
       
-      // Start execution
-      const result = await engine.start();
+      // Start execution with callback
+      const result = await engine.start(userInputCallback);
       
       return {
-        conversationId: conversation.id,
+        conversationId: session.id,
         success: result.success,
         result: result.result,
         error: result.error,
-        needsUserInput: result.needsUserInput || false,
-        message: result.message,
       };
       
     } catch (error) {
@@ -73,109 +91,65 @@ export class AgentService {
   }
 
   /**
-   * Continue generation with user response
+   * Get conversation status and progress with new data structure
    */
-  async continueGeneration(
-    conversationId: string,
-    userResponse: string,
-  ): Promise<{
-    success: boolean;
-    result?: any;
-    error?: string;
-    needsUserInput?: boolean;
-    message?: string;
-  }> {
-    try {
-      let engine = this.engines.get(conversationId);
-      
-      if (!engine) {
-        // Recreate engine if not in memory
-        engine = new AgentEngine(conversationId);
-        this.engines.set(conversationId, engine);
-      }
-      
-      const result = await engine.continueWithUserInput(userResponse);
-      
-      return {
-        success: result.success,
-        result: result.result,
-        error: result.error,
-        needsUserInput: result.needsUserInput || false,
-        message: result.message,
-      };
-      
-    } catch (error) {
-      console.error("Failed to continue generation:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-    }
-  }
-
-  /**
-   * Get conversation status and progress
-   */
-  async getConversationStatus(conversationId: string): Promise<{
-    conversation: AgentConversation | null;
-    status: AgentStatus;
+  async getSessionStatus(sessionId: string): Promise<{
+    session: ResearchSession | null;
+    status: SessionStatus;
     progress: {
-      currentTasks: number;
       completedTasks: number;
       totalIterations: number;
-      currentFocus: string;
+      knowledgeBaseSize: number;
     };
     hasResult: boolean;
     result?: any;
   }> {
     try {
-      const conversation = await AgentConversationOperations.getConversationById(conversationId);
-      if (!conversation) {
+      const session = await ResearchSessionOperations.getSessionById(sessionId);
+      if (!session) {
         return {
-          conversation: null,
-          status: AgentStatus.FAILED,
+          session: null,
+          status: SessionStatus.FAILED,
           progress: {
-            currentTasks: 0,
             completedTasks: 0,
             totalIterations: 0,
-            currentFocus: "Conversation not found",
+            knowledgeBaseSize: 0,
           },
           hasResult: false,
         };
       }
       
-      const hasCharacterData = !!conversation.result.character_data;
-      const hasWorldbookData = !!conversation.result.worldbook_data && conversation.result.worldbook_data.length > 0;
+      // Check completion using new character_progress structure
+      const hasCharacterData = !!session.generation_output.character_data;
+      const hasWorldbookData = !!session.generation_output.worldbook_data && session.generation_output.worldbook_data.length > 0;
       const hasResult = hasCharacterData && hasWorldbookData;
       
       return {
-        conversation,
-        status: conversation.status,
+        session: session,
+        status: session.status,
         progress: {
-          currentTasks: conversation.plan_pool.current_tasks.length,
-          completedTasks: conversation.plan_pool.completed_tasks.length,
-          totalIterations: conversation.context.current_iteration,
-          currentFocus: conversation.plan_pool.context.current_focus,
+          completedTasks: session.research_state.completed_tasks.length,
+          totalIterations: session.execution_info.current_iteration,
+          knowledgeBaseSize: session.research_state.knowledge_base.length,
         },
         hasResult,
         result: hasResult ? {
-          character_data: conversation.result.character_data,
-          worldbook_data: conversation.result.worldbook_data,
-          integration_notes: conversation.result.integration_notes,
-          quality_metrics: conversation.result.quality_metrics,
+          character_data: session.generation_output.character_data,
+          worldbook_data: session.generation_output.worldbook_data,
+          knowledge_base: session.research_state.knowledge_base,
+          completion_status: session,
         } : undefined,
       };
       
     } catch (error) {
       console.error("Failed to get conversation status:", error);
       return {
-        conversation: null,
-        status: AgentStatus.FAILED,
+        session: null,
+        status: SessionStatus.FAILED,
         progress: {
-          currentTasks: 0,
           completedTasks: 0,
           totalIterations: 0,
-          currentFocus: "Error occurred",
+          knowledgeBaseSize: 0,
         },
         hasResult: false,
       };
@@ -185,9 +159,9 @@ export class AgentService {
   /**
    * List all conversations for a user
    */
-  async listConversations(): Promise<AgentConversation[]> {
+  async listConversations(): Promise<ResearchSession[]> {
     try {
-      return await AgentConversationOperations.getAllConversations();
+      return await ResearchSessionOperations.getAllSessions();
     } catch (error) {
       console.error("Failed to list conversations:", error);
       return [];
@@ -197,13 +171,14 @@ export class AgentService {
   /**
    * Delete a conversation
    */
-  async deleteConversation(conversationId: string): Promise<boolean> {
+  async deleteSession(sessionId: string): Promise<boolean> {
     try {
       // Remove engine from memory
-      this.engines.delete(conversationId);
+      this.engines.delete(sessionId);
       
       // Delete from storage
-      return await AgentConversationOperations.deleteConversation(conversationId);
+      await ResearchSessionOperations.deleteSession(sessionId);
+      return true;
     } catch (error) {
       console.error("Failed to delete conversation:", error);
       return false;
@@ -211,73 +186,126 @@ export class AgentService {
   }
 
   /**
+   * Clear all sessions from storage and memory
+   */
+  async clearAllSessions(): Promise<void> {
+    try {
+      // Clear all engines from memory
+      this.engines.clear();
+      
+      // Clear all sessions from storage
+      await ResearchSessionOperations.clearAll();
+      console.log("All sessions cleared from storage.");
+    } catch (error) {
+      console.error("Failed to clear all sessions:", error);
+      throw error; // Re-throw to be caught by CLI
+    }
+  }
+
+  /**
    * Get conversation messages for UI display
    */
-  async getConversationMessages(conversationId: string): Promise<{
+  async getMessages(sessionId: string): Promise<{
     messages: any[];
-    thoughts: any[];
-    currentReasoning: string;
+    messageCount: number;
   }> {
     try {
-      const conversation = await AgentConversationOperations.getConversationById(conversationId);
-      if (!conversation) {
+      const session = await ResearchSessionOperations.getSessionById(sessionId);
+      if (!session) {
         return {
           messages: [],
-          thoughts: [],
-          currentReasoning: "",
+          messageCount: 0,
         };
       }
       
       return {
-        messages: conversation.messages,
-        thoughts: conversation.thought_buffer.thoughts,
-        currentReasoning: conversation.thought_buffer.current_reasoning,
+        messages: session.messages,
+        messageCount: session.messages.length,
       };
       
     } catch (error) {
       console.error("Failed to get conversation messages:", error);
       return {
         messages: [],
-        thoughts: [],
-        currentReasoning: "",
+        messageCount: 0,
       };
     }
   }
 
   /**
-   * Get plan status for debugging
+   * Get task state for debugging (replaces planning status)
    */
-  async getPlanStatus(conversationId: string): Promise<{
-    goalTree: any[];
-    currentTasks: any[];
-    completedTasks: any[];
-    context: any;
+  async getResearchState(sessionId: string): Promise<{
+    mainObjective: string;
+    completedTasks: string[];
+    knowledgeBase: any[];
   }> {
     try {
-      const conversation = await AgentConversationOperations.getConversationById(conversationId);
-      if (!conversation) {
+      const session = await ResearchSessionOperations.getSessionById(sessionId);
+      if (!session) {
         return {
-          goalTree: [],
-          currentTasks: [],
+          mainObjective: "",
           completedTasks: [],
-          context: {},
+          knowledgeBase: [],
         };
       }
       
       return {
-        goalTree: conversation.plan_pool.goal_tree,
-        currentTasks: conversation.plan_pool.current_tasks,
-        completedTasks: conversation.plan_pool.completed_tasks,
-        context: conversation.plan_pool.context,
+        mainObjective: session.research_state.main_objective,
+        completedTasks: session.research_state.completed_tasks,
+        knowledgeBase: session.research_state.knowledge_base,
       };
       
     } catch (error) {
-      console.error("Failed to get plan status:", error);
+      console.error("Failed to get task state:", error);
       return {
-        goalTree: [],
-        currentTasks: [],
+        mainObjective: "",
         completedTasks: [],
-        context: {},
+        knowledgeBase: [],
+      };
+    }
+  }
+
+  /**
+   * Get character progress for UI display
+   */
+  async getGenerationOutput(sessionId: string): Promise<{
+    hasCharacter: boolean;
+    hasWorldbook: boolean;
+    completionPercentage: number;
+    characterData?: any;
+    worldbookData?: any[];
+  }> {
+    try {
+      const session = await ResearchSessionOperations.getSessionById(sessionId);
+      if (!session) {
+        return {
+          hasCharacter: false,
+          hasWorldbook: false,
+          completionPercentage: 0,
+        };
+      }
+      
+      const hasCharacter = !!session.generation_output.character_data;
+      const hasWorldbook = !!session.generation_output.worldbook_data && session.generation_output.worldbook_data.length > 0;
+      
+      // Calculate completion percentage from completion status
+      const completionPercentage = 0;
+      
+      return {
+        hasCharacter,
+        hasWorldbook,
+        completionPercentage: Math.round(completionPercentage),
+        characterData: session.generation_output.character_data,
+        worldbookData: session.generation_output.worldbook_data,
+      };
+      
+    } catch (error) {
+      console.error("Failed to get character progress:", error);
+      return {
+        hasCharacter: false,
+        hasWorldbook: false,
+        completionPercentage: 0,
       };
     }
   }
@@ -285,14 +313,14 @@ export class AgentService {
   /**
    * Export conversation data
    */
-  async exportConversation(conversationId: string): Promise<{
+  async exportConversation(sessionId: string): Promise<{
     success: boolean;
     data?: any;
     error?: string;
   }> {
     try {
-      const conversation = await AgentConversationOperations.getConversationById(conversationId);
-      if (!conversation) {
+      const session = await ResearchSessionOperations.getSessionById(sessionId);
+      if (!session) {
         return {
           success: false,
           error: "Conversation not found",
@@ -300,9 +328,10 @@ export class AgentService {
       }
       
       const exportData = {
-        conversation,
+        session,
         exportedAt: new Date().toISOString(),
-        version: "2.0", // New architecture version
+        version: "4.0", // Updated to new simplified architecture
+        architecture: "real-time-decision",
       };
       
       return {
@@ -320,7 +349,7 @@ export class AgentService {
   }
 
   /**
-   * Get generation statistics
+   * Get generation statistics with new data structure
    */
   async getGenerationStats(): Promise<{
     totalConversations: number;
@@ -328,44 +357,65 @@ export class AgentService {
     successRate: number;
     averageIterations: number;
     statusBreakdown: Record<string, number>;
+    averageKnowledgeBaseSize: number;
+    averageTokensUsed: number;
   }> {
     try {
-      const conversations = await AgentConversationOperations.getAllConversations();
+      const sessions = await ResearchSessionOperations.getAllSessions();
       
       const statusBreakdown: Record<string, number> = {};
       let totalIterations = 0;
       let completedGenerations = 0;
+      let totalKnowledgeBaseSize = 0;
+      let totalTokensUsed = 0;
       
-      conversations.forEach(conv => {
+      sessions.forEach(session => {
         // Count by status
-        statusBreakdown[conv.status] = (statusBreakdown[conv.status] || 0) + 1;
+        statusBreakdown[session.status] = (statusBreakdown[session.status] || 0) + 1;
         
         // Count iterations
-        totalIterations += conv.context.current_iteration;
+        totalIterations += session.execution_info.current_iteration;
+        
+        // Count tokens used
+        totalTokensUsed += session.execution_info.total_tokens_used || 0;
+        
+        // Count knowledge base size
+        totalKnowledgeBaseSize += session.research_state.knowledge_base.length;
         
         // Count completed generations
-        if (conv.status === AgentStatus.COMPLETED && 
-            conv.result.character_data && 
-            conv.result.worldbook_data && 
-            conv.result.worldbook_data.length > 0) {
+        if (session.status === SessionStatus.COMPLETED && 
+            session.generation_output.character_data && 
+            session.generation_output.worldbook_data && 
+            session.generation_output.worldbook_data.length > 0) {
           completedGenerations++;
         }
+       
       });
       
-      const successRate = conversations.length > 0 
-        ? (completedGenerations / conversations.length) * 100 
+      const successRate = sessions.length > 0 
+        ? (completedGenerations / sessions.length) * 100 
         : 0;
         
-      const averageIterations = conversations.length > 0 
-        ? totalIterations / conversations.length 
+      const averageIterations = sessions.length > 0 
+        ? totalIterations / sessions.length 
+        : 0;
+
+      const averageKnowledgeBaseSize = sessions.length > 0
+        ? totalKnowledgeBaseSize / sessions.length
+        : 0;
+
+      const averageTokensUsed = sessions.length > 0
+        ? totalTokensUsed / sessions.length
         : 0;
       
       return {
-        totalConversations: conversations.length,
+        totalConversations: sessions.length,
         completedGenerations,
         successRate,
         averageIterations,
         statusBreakdown,
+        averageKnowledgeBaseSize,
+        averageTokensUsed,
       };
       
     } catch (error) {
@@ -376,7 +426,29 @@ export class AgentService {
         successRate: 0,
         averageIterations: 0,
         statusBreakdown: {},
+        averageKnowledgeBaseSize: 0,
+        averageTokensUsed: 0,
       };
+    }
+  }
+
+  /**
+   * Get conversation summary for quick display
+   */
+  async getConversationSummary(sessionId: string): Promise<{
+    title: string;
+    status: SessionStatus;
+    messageCount: number;
+    hasCharacter: boolean;
+    hasWorldbook: boolean;
+    completionPercentage: number;
+    knowledgeBaseSize: number;
+  } | null> {
+    try {
+      return await ResearchSessionOperations.getSessionSummary(sessionId);
+    } catch (error) {
+      console.error("Failed to get conversation summary:", error);
+      return null;
     }
   }
 

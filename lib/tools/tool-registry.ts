@@ -1,16 +1,23 @@
-import { ToolType, ToolExecutionContext, ToolExecutionResult, PlanTask } from "@/lib/models/agent-model";
-import { BaseTool } from "@/lib/tools/base-tool";
-import { PlanTool } from "@/lib/tools/plan-tool";
-import { AskUserTool } from "@/lib/tools/ask-user-tool";
-import { SearchTool } from "@/lib/tools/search-tool";
-import { OutputTool } from "@/lib/tools/output-tool";
-import { UpdatePlanTool } from "@/lib/tools/update-plan-tool";
+import { 
+  ToolType, 
+  ExecutionContext, 
+  ExecutionResult, 
+  ToolDecision, 
+} from "@/lib/models/agent-model";
+import { SimpleTool } from "@/lib/tools/base-tool";
+import { SearchTool } from "@/lib/tools/search";
+import { AskUserTool } from "@/lib/tools/ask-user";
+import { CharacterTool } from "@/lib/tools/character";
+import { WorldbookTool } from "@/lib/tools/worldbook";
+import { ReflectTool } from "@/lib/tools/reflect";
+import { CompleteTool } from "@/lib/tools/complete";
 
 /**
- * Tool Registry - manages all available tools
+ * Simplified Tool Registry - Real-time Decision Architecture
+ * No more complex tool planning, just direct tool execution
  */
 export class ToolRegistry {
-  private static tools: Map<ToolType, BaseTool> = new Map();
+  private static tools: Map<ToolType, SimpleTool> = new Map();
   private static initialized = false;
 
   /**
@@ -19,83 +26,86 @@ export class ToolRegistry {
   static initialize(): void {
     if (this.initialized) return;
 
-    this.tools.set(ToolType.PLAN, new PlanTool());
-    this.tools.set(ToolType.ASK_USER, new AskUserTool());
+    // Register simplified tools
     this.tools.set(ToolType.SEARCH, new SearchTool());
-    this.tools.set(ToolType.OUTPUT, new OutputTool());
-    this.tools.set(ToolType.UPDATE_PLAN, new UpdatePlanTool());
+    this.tools.set(ToolType.ASK_USER, new AskUserTool());
+    this.tools.set(ToolType.CHARACTER, new CharacterTool());
+    this.tools.set(ToolType.WORLDBOOK, new WorldbookTool());
+    this.tools.set(ToolType.REFLECT, new ReflectTool());
+    this.tools.set(ToolType.COMPLETE, new CompleteTool());
 
     this.initialized = true;
+    console.log("🔧 Tool Registry initialized with 6 tools (including enhanced search and completion)");
   }
 
   /**
-   * Get tool by type
+   * Execute a tool decision - the core method for real-time execution
    */
-  static getTool(toolType: ToolType): BaseTool | undefined {
+  static async executeToolDecision(
+    decision: ToolDecision, 
+    context: ExecutionContext,
+  ): Promise<ExecutionResult> {
     this.initialize();
-    return this.tools.get(toolType);
-  }
 
-  /**
-   * Get all available tools
-   */
-  static getAllTools(): BaseTool[] {
-    this.initialize();
-    return Array.from(this.tools.values());
-  }
-
-  /**
-   * Get tool information for LLM prompts
-   */
-  static getToolsInfo(): Array<{ type: string; name: string; description: string }> {
-    this.initialize();
-    return this.getAllTools().map(tool => tool.getToolInfo());
-  }
-
-  /**
-   * Check if a tool can execute a task
-   */
-  static canExecuteTask(task: PlanTask): boolean {
-    const tool = this.getTool(task.tool);
-    return tool ? tool.canExecute(task) : false;
-  }
-
-  /**
-   * Execute a task with the appropriate tool
-   */
-  static async executeTask(task: PlanTask, context: ToolExecutionContext): Promise<ToolExecutionResult> {
-    const tool = this.getTool(task.tool);
+    const tool = this.tools.get(decision.tool);
     if (!tool) {
       return {
         success: false,
-        error: `No tool found for type: ${task.tool}`,
-        should_continue: true,
+        error: `No tool found for type: ${decision.tool}`,
       };
     }
 
-    if (!tool.canExecute(task)) {
+    console.log(`🛠️ [${tool.name}] Executing with parameters:`, decision.parameters);
+    
+    try {
+      const result = await tool.execute(context, decision.parameters);
+      
+      console.log(`✅ [${tool.name}] ${result.success ? "Success" : "Failed"}`);
+      if (result.error) {
+        console.log(`❌ Error: ${result.error}`);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error(`❌ [${tool.name}] Execution failed:`, error);
       return {
         success: false,
-        error: `Tool ${task.tool} cannot execute this task`,
-        should_continue: true,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
-
-    return await tool.executeTask(task, context);
   }
 
   /**
-   * Register a custom tool
+   * Generates a detailed XML string describing all registered tools and their parameters.
+   * This structured format is easier for the LLM to parse in prompts.
    */
-  static registerTool(tool: BaseTool): void {
-    this.tools.set(tool.toolType, tool);
-  }
+  static getDetailedToolsInfo(): string {
+    this.initialize();
 
-  /**
-   * Unregister a tool
-   */
-  static unregisterTool(toolType: ToolType): boolean {
-    return this.tools.delete(toolType);
+    let xmlOutput = "<tools>\n";
+
+    this.tools.forEach((tool, toolType) => {
+      xmlOutput += "  <tool>\n";
+      xmlOutput += `    <type>${toolType}</type>\n`;
+      xmlOutput += `    <name>${tool.name}</name>\n`;
+      xmlOutput += `    <description>${tool.description}</description>\n`;
+      xmlOutput += "    <parameters>\n";
+      
+      tool.parameters.forEach(param => {
+        xmlOutput += "      <parameter>\n";
+        xmlOutput += `        <name>${param.name}</name>\n`;
+        xmlOutput += `        <type>${param.type}</type>\n`;
+        xmlOutput += `        <required>${param.required}</required>\n`;
+        xmlOutput += `        <description>${param.description}</description>\n`;
+        xmlOutput += "      </parameter>\n";
+      });
+
+      xmlOutput += "    </parameters>\n";
+      xmlOutput += "  </tool>\n";
+    });
+
+    xmlOutput += "</tools>";
+    return xmlOutput;
   }
 }
 

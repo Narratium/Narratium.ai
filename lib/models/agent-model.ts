@@ -1,110 +1,156 @@
 /**
- * New Agent Model - Plan-based Architecture
- * Based on the simplified workflow design with LLM as the central planner
+ * Agent Model - Real-time Decision Architecture
+ * Inspired by Jina AI DeepResearch design philosophy
+ * Optimized naming conventions for clarity
  */
 
-// Core tool types available to the agent
+// Tool types - pure execution units
 export enum ToolType {
-  PLAN = "PLAN",
-  ASK_USER = "ASK_USER",
-  SEARCH = "SEARCH",
-  OUTPUT = "OUTPUT",
-  UPDATE_PLAN = "UPDATE_PLAN"
+  SEARCH = "SEARCH",     // Search and gather information
+  ASK_USER = "ASK_USER", // Get user input
+  CHARACTER = "CHARACTER", // Generate/update character card
+  WORLDBOOK = "WORLDBOOK", // Generate worldbook entries
+  REFLECT = "REFLECT",    // Reflect on progress and update tasks
+  COMPLETE = "COMPLETE"   // Final completion - clear all tasks and end session
 }
 
-// Agent execution status
-export enum AgentStatus {
+// Session execution status
+export enum SessionStatus {
   IDLE = "idle",
-  THINKING = "thinking",           // LLM is planning/thinking
-  EXECUTING = "executing",         // Executing a tool
-  WAITING_USER = "waiting_user",   // Waiting for user input
+  THINKING = "thinking",
+  EXECUTING = "executing", 
+  WAITING_USER = "waiting_user",
   COMPLETED = "completed",
   FAILED = "failed"
 }
 
-// Plan task structure
-export interface PlanTask {
-  id: string;
-  description: string;
+// ============================================================================
+// CORE DECISION STRUCTURES
+// ============================================================================
+
+/**
+ * Task adjustment structure for planning analysis
+ */
+export interface TaskAdjustment {
+  reasoning: string;
+  taskDescription?: string; // New task description if optimization needed
+  newSubproblems?: string[]; // New sub-problems (max 2, cannot exceed current count)
+}
+
+/**
+ * Real-time tool decision - inspired by DeepResearch action types
+ */
+export interface ToolDecision {
   tool: ToolType;
   parameters: Record<string, any>;
-  dependencies: string[];          // Task IDs this task depends on
-  status: "pending" | "executing" | "completed" | "failed";
-  result?: any;
-  reasoning?: string;              // Why this task is needed
-  priority: number;                // Execution priority (1-10)
-  created_at: string;
-  completed_at?: string;
+  reasoning: string;
+  priority: number;
+  taskAdjustment?: TaskAdjustment; // Optional task adjustment from planning analysis
 }
 
-// Goal tree structure for hierarchical planning
-export interface GoalNode {
+/**
+ * Knowledge entry from search/research results
+ */
+export interface KnowledgeEntry {
+  id: string;
+  source: string;
+  content: string;
+  url?: string;
+  relevance_score: number;
+}
+
+/**
+ * Sub-problem entry for breaking down tasks into smaller actionable steps
+ */
+export interface SubProblem {
   id: string;
   description: string;
-  type: "main_goal" | "sub_goal" | "task";
-  parent_id?: string;
-  children: string[];              // Child goal/task IDs
-  status: "pending" | "in_progress" | "completed" | "failed";
-  checkpoint?: {                   // For tracking progress
-    progress: number;              // 0-100
-    description: string;
-    timestamp: string;
+  reasoning?: string;
+}
+
+/**
+ * Task entry for tracking specific work items
+ * Enhanced structure with sub-problems - tasks are no longer bound to specific tools
+ */
+export interface TaskEntry {
+  id: string;
+  description: string;
+  reasoning?: string; // Why this task was created/updated
+  sub_problems: SubProblem[]; // Ordered list of sub-problems to solve
+}
+
+/**
+ * Research state - similar to DeepResearch's context management
+ */
+export interface ResearchState {
+  id: string;
+  session_id: string;
+  
+  // Current research objective
+  main_objective: string;
+  
+  // Sequential task management
+  task_queue: TaskEntry[];        // Pending tasks in execution order
+  completed_tasks: string[];      // Descriptions of finished tasks
+  
+  // Research artifacts
+  knowledge_base: KnowledgeEntry[];
+}
+
+/**
+ * Tool execution result
+ */
+export interface ExecutionResult {
+  success: boolean;
+  result?: any;
+  error?: string;
+}
+
+// ============================================================================
+// EXECUTION CONTEXT
+// ============================================================================
+
+/**
+ * Tool execution context - unified for all tools
+ */
+export interface ExecutionContext {
+  session_id: string;
+  generation_output: GenerationOutput;
+  // Current research state
+  research_state: ResearchState;
+  message_history: Message[];
+  
+  // LLM configuration
+  llm_config: {
+    model_name: string;
+    api_key: string;
+    base_url?: string;
+    llm_type: "openai" | "ollama";
+    temperature: number;
+    max_tokens?: number;
+    tavily_api_key?: string; // Add Tavily API key support
   };
-  metadata?: Record<string, any>;
+
 }
 
-// Plan pool - central planning state
-export interface PlanPool {
-  id: string;
-  conversation_id: string;
-  goal_tree: GoalNode[];           // Hierarchical goal structure
-  current_tasks: PlanTask[];       // Current active tasks
-  completed_tasks: PlanTask[];     // Completed task history
-  context: {
-    user_request: string;          // Original user request
-    current_focus: string;         // What the agent is currently focusing on
-    constraints: string[];         // Any constraints or requirements
-    preferences: Record<string, any>; // User preferences
-  };
-  created_at: string;
-  updated_at: string;
-}
+// ============================================================================
+// COMMUNICATION STRUCTURES
+// ============================================================================
 
-// Thought buffer for agent's internal reasoning
-export interface ThoughtBuffer {
+/**
+ * Message in the conversation/research process
+ */
+export interface Message {
   id: string;
-  conversation_id: string;
-  thoughts: ThoughtEntry[];
-  current_reasoning: string;       // Current line of thinking
-  decision_history: DecisionEntry[]; // History of decisions made
-  reflection_notes: string[];      // Self-reflection notes
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ThoughtEntry {
-  id: string;
-  type: "observation" | "reasoning" | "decision" | "reflection";
+  role: "user" | "agent" | "system";
   content: string;
-  related_task_id?: string;
-  timestamp: string;
-  metadata?: Record<string, any>;
+  type: "user_input" | "agent_thinking" | "agent_action" | "system_info" | "quality_evaluation" | "tool_failure";
 }
 
-export interface DecisionEntry {
-  id: string;
-  decision: string;
-  reasoning: string;
-  alternatives_considered: string[];
-  confidence: number;              // 0-1 confidence in decision
-  outcome?: "success" | "failure" | "partial";
-  timestamp: string;
-}
-
-// Final result structure
-export interface AgentResult {
-  id: string;
-  conversation_id: string;
+/**
+ * Generation output (specific to character creation application)
+ */
+export interface GenerationOutput {
   character_data?: {
     name: string;
     description: string;
@@ -118,51 +164,41 @@ export interface AgentResult {
     tags?: string[];
     [key: string]: any;
   };
+  
   worldbook_data?: WorldbookEntry[];
-  integration_notes?: string;
-  quality_metrics?: {
-    completeness: number;          // 0-100
-    consistency: number;           // 0-100
-    creativity: number;            // 0-100
-    user_satisfaction: number;     // 0-100
-  };
-  generation_metadata: {
-    total_iterations: number;
-    tools_used: ToolType[];
-  };
-  created_at: string;
-  updated_at: string;
 }
 
 export interface WorldbookEntry {
   id: string;
   uid: string;
-  key: string[];                   // Trigger keywords
+  key: string[];
   keysecondary: string[];
-  comment: string;                 // Entry title/description
-  content: string;                 // Entry content
-  constant: boolean;               // Always active
-  selective: boolean;              // Context-dependent
+  comment: string;
+  content: string;
+  constant: boolean;
+  selective: boolean;
   order: number;
-  position: number;                // Insertion position
+  position: number;
   disable: boolean;
-  probability: number;             // Activation probability
-  useProbability: boolean;
 }
 
-// Main conversation structure
-export interface AgentConversation {
+// ============================================================================
+// MAIN SESSION STRUCTURE
+// ============================================================================
+
+/**
+ * Research Session - the main data container
+ * Represents a complete research/generation session
+ */
+export interface ResearchSession {
   id: string;
   title: string;
-  status: AgentStatus;
+  status: SessionStatus;
   
-  // Core state components
-  plan_pool: PlanPool;
-  thought_buffer: ThoughtBuffer;
-  result: AgentResult;
-  
-  // Message history for UI display
-  messages: ConversationMessage[];
+  // Core session data
+  messages: Message[];
+  research_state: ResearchState;
+  generation_output: GenerationOutput;
   
   // LLM configuration
   llm_config: {
@@ -172,53 +208,17 @@ export interface AgentConversation {
     llm_type: "openai" | "ollama";
     temperature: number;
     max_tokens?: number;
+    tavily_api_key?: string; // Add Tavily API key support
   };
   
-  // Execution context
-  context: {
+  // Execution tracking
+  execution_info: {
     current_iteration: number;
     max_iterations: number;
-    start_time: string;
-    last_activity: string;
     error_count: number;
     last_error?: string;
+    total_tokens_used: number;
+    token_budget: number;
   };
   
-  created_at: string;
-  updated_at: string;
 }
-
-export interface ConversationMessage {
-  id: string;
-  role: "user" | "agent" | "system";
-  content: string;
-  message_type: "userInput" | "agent_thinking" | "agent_action" | "agent_output" | "system_info";
-  metadata?: {
-    task_id?: string;
-    tool_used?: ToolType;
-    reasoning?: string;
-    attachments?: any[];
-  };
-  timestamp: string;
-}
-
-// Tool execution interface
-export interface ToolExecutionContext {
-  conversation_id: string;
-  plan_pool: PlanPool;
-  thought_buffer: ThoughtBuffer;
-  current_result: AgentResult;
-  llm_config: AgentConversation["llm_config"];
-}
-
-export interface ToolExecutionResult {
-  success: boolean;
-  result?: any;
-  error?: string;
-  should_update_plan?: boolean;
-  should_continue?: boolean;
-  userInput_required?: boolean;
-  reasoning?: string;
-}
-
-// Note: PlanExecutor interface has been replaced by the unified BaseTool system in lib/tools/

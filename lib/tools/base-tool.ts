@@ -1,102 +1,143 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { ChatOllama } from "@langchain/ollama";
 import { 
   ToolType,
-  ToolExecutionContext,
-  ToolExecutionResult,
-  PlanTask,
-  AgentConversation,
-} from "../models/agent-model";
-import { ThoughtBufferOperations } from "@/lib/data/agent/thought-buffer-operations";
-import { AgentConversationOperations } from "@/lib/data/agent/agent-conversation-operations";
+  ExecutionContext,
+  ExecutionResult,
+  KnowledgeEntry,
+} from "@/lib/models/agent-model";
+import { v4 as uuidv4 } from "uuid";
+
+// ============================================================================
+// PURE EXECUTION TOOL ARCHITECTURE - Following DeepResearch Design
+// ============================================================================
 
 /**
- * Base Tool Class - provides common functionality for all tools
+ * Tool parameter definition for planning phase
+ * Following DeepResearch approach - simple parameter schema
  */
-export abstract class BaseTool {
+export interface ToolParameter {
+  name: string;
+  type: "string" | "number" | "boolean" | "object" | "array";
+  required: boolean;
+  description: string;
+}
+
+/**
+ * Detailed tool information for planning
+ */
+export interface DetailedToolInfo {
+  type: ToolType;
+  name: string;
+  description: string;
+  parameters: ToolParameter[];
+}
+
+/**
+ * Simple tool interface - pure execution only
+ */
+export interface SimpleTool {
+  readonly name: string;
+  readonly description: string;
+  readonly toolType: ToolType;
+  readonly parameters: ToolParameter[];
+  
+  execute(context: ExecutionContext, parameters: Record<string, any>): Promise<ExecutionResult>;
+}
+
+/**
+ * Base Tool - Pure Execution Unit (Following DeepResearch Philosophy)
+ * No LLM calls, no parameter generation, just direct execution
+ */
+export abstract class BaseSimpleTool implements SimpleTool {
   abstract readonly toolType: ToolType;
   abstract readonly name: string;
   abstract readonly description: string;
+  abstract readonly parameters: ToolParameter[];
 
   /**
-   * Check if this tool can execute the given task
+   * Pure execution method - no LLM calls, just execute with given parameters
    */
-  canExecute(task: PlanTask): boolean {
-    return task.tool === this.toolType;
+  async execute(context: ExecutionContext, parameters: Record<string, any>): Promise<ExecutionResult> {
+    try {
+      console.log(`🛠️ [${this.name}] Executing with parameters:`, parameters);
+      
+      // Direct execution with provided parameters
+      const result = await this.doWork(parameters, context);
+      
+      console.log(`✅ [${this.name}] Execution completed`);
+      
+      return result;
+      
+    } catch (error) {
+      console.error(`❌ [${this.name}] Execution failed:`, error);
+      return this.createFailureResult(error);
+    }
   }
 
   /**
-   * Execute the tool with the given task and context
+   * Core work logic - implement this in your tool
+   * This should be pure execution without any LLM calls
    */
-  abstract executeTask(task: PlanTask, context: ToolExecutionContext): Promise<ToolExecutionResult>;
+  protected abstract doWork(parameters: Record<string, any>, context: ExecutionContext): Promise<any>;
+
+  // ============================================================================
+  // HELPER METHODS - Pure utilities without LLM calls
+  // ============================================================================
 
   /**
-   * Get tool information for LLM prompt
+   * Create knowledge entry from results
    */
-  getToolInfo(): { type: string; name: string; description: string } {
+  protected createKnowledgeEntry(
+    source: string,
+    content: string,
+    url?: string,
+    relevanceScore: number = 70,
+  ): KnowledgeEntry {
     return {
-      type: this.toolType,
-      name: this.name,
-      description: this.description,
+      id: uuidv4(),
+      source,
+      content,
+      url,
+      relevance_score: relevanceScore,  
     };
   }
 
   /**
-   * Create LLM instance from config
+   * Create success result
    */
-  protected createLLM(config: AgentConversation["llm_config"]) {
-    if (config.llm_type === "openai") {
-      return new ChatOpenAI({
-        modelName: config.model_name,
-        openAIApiKey: config.api_key,
-        configuration: {
-          baseURL: config.base_url,
-        },
-        temperature: config.temperature,
-        maxTokens: config.max_tokens,
-        streaming: false,
-      });
-    } else if (config.llm_type === "ollama") {
-      return new ChatOllama({
-        model: config.model_name,
-        baseUrl: config.base_url || "http://localhost:11434",
-        temperature: config.temperature,
-        streaming: false,
-      });
+  protected createSuccessResult(
+    result: any,
+  ): ExecutionResult {
+    return {
+      success: true,
+      result,
+    };  
+  }
+
+  /**
+   * Create failure result
+   */
+  protected createFailureResult(
+    error: any,
+  ): ExecutionResult {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    return {
+      success: false,
+      error: `${this.name} failed: ${errorMessage}`,
+    };
+  }
+
+  /**
+   * Build simple summaries for context (no LLM calls)
+   */
+  protected buildKnowledgeBaseSummary(knowledgeBase: KnowledgeEntry[]): string {
+    if (knowledgeBase.length === 0) {
+      return "No knowledge gathered yet.";
     }
-
-    throw new Error(`Unsupported LLM type: ${config.llm_type}`);
-  }
-
-  /**
-   * Add thought to conversation
-   */
-  protected async addThought(
-    conversationId: string,
-    type: "observation" | "reasoning" | "decision" | "reflection",
-    content: string,
-    taskId?: string,
-  ): Promise<void> {
-    await ThoughtBufferOperations.addThought(conversationId, {
-      type,
-      content,
-      related_task_id: taskId,
-    });
-  }
-
-  /**
-   * Add message to conversation
-   */
-  protected async addMessage(
-    conversationId: string,
-    role: "agent" | "system",
-    content: string,
-    messageType: "agent_thinking" | "agent_action" | "agent_output" | "system_info" = "agent_output",
-  ): Promise<void> {
-    await AgentConversationOperations.addMessage(conversationId, {
-      role,
-      content,
-      message_type: messageType,
-    });
+    
+    return knowledgeBase
+      .slice(0, 5)
+      .map(k => `- ${k.source}: ${k.content.substring(0, 100)}...`)
+      .join("\n");
   }
 } 
