@@ -86,6 +86,17 @@ For Download Version: please refer to the [Download for Mac, Windows, Linux](htt
 - **Visual Memory Management**: React Flow-powered session tracing and branching.
 - **Character Cards & Lore**: Compatible with SillyTavern cards, manage everything in one place.
 
+| API Recommendations & Configuration |
+| :-------------- |
+
+**Supported API Formats**: Narratium.ai supports the standard OpenAI API format, compatible with various AI model providers.
+
+**Recommended API Services**:
+- **OpenAI**: Directly supports models using the OpenAI API format
+- **OpenRouter**: Recommended to use [OpenRouter](https://openrouter.ai/) for unified access to various models, including:
+- **Relay Service Deployment**: Recommended [new-api](https://github.com/QuantumNous/new-api)
+- **Local Deployment**: Supports local inference services like Ollama, LM Studio, etc.
+
 | Narratium vs. Other AI Roleplay Platforms |
 | :---------------------------------------- |
 

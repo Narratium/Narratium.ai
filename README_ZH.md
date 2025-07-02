@@ -81,12 +81,25 @@
 
 如需客户端下载版本，请访问 [Mac、Windows、Linux 下载页面](https://github.com/Narratium/Narratium.ai/releases)
 
+
+
 | 功能特性 |
 | :------- |
 
 - **沉浸式冒险模式**: 创建个性化世界并做出重要的决策。
 - **可视化记忆管理**: 基于React Flow的会话追踪和分支。
 - **角色卡片与背景**: 兼容SillyTavern卡片，在一处管理所有内容。
+
+| API 推荐与配置 |
+| :-------------- |
+
+**支持的API格式**: Narratium.ai 支持标准的 OpenAI API 格式，兼容多种AI模型提供商。
+
+**推荐API服务**:
+- **OpenAI**: 直接支持 OpenAI API 格式的模型
+- **OpenRouter**: 推荐使用 [OpenRouter](https://openrouter.ai/) 统一访问多种模型，包括:
+- **中转站部署**: 推荐 [new-api](https://github.com/QuantumNous/new-api)
+- **本地部署**: 支持 Ollama、LM Studio 等本地推理服务
 
 | Narratium与其他AI角色扮演平台对比 |
 | :---------------------------------------- |
