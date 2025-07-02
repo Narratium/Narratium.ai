@@ -67,17 +67,17 @@
 | Version Information |
 | :---------------- |
 
-- **main**: Stable version branch, regularly builds desktop versions through pake
-- **dev**: Development version branch, with multiple commits daily
+- **main**: Stable version branch, regularly builds desktop versions through pake.
+- **dev**: Development version branch, with multiple commits daily.
 
 | Quickly Start |
 | :---------- |
 
-For detailed installation and setup instructions, please refer to our [Getting Started Guide](./docs/GETTING_STARTED.md)
+For detailed installation and setup instructions, please refer to our [Getting Started Guide](./docs/GETTING_STARTED.md).
 
 For detailed Vercel deployment instructions, please refer to the [Vercel Deployment Guide](./docs/VERCEL_DEPLOYMENT.md).
 
-For Download Version: please refer to the [Download for Mac, Windows, Linux](https://github.com/Narratium/Narratium.ai/releases)
+For Download Version: please refer to the [Download for Mac, Windows, Linux](https://github.com/Narratium/Narratium.ai/releases).
 
 | Features |
 | :------- |
@@ -85,6 +85,15 @@ For Download Version: please refer to the [Download for Mac, Windows, Linux](htt
 - **Immersive Adventure Mode**: Create personalized worlds and make decisions that matter.
 - **Visual Memory Management**: React Flow-powered session tracing and branching.
 - **Character Cards & Lore**: Compatible with SillyTavern cards, manage everything in one place.
+
+| API Recommendations & Configuration |
+| :-------------- |
+
+**Recommended API Services**:
+- **OpenAI**: Directly supports models using the OpenAI API format.
+- **OpenRouter**: Recommended to use [OpenRouter](https://openrouter.ai/) for unified access to various models.
+- **Relay Service Deployment**: Recommended [new-api](https://github.com/QuantumNous/new-api).
+- **Local Deployment**: Supports local inference services like Ollama, LM Studio, etc.
 
 | Narratium vs. Other AI Roleplay Platforms |
 | :---------------------------------------- |
