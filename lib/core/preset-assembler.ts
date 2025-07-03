@@ -8,7 +8,7 @@ export class PresetAssembler {
     language: "zh" | "en" = "zh",
     fastModel: boolean,
     contextData: { username?: string; charName?: string; number?: number } = {},
-    systemPresetType: "mirror_realm" | "novel_king" = "mirror_realm",
+    systemPresetType: "mirror_realm" | "novel_king" | "professional_heart" = "mirror_realm",
   ): { systemMessage: string; userMessage: string } {
     if (prompts.length === 0 || fastModel) {
       console.group("PresetAssembler", prompts.length, fastModel);
@@ -122,7 +122,7 @@ export class PresetAssembler {
     finalUserMessageParts.push("{{memory}}");
     finalUserMessageParts.push("</memory>");
     
-    finalUserMessageParts.push(PromptLibrary.get("mirror_realm", language, "structure"));
+    finalUserMessageParts.push(PromptLibrary.get(systemPresetType, language, "structure"));
     finalUserMessageParts.push("");
     finalUserMessageParts.push("<outputFormat>");
     if (language === "zh") {
@@ -172,7 +172,7 @@ export class PresetAssembler {
     };
   }
 
-  private static _getDefaultFramework(language: "zh" | "en" = "zh", contextData: { username?: string; charName?: string; number?: number }, systemPresetType: "mirror_realm" | "novel_king" = "mirror_realm"): { systemMessage: string; userMessage: string } {
+  private static _getDefaultFramework(language: "zh" | "en" = "zh", contextData: { username?: string; charName?: string; number?: number }, systemPresetType: "mirror_realm" | "novel_king" | "professional_heart" = "mirror_realm"): { systemMessage: string; userMessage: string } {
     const orderedSystemIdentifiers = [
       "main",
       "worldInfoBefore",

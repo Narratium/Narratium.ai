@@ -115,7 +115,8 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
       const preset = githubPresets.find(p => p.name === presetName);
       if (preset) {
         // Set the system preset type in localStorage
-        localStorage.setItem("system_preset_type", presetName === "novel_king" ? "novel_king" : "mirror_realm");
+        let presetType = presetName;
+        localStorage.setItem("system_preset_type", presetType);
         localStorage.setItem("system_preset_name", getPresetDisplayName(presetName, language as "zh" | "en"));
         
         // Mark as selected (using the existing downloaded state for UI consistency)
@@ -133,7 +134,14 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
       
       // Get current selected preset from localStorage
       const currentPresetType = localStorage.getItem("system_preset_type");
-      const currentPresetName = currentPresetType === "novel_king" ? "novel_king" : "mirror_realm";
+      let currentPresetName: string;
+      if (currentPresetType === "novel_king") {
+        currentPresetName = "novel_king";
+      } else if (currentPresetType === "professional_heart") {
+        currentPresetName = "professional_heart";
+      } else {
+        currentPresetName = "mirror_realm";
+      }
       
       // Set the selected preset
       setDownloadedPresets([currentPresetName]);
