@@ -1,9 +1,10 @@
-import { AgentEngine } from "@/lib/core/agent-engine";
+import { AgentEngine } from "./agent-engine";
 import { ResearchSessionOperations } from "@/lib/data/agent/agent-conversation-operations";
 import { ResearchSession, SessionStatus } from "@/lib/models/agent-model";
+import { ConfigManager, loadConfigFromLocalStorage } from "./config-manager";
 
 // Define user input callback type
-type UserInputCallback = (message?: string) => Promise<string>;
+type UserInputCallback = (message?: string, options?: string[]) => Promise<string>;
 
 /**
  * Agent Service - Simplified for Real-time Decision Architecture
@@ -11,8 +12,10 @@ type UserInputCallback = (message?: string) => Promise<string>;
  */
 export class AgentService {
   private engines: Map<string, AgentEngine> = new Map();
+  private configManager: ConfigManager;
 
   constructor() {
+    this.configManager = ConfigManager.getInstance();
     // Initialize storage on construction
     this.initialize();
   }
@@ -34,15 +37,6 @@ export class AgentService {
    */
   async startGeneration(
     initialUserRequest: string,
-    llmConfig: {
-      model_name: string;
-      api_key: string;
-      base_url?: string;
-      llm_type: "openai" | "ollama";
-      temperature?: number;
-      max_tokens?: number;
-      tavily_api_key?: string;
-    },
     userInputCallback?: UserInputCallback,
   ): Promise<{
     conversationId: string;
@@ -51,18 +45,24 @@ export class AgentService {
     error?: string;
   }> {
     try {
+      // Ensure ConfigManager is initialized
+      if (!this.configManager.isConfigured()) {
+        const config = loadConfigFromLocalStorage();
+        this.configManager.setConfig(config);
+      }
+
+      // Check if LLM configuration is available
+      if (!this.configManager.isConfigured()) {
+        return {
+          conversationId: "",
+          success: false,
+          error: "LLM configuration not found. Please run configuration setup first.",
+        };
+      }
+
       // Create new conversation with fixed title and story as user request
       const session = await ResearchSessionOperations.createSession(
         "Character & Worldbook Generation", // Fixed title
-        {
-          model_name: llmConfig.model_name,
-          api_key: llmConfig.api_key,
-          base_url: llmConfig.base_url,
-          llm_type: llmConfig.llm_type,
-          temperature: llmConfig.temperature || 0.7,
-          max_tokens: llmConfig.max_tokens,
-          tavily_api_key: llmConfig.tavily_api_key,
-        },
         initialUserRequest, // Story description as user request
       );
       
@@ -121,8 +121,13 @@ export class AgentService {
       
       // Check completion using new character_progress structure
       const hasCharacterData = !!session.generation_output.character_data;
-      const hasWorldbookData = !!session.generation_output.worldbook_data && session.generation_output.worldbook_data.length > 0;
-      const hasResult = hasCharacterData && hasWorldbookData;
+      // Check if all mandatory worldbook components exist and supplement_data has content (at least 5 valid entries)
+      const hasAllWorldbookComponents = !!session.generation_output.status_data && 
+                                      !!session.generation_output.user_setting_data && 
+                                      !!session.generation_output.world_view_data && 
+                                      (session.generation_output.supplement_data && session.generation_output.supplement_data.filter(e => e.content && e.content.trim() !== "").length >= 5);
+      
+      const hasResult = hasCharacterData && hasAllWorldbookComponents;
       
       return {
         session: session,
@@ -132,10 +137,13 @@ export class AgentService {
           totalIterations: session.execution_info.current_iteration,
           knowledgeBaseSize: session.research_state.knowledge_base.length,
         },
-        hasResult,
+        hasResult: hasResult || false,
         result: hasResult ? {
           character_data: session.generation_output.character_data,
-          worldbook_data: session.generation_output.worldbook_data,
+          status_data: session.generation_output.status_data,
+          user_setting_data: session.generation_output.user_setting_data,
+          world_view_data: session.generation_output.world_view_data,
+          supplement_data: session.generation_output.supplement_data,
           knowledge_base: session.research_state.knowledge_base,
           completion_status: session,
         } : undefined,
@@ -271,41 +279,55 @@ export class AgentService {
    */
   async getGenerationOutput(sessionId: string): Promise<{
     hasCharacter: boolean;
-    hasWorldbook: boolean;
-    completionPercentage: number;
     characterData?: any;
-    worldbookData?: any[];
+    hasStatusData: boolean;
+    hasUserSettingData: boolean;
+    hasWorldViewData: boolean;
+    supplementDataCount: number;
+    statusData?: any;
+    userSettingData?: any;
+    worldViewData?: any;
+    supplementData?: any[];
   }> {
     try {
       const session = await ResearchSessionOperations.getSessionById(sessionId);
       if (!session) {
         return {
           hasCharacter: false,
-          hasWorldbook: false,
-          completionPercentage: 0,
+          hasStatusData: false,
+          hasUserSettingData: false,
+          hasWorldViewData: false,
+          supplementDataCount: 0,
         };
       }
       
       const hasCharacter = !!session.generation_output.character_data;
-      const hasWorldbook = !!session.generation_output.worldbook_data && session.generation_output.worldbook_data.length > 0;
-      
-      // Calculate completion percentage from completion status
-      const completionPercentage = 0;
-      
+      const hasStatus = !!session.generation_output.status_data;
+      const hasUserSetting = !!session.generation_output.user_setting_data;
+      const hasWorldView = !!session.generation_output.world_view_data;
+      const validSupplementCount = session.generation_output.supplement_data?.filter(e => e.content && e.content.trim() !== "").length || 0;
+
       return {
         hasCharacter,
-        hasWorldbook,
-        completionPercentage: Math.round(completionPercentage),
         characterData: session.generation_output.character_data,
-        worldbookData: session.generation_output.worldbook_data,
+        hasStatusData: hasStatus,
+        hasUserSettingData: hasUserSetting,
+        hasWorldViewData: hasWorldView,
+        supplementDataCount: validSupplementCount,
+        statusData: session.generation_output.status_data,
+        userSettingData: session.generation_output.user_setting_data,
+        worldViewData: session.generation_output.world_view_data,
+        supplementData: session.generation_output.supplement_data,
       };
       
     } catch (error) {
       console.error("Failed to get character progress:", error);
       return {
         hasCharacter: false,
-        hasWorldbook: false,
-        completionPercentage: 0,
+        hasStatusData: false,
+        hasUserSettingData: false,
+        hasWorldViewData: false,
+        supplementDataCount: 0,
       };
     }
   }
@@ -385,8 +407,10 @@ export class AgentService {
         // Count completed generations
         if (session.status === SessionStatus.COMPLETED && 
             session.generation_output.character_data && 
-            session.generation_output.worldbook_data && 
-            session.generation_output.worldbook_data.length > 0) {
+            session.generation_output.status_data &&
+            session.generation_output.user_setting_data &&
+            session.generation_output.world_view_data &&
+            (session.generation_output.supplement_data && session.generation_output.supplement_data.length >= 5)) {
           completedGenerations++;
         }
        
@@ -465,8 +489,5 @@ export class AgentService {
   getEngine(conversationId: string): AgentEngine | undefined {
     return this.engines.get(conversationId);
   }
-}
 
-// Singleton instance
-export const agentService = new AgentService(); 
- 
+}
