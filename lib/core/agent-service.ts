@@ -37,6 +37,7 @@ export class AgentService {
    */
   async startGeneration(
     initialUserRequest: string,
+    sessionId?: string,
     userInputCallback?: UserInputCallback,
   ): Promise<{
     conversationId: string;
@@ -60,11 +61,42 @@ export class AgentService {
         };
       }
 
-      // Create new conversation with fixed title and story as user request
-      const session = await ResearchSessionOperations.createSession(
+      let session: any = null;
+
+      // Similar to page.tsx logic: check if sessionId provided and session exists
+      if (sessionId) {
+        console.log(`🔍 Checking for existing session: ${sessionId}`);
+        session = await ResearchSessionOperations.getSessionById(sessionId);
+        
+        if (session) {
+          console.log("✅ Found existing session, resuming:", session.id);
+          
+          // Create agent engine for existing session - similar to loading existing dialogue
+          const engine = new AgentEngine(session.id, userInputCallback);
+          this.engines.set(session.id, engine);
+          
+          // Resume execution
+          const result = await engine.start(userInputCallback);
+          
+          return {
+            conversationId: session.id,
+            success: result.success,
+            result: result.result,
+            error: result.error,
+          };
+        } else {
+          console.log("⚠️ Session not found with provided ID, creating new session");
+        }
+      }
+
+      // Create new session if no sessionId provided or session doesn't exist - similar to initializeNewDialogue
+      console.log("🆕 Creating new session for request:", initialUserRequest);
+      session = await ResearchSessionOperations.createSession(
         "Character & Worldbook Generation", // Fixed title
         initialUserRequest, // Story description as user request
       );
+      
+      console.log("✅ New session created successfully:", session.id);
       
       // Create agent engine with user input callback
       const engine = new AgentEngine(session.id, userInputCallback);
@@ -488,6 +520,62 @@ export class AgentService {
    */
   getEngine(conversationId: string): AgentEngine | undefined {
     return this.engines.get(conversationId);
+  }
+
+  /**
+   * Handle user response for sessions waiting for user input
+   */
+  async respondToAgent(sessionId: string, userResponse: string): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      const session = await ResearchSessionOperations.getSessionById(sessionId);
+      if (!session) {
+        return {
+          success: false,
+          error: "Session not found",
+        };
+      }
+
+      // Check if session is waiting for user input
+      if (session.status !== SessionStatus.WAITING_USER) {
+        return {
+          success: false,
+          error: "Session is not waiting for user input",
+        };
+      }
+
+      // Add user response message
+      await ResearchSessionOperations.addMessage(sessionId, {
+        role: "user",
+        content: userResponse,
+        type: "user_input",
+      });
+
+      // Get the engine for this session
+      const engine = this.engines.get(sessionId);
+      if (!engine) {
+        return {
+          success: false,
+          error: "Agent engine not found for this session",
+        };
+      }
+
+      // Resume the engine with user input
+      await engine.handleUserResponse(userResponse);
+
+      return {
+        success: true,
+      };
+      
+    } catch (error) {
+      console.error("Failed to respond to agent:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
   }
 
 }
