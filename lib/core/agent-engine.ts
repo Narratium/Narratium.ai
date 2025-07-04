@@ -173,11 +173,49 @@ export class AgentEngine {
   private userInputCallback?: UserInputCallback;
   private model: any; // LLM model instance
   private configManager: ConfigManager;
+  
+  // Add user input state management
+  private pendingUserInput: {
+    resolve: (value: string) => void;
+    reject: (error: Error) => void;
+  } | null = null;
 
   constructor(conversationId: string, userInputCallback?: UserInputCallback) {
     this.conversationId = conversationId;
     this.userInputCallback = userInputCallback;
     this.configManager = ConfigManager.getInstance();
+  }
+
+  /**
+   * Handle user response for pending user input
+   */
+  async handleUserResponse(userResponse: string): Promise<void> {
+    if (this.pendingUserInput) {
+      // Resolve the pending promise with user response
+      this.pendingUserInput.resolve(userResponse);
+      this.pendingUserInput = null;
+      
+      // Update session status to continue execution
+      await ResearchSessionOperations.updateStatus(this.conversationId, SessionStatus.THINKING);
+    }
+  }
+
+  /**
+   * Modified user input callback for web UI support
+   */
+  private async requestUserInput(message?: string, options?: string[]): Promise<string> {
+    return new Promise((resolve, reject) => {
+      // Store the promise resolvers
+      this.pendingUserInput = { resolve, reject };
+      
+      // If there's a callback (for CLI or other interfaces), use it
+      if (this.userInputCallback) {
+        this.userInputCallback(message, options)
+          .then(resolve)
+          .catch(reject);
+      }
+      // For web UI, the promise will be resolved by handleUserResponse
+    });
   }
 
   /**
@@ -457,27 +495,24 @@ ${taskQueue.map((task, i) => `${i + 1}. ${task.description} (${task.sub_problems
 
       // Handle ASK_USER tool - special case for user interaction flow control
       if (decision.tool === ToolType.ASK_USER && result.success) {
-        if (!this.userInputCallback) {
-          throw new Error("User input required but no callback provided");
-        }
-
         await ResearchSessionOperations.updateStatus(this.conversationId, SessionStatus.WAITING_USER);
         
-        const userInput = await this.userInputCallback(result.result?.message, result.result?.options);
-
+        // Add agent message indicating user input is needed
         await ResearchSessionOperations.addMessage(this.conversationId, {
           role: "agent",
-          content: result.result?.message,
+          content: `INPUT REQUIRED: ${result.result?.message || "Please provide your input"}${result.result?.options ? `\n\nOptions: ${result.result.options.join(", ")}` : ""}`,
           type: "agent_action",
         });
         
+        // Request user input using the callback method (consistent with CLI)
+        const userInput = await this.requestUserInput(result.result?.message, result.result?.options);
+        
+        // Add user response message
         await ResearchSessionOperations.addMessage(this.conversationId, {
           role: "user",
           content: userInput,
           type: "user_input",
         });
-        
-        await ResearchSessionOperations.updateStatus(this.conversationId, SessionStatus.THINKING);
         
         // Complete current sub-problem after successful user interaction
         await ResearchSessionOperations.completeCurrentSubProblem(this.conversationId);

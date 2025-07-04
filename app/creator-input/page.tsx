@@ -8,7 +8,7 @@ import { useLanguage } from "../i18n";
 
 export default function CreatorInputPage() {
   const router = useRouter();
-  const { t, fontClass,serifFontClass, titleFontClass } = useLanguage();
+  const { t, fontClass, serifFontClass, titleFontClass } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -36,9 +36,9 @@ export default function CreatorInputPage() {
     
     setIsLoading(true);
     
-    setTimeout(() => {
-      router.push("/creator-area");
-    }, 1000);
+    // Use URL params to pass data directly
+    const encodedRequest = encodeURIComponent(inputValue.trim());
+    router.push(`/creator-area?request=${encodedRequest}`);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
