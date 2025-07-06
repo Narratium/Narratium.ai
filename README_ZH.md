@@ -106,11 +106,13 @@
     <th align="center">Narratium.ai</th>
     <th align="center">SillyTavern</th>
     <th align="center">AI Dungeon</th>
+    <th align="center">fount</th>
   </tr>
   <tr>
     <td><strong>开源</strong></td>
     <td align="center">✅</td>
     <td align="center">✅</td>
+    <td align="center">❌</td>
     <td align="center">❌</td>
   </tr>
   <tr>
@@ -118,11 +120,13 @@
     <td align="center">✅</td>
     <td align="center">❌ (复杂设置)</td>
     <td align="center">✅ (但流程有限)</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>角色记忆与追踪</strong></td>
     <td align="center">✅</td>
     <td align="center">⚠️ (基于插件)</td>
+    <td align="center">❌</td>
     <td align="center">❌</td>
   </tr>
   <tr>
@@ -130,17 +134,20 @@
     <td align="center">✅</td>
     <td align="center">⚠️ (通过扩展)</td>
     <td align="center">❌</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>长期对话支持</strong></td>
     <td align="center">✅</td>
     <td align="center">✅</td>
     <td align="center">❌ (上下文有限)</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>离线/本地部署</strong></td>
     <td align="center">✅</td>
     <td align="center">✅</td>
+    <td align="center">❌</td>
     <td align="center">❌</td>
   </tr>
   <tr>
@@ -148,12 +155,14 @@
     <td align="center">✅</td>
     <td align="center">❌ (极简)</td>
     <td align="center">✅</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>无限分支故事情节</strong></td>
     <td align="center">✅</td>
     <td align="center">⚠️ (需要手动努力)</td>
     <td align="center">✅ (但不稳定)</td>
+    <td align="center">❌</td>
   </tr>
 </table>
 
