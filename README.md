@@ -104,11 +104,13 @@ For Download Version: please refer to the [Download for Mac, Windows, Linux](htt
     <th align="center">Narratium.ai</th>
     <th align="center">SillyTavern</th>
     <th align="center">AI Dungeon</th>
+    <th align="center">fount</th>
   </tr>
   <tr>
     <td><strong>Open Source</strong></td>
     <td align="center">✅</td>
     <td align="center">✅</td>
+    <td align="center">❌</td>
     <td align="center">❌</td>
   </tr>
   <tr>
@@ -116,11 +118,13 @@ For Download Version: please refer to the [Download for Mac, Windows, Linux](htt
     <td align="center">✅</td>
     <td align="center">❌ (complex setup)</td>
     <td align="center">✅ (but limited flow)</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>Character Memory &amp; Tracking</strong></td>
     <td align="center">✅</td>
     <td align="center">⚠️ (plugin-based)</td>
+    <td align="center">❌</td>
     <td align="center">❌</td>
   </tr>
   <tr>
@@ -128,17 +132,20 @@ For Download Version: please refer to the [Download for Mac, Windows, Linux](htt
     <td align="center">✅</td>
     <td align="center">⚠️ (via extensions)</td>
     <td align="center">❌</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>Long-term Conversation Support</strong></td>
     <td align="center">✅</td>
     <td align="center">✅</td>
     <td align="center">❌ (limited context)</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>Offline / Local Deployment</strong></td>
     <td align="center">✅</td>
     <td align="center">✅</td>
+    <td align="center">❌</td>
     <td align="center">❌</td>
   </tr>
   <tr>
@@ -146,12 +153,14 @@ For Download Version: please refer to the [Download for Mac, Windows, Linux](htt
     <td align="center">✅</td>
     <td align="center">❌ (minimal)</td>
     <td align="center">✅</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>Infinite Branching Storylines</strong></td>
     <td align="center">✅</td>
     <td align="center">⚠️ (manual effort)</td>
     <td align="center">✅ (but unstable)</td>
+    <td align="center">❌</td>
   </tr>
 </table>
 
