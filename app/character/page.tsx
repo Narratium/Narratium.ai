@@ -42,6 +42,10 @@ import CharacterChatHeader from "@/components/CharacterChatHeader";
 import UserTour from "@/components/UserTour";
 import { useTour } from "@/hooks/useTour";
 import ErrorToast from "@/components/ErrorToast";
+import {
+  getCharacterCompressorPromptEn,
+  getCharacterCompressorPromptZh, getNovelPerspectivePromptEn, getNovelPerspectivePromptZh, getProtagonistPerspectivePromptEn, getProtagonistPerspectivePromptZh, getSceneTransitionPromptEn, getSceneTransitionPromptZh, getStatusPromptEn, getStatusPromptZh, getStoryProgressPromptEn, getStoryProgressPromptZh,
+} from "@/lib/prompts/character-prompts";
 
 /**
  * Interface definitions for the component's data structures
@@ -552,24 +556,25 @@ export default function CharacterPage() {
   
     let message = userInput;
     let hints: string[] = [];
+    const lang = localStorage.getItem("language") || "zh";
   
     if (activeModes["story-progress"]) {
-      const progressHint = t("characterChat.storyProgressHint");
+      const progressHint = lang === "zh" ? getStoryProgressPromptZh() : getStoryProgressPromptEn();
       hints.push(progressHint);
     }
   
     if (activeModes["perspective"].active) {
       if (activeModes["perspective"].mode === "novel") {
-        const novelHint = t("characterChat.novelPerspectiveHint");
+        const novelHint = lang === "zh" ? getNovelPerspectivePromptZh() : getNovelPerspectivePromptEn();
         hints.push(novelHint);
       } else if (activeModes["perspective"].mode === "protagonist") {
-        const protagonistHint = t("characterChat.protagonistPerspectiveHint");
+        const protagonistHint = lang === "zh" ? getProtagonistPerspectivePromptZh() : getProtagonistPerspectivePromptEn();
         hints.push(protagonistHint);
       }
     }
   
     if (activeModes["scene-setting"]) {
-      const sceneSettingHint = t("characterChat.sceneTransitionHint");
+      const sceneSettingHint = lang === "zh" ? getSceneTransitionPromptZh() : getSceneTransitionPromptEn();
       hints.push(sceneSettingHint);
     }
   
