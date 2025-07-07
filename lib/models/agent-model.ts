@@ -201,13 +201,21 @@ export interface SupplementEntry extends BaseWorldbookEntry {
 // ============================================================================
 
 /**
- * Message in the conversation/research process
+ * Communication message structure - enhanced with UI metadata
  */
 export interface Message {
   id: string;
   role: "user" | "agent" | "system";
   content: string;
-  type: "user_input" | "agent_thinking" | "agent_action" | "system_info" | "quality_evaluation" | "tool_failure";
+  type: "user_input" | "agent_thinking" | "agent_action" | "system_info" | "quality_evaluation" | "tool_failure" | "tool_execution" | "system_prompt";
+  timestamp?: string | Date; // Timestamp for message ordering
+  metadata?: {
+    tool?: string;
+    parameters?: any;
+    result?: any;
+    reasoning?: string;
+    [key: string]: any;
+  };
 }
 
 /**

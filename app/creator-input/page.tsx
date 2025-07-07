@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Send, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "../i18n";
+import { initAgentSession } from "@/function/agent/session";
 
 export default function CreatorInputPage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function CreatorInputPage() {
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     setMounted(true);
@@ -35,10 +37,25 @@ export default function CreatorInputPage() {
     if (!inputValue.trim() || isLoading) return;
     
     setIsLoading(true);
+    setError("");
     
-    // Use URL params to pass data directly
-    const encodedRequest = encodeURIComponent(inputValue.trim());
-    router.push(`/creator-area?request=${encodedRequest}`);
+    try {
+      // Create new agent session
+      const title = `Character Creation - ${new Date().toLocaleDateString()}`;
+      const response = await initAgentSession(title, inputValue.trim());
+      
+      if (!response.success) {
+        throw new Error(response.error || "Failed to create session");
+      }
+      
+      // Navigate to creator-area with session ID
+      router.push(`/creator-area?id=${response.sessionId}`);
+      
+    } catch (error: any) {
+      console.error("Error creating session:", error);
+      setError(error.message || "Failed to start creation process");
+      setIsLoading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -98,6 +115,12 @@ export default function CreatorInputPage() {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="w-full max-w-2xl"
         >
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="relative">
             <div className="relative bg-black/20 backdrop-blur-sm border border-amber-500/30 rounded-2xl p-1 shadow-[0_0_20px_rgba(251,146,60,0.3)] hover:shadow-[0_0_30px_rgba(251,146,60,0.4)] transition-all duration-300">
               <textarea
@@ -124,7 +147,7 @@ export default function CreatorInputPage() {
 
             <div className="flex justify-between items-center mt-3 px-2">
               <span className={`text-[#c0a480]/60 text-xs ${fontClass}`}>
-                {t("creatorInput.enterToSend")}
+                {isLoading ? "Creating your session..." : t("creatorInput.enterToSend")}
               </span>
               <span className="text-[#c0a480]/60 text-xs font-cinzel">
                 {inputValue.length}/1000

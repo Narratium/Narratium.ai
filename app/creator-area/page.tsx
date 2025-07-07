@@ -1,13 +1,38 @@
+/**
+ * Creator Area Page Component
+ * 
+ * This is the main agent creation interface that provides:
+ * - Real-time AI agent interaction for character creation
+ * - Chat-style message display with expandable details
+ * - Progress tracking and component completion status
+ * - Export functionality for generated characters and worldbooks
+ * - User input handling for agent decisions
+ * 
+ * The page handles all agent interactions and provides a comprehensive interface for:
+ * - Agent thinking process visualization
+ * - Tool execution monitoring
+ * - Quality evaluation tracking
+ * - User choice handling for agent decisions
+ * - Character and worldbook generation progress
+ * 
+ * Dependencies:
+ * - getAgentSession: For session loading and management
+ * - executeAgentSession: For agent execution control
+ * - respondToAgentSession: For user response handling
+ * - AgentUserInput: For user interaction components
+ */
+
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../i18n";
-import { startAgentGeneration } from "@/function/agent/start";
+import { getAgentSession } from "@/function/agent/session";
+import { executeAgentSession, respondToAgentSession } from "@/function/agent/execute";
 import { getAgentSessionStatus } from "@/function/agent/status";
-import { getAgentSessionMessages, respondToAgent } from "@/function/agent/messages";
 import AgentUserInput from "@/components/AgentUserInput";
-import { useSearchParams } from "next/navigation";
+import ErrorToast from "@/components/ErrorToast";
 import { 
   Brain, 
   Search, 
@@ -19,19 +44,33 @@ import {
   AlertCircle, 
   ChevronDown, 
   ChevronRight,
-  Eye,
-  EyeOff,
   Download,
-  Copy,
   ArrowLeft,
+  HelpCircle,
+  ImageIcon,
+  Palette,
+  Loader2,
 } from "lucide-react";
+
+/**
+ * Interface definitions for the component's data structures
+ */
+interface AgentSession {
+  id: string;
+  title: string;
+  status: string;
+  research_state: {
+    main_objective: string;
+  };
+  generation_output?: any;
+}
 
 interface Message {
   id: string;
   role: "agent" | "user";
   content: string;
-  type: "agent_thinking" | "agent_action" | "user_input" | "tool_execution" | "quality_evaluation" | "system_prompt";
-  timestamp: Date;
+  type?: "agent_thinking" | "agent_action" | "user_input" | "tool_execution" | "quality_evaluation" | "system_prompt" | "user_response" | "tool_result" | "agent_message" | "system_message" | "error";
+  timestamp?: Date;
   metadata?: {
     tool?: string;
     parameters?: any;
@@ -63,6 +102,11 @@ const MESSAGE_TYPE_ICONS = {
   tool_execution: Sparkles,
   quality_evaluation: CheckCircle,
   system_prompt: Search,
+  user_response: User,
+  tool_result: Sparkles,
+  agent_message: MessageSquare,
+  system_message: Search,
+  error: AlertCircle,
 };
 
 const MESSAGE_TYPE_COLORS = {
@@ -72,6 +116,11 @@ const MESSAGE_TYPE_COLORS = {
   tool_execution: "text-amber-400 bg-amber-500/10",
   quality_evaluation: "text-emerald-400 bg-emerald-500/10",
   system_prompt: "text-cyan-400 bg-cyan-500/10",
+  user_response: "text-green-400 bg-green-500/10",
+  tool_result: "text-amber-400 bg-amber-500/10",
+  agent_message: "text-blue-400 bg-blue-500/10",
+  system_message: "text-cyan-400 bg-cyan-500/10",
+  error: "text-red-400 bg-red-500/10",
 };
 
 const MessageCard = ({ message, expanded, onToggle }: { 
@@ -79,8 +128,10 @@ const MessageCard = ({ message, expanded, onToggle }: {
   expanded: boolean; 
   onToggle: () => void; 
 }) => {
-  const Icon = MESSAGE_TYPE_ICONS[message.type];
-  const colorClass = MESSAGE_TYPE_COLORS[message.type];
+  // Ensure message.type exists and is valid, provide fallback
+  const messageType = message.type || "agent_message";
+  const Icon = MESSAGE_TYPE_ICONS[messageType] || HelpCircle;
+  const colorClass = MESSAGE_TYPE_COLORS[messageType] || "text-[#c0a480] bg-[#c0a480]/10";
 
   return (
     <motion.div
@@ -95,10 +146,10 @@ const MessageCard = ({ message, expanded, onToggle }: {
           </div>
           <div>
             <h4 className="text-[#c0a480] font-medium text-sm capitalize">
-              {message.type.replace("_", " ")}
+              {messageType.replace("_", " ")}
             </h4>
             <p className="text-[#c0a480]/60 text-xs">
-              {new Date(message.timestamp).toLocaleTimeString()}
+              {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : "Unknown time"}
             </p>
           </div>
         </div>
@@ -114,7 +165,7 @@ const MessageCard = ({ message, expanded, onToggle }: {
             className="mt-3 pt-3 border-t border-amber-500/20"
           >
             <div className="text-[#c0a480] text-sm whitespace-pre-wrap break-words">
-              {message.content}
+              {message.content || "No content available"}
             </div>
             {message.metadata && (
               <div className="mt-3 p-3 bg-black/30 rounded-lg">
@@ -148,20 +199,204 @@ const MessageCard = ({ message, expanded, onToggle }: {
   );
 };
 
-const ProgressPanel = ({ progress, status, result }: { 
+const AvatarGenerationSection = ({ sessionId }: { sessionId: string | null }) => {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [imageChoice, setImageChoice] = useState<"search" | "generate">("search");
+  const [imageStyle, setImageStyle] = useState("anime");
+  const [avatarResult, setAvatarResult] = useState<any>(null);
+  const [showOptions, setShowOptions] = useState(false);
+
+  const handleGenerateAvatar = async () => {
+    if (!sessionId) return;
+    
+    setIsGenerating(true);
+    try {
+      // Import and call the generateAvatar function directly
+      const { generateAvatar } = await import("@/function/agent/avatar");
+      
+      const params = new URLSearchParams({
+        sessionId,
+        imageChoice,
+        imageStyle,
+      });
+      
+      const result = await generateAvatar(params);
+      
+      if (result.success) {
+        setAvatarResult(result.data);
+      } else {
+        console.error("Avatar generation failed:", result.error);
+      }
+    } catch (error) {
+      console.error("Avatar generation error:", error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const imageStyleOptions = [
+    { value: "kawaii", label: "Cute/Kawaii" },
+    { value: "anime", label: "Japanese Anime" },
+    { value: "scifi", label: "Sci-fi/Tech" },
+    { value: "realistic", label: "Realistic/Photo" },
+    { value: "fantasy", label: "Fantasy" },
+    { value: "gothic", label: "Dark/Gothic" },
+    { value: "minimalist", label: "Minimalist" },
+    { value: "vintage", label: "Retro/Vintage" },
+  ];
+
+  return (
+    <div className="space-y-3">
+      <button
+        onClick={() => setShowOptions(!showOptions)}
+        className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2"
+      >
+        <ImageIcon className="w-4 h-4" />
+        <span>Generate Character Card</span>
+      </button>
+
+      {showOptions && (
+        <div className="space-y-3 p-3 bg-black/20 rounded-lg border border-purple-500/20">
+          <div>
+            <label className="text-[#c0a480] text-sm font-medium mb-2 block">
+              Image Source
+            </label>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setImageChoice("search")}
+                className={`flex-1 py-2 px-3 rounded text-sm transition-all ${
+                  imageChoice === "search"
+                    ? "bg-purple-600 text-white"
+                    : "bg-black/30 text-[#c0a480] hover:bg-black/50"
+                }`}
+              >
+                Search Online
+              </button>
+              <button
+                onClick={() => setImageChoice("generate")}
+                className={`flex-1 py-2 px-3 rounded text-sm transition-all ${
+                  imageChoice === "generate"
+                    ? "bg-purple-600 text-white"
+                    : "bg-black/30 text-[#c0a480] hover:bg-black/50"
+                }`}
+              >
+                AI Generate
+              </button>
+            </div>
+          </div>
+
+          {imageChoice === "generate" && (
+            <div>
+              <label className="text-[#c0a480] text-sm font-medium mb-2 block">
+                Image Style
+              </label>
+              <select
+                value={imageStyle}
+                onChange={(e) => setImageStyle(e.target.value)}
+                className="w-full bg-black/30 border border-amber-500/20 text-[#c0a480] rounded p-2 text-sm"
+              >
+                {imageStyleOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <button
+            onClick={handleGenerateAvatar}
+            disabled={isGenerating}
+            className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 disabled:from-gray-600 disabled:to-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Generating...</span>
+              </>
+            ) : (
+              <>
+                <Palette className="w-4 h-4" />
+                <span>Generate Card</span>
+              </>
+            )}
+          </button>
+
+          {avatarResult && (
+            <div className="mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+              <div className="text-green-400 text-sm font-medium mb-2">
+                Avatar Generated Successfully!
+              </div>
+              <div className="text-amber-400 text-xs mb-2">
+                ⚡ Character data embedded in PNG - ready for import!
+              </div>
+              {avatarResult.imageUrl && (
+                <div className="space-y-2">
+                  <img
+                    src={avatarResult.imageUrl}
+                    alt="Generated Avatar"
+                    className="w-full h-48 object-cover rounded-lg"
+                  />
+                  <button
+                    onClick={async () => {
+                      try {
+                        // Fetch the image data from the remote URL
+                        const response = await fetch(avatarResult.imageUrl);
+                        const blob = await response.blob();
+                        
+                        // Create a local blob URL
+                        const blobUrl = URL.createObjectURL(blob);
+                        
+                        // Create download link with the blob URL
+                        const link = document.createElement("a");
+                        link.href = blobUrl;
+                        link.download = `character-card-${Date.now()}.png`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // Clean up the blob URL
+                        URL.revokeObjectURL(blobUrl);
+                      } catch (error) {
+                        console.error("Download failed:", error);
+                        // Fallback: open in new tab if download fails
+                        window.open(avatarResult.imageUrl, "_blank");
+                      }
+                    }}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Download Character Card</span>
+                  </button>
+                </div>
+              )}
+              <div className="text-[#c0a480] text-xs mt-2">
+                {avatarResult.imageDescription}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ProgressPanel = ({ progress, status, result, sessionId }: { 
   progress: SessionProgress; 
   status: string; 
   result?: AgentResult; 
+  sessionId: string | null;
 }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const { t } = useLanguage();
 
   const getStatusColor = (status: string) => {
     switch (status) {
-    case "THINKING": return "text-amber-400";
-    case "EXECUTING": return "text-blue-400";
-    case "WAITING_USER": return "text-cyan-400";
-    case "COMPLETED": return "text-green-400";
-    case "FAILED": return "text-red-400";
+    case "thinking": return "text-amber-400";
+    case "executing": return "text-blue-400";
+    case "waiting_user": return "text-cyan-400";
+    case "completed": return "text-green-400";
+    case "failed": return "text-red-400";
     default: return "text-[#c0a480]";
     }
   };
@@ -202,7 +437,7 @@ const ProgressPanel = ({ progress, status, result }: {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `character-${Date.now()}.json`;
+    a.download = `agent-result-${new Date().getTime()}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -210,91 +445,94 @@ const ProgressPanel = ({ progress, status, result }: {
   };
 
   return (
-    <div className="bg-black/20 backdrop-blur-sm border border-amber-500/20 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[#c0a480] font-bold text-lg">Creation Progress</h3>
-        <div className="flex space-x-2">
-          {status === "COMPLETED" && result && (
-            <button
-              onClick={handleExportResult}
-              className="text-[#c0a480]/60 hover:text-[#c0a480] transition-colors"
-              title="Export result"
-            >
-              <Download className="w-4 h-4" />
-            </button>
-          )}
-          <button
-            onClick={() => setShowDetails(!showDetails)}
-            className="text-[#c0a480]/60 hover:text-[#c0a480] transition-colors"
-            title={showDetails ? "Hide details" : "Show details"}
-          >
-            {showDetails ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-3">
+    <div className="bg-black/30 backdrop-blur-sm border border-amber-500/20 rounded-lg p-4">
+      <h3 className="text-[#f4e8c1] font-semibold mb-4">Creation Progress</h3>
+      
+      <div className="space-y-4">
         <div>
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-[#c0a480]/80">Status</span>
-            <span className={`font-medium ${getStatusColor(status)}`}>
-              {status.replace("_", " ")}
-            </span>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-[#c0a480] text-sm">Overall Progress</span>
+            <span className="text-[#c0a480] text-sm">{Math.round(getProgressPercentage())}%</span>
           </div>
-        </div>
-
-        <div>
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-[#c0a480]/80">Overall Progress</span>
-            <span className="text-[#c0a480]">{Math.round(getProgressPercentage())}%</span>
-          </div>
-          <div className="w-full bg-black/30 rounded-full h-2">
+          <div className="w-full bg-black/20 rounded-full h-2">
             <div 
-              className="bg-gradient-to-r from-amber-500 to-orange-400 h-2 rounded-full transition-all duration-500"
+              className="bg-gradient-to-r from-amber-600 to-amber-400 h-2 rounded-full transition-all duration-300"
               style={{ width: `${getProgressPercentage()}%` }}
             />
           </div>
         </div>
 
-        {progress && (
-          <div className="text-xs text-[#c0a480]/60 space-y-1">
-            <div className="flex justify-between">
-              <span>Tasks Completed:</span>
-              <span>{progress.completedTasks}</span>
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-[#c0a480] text-sm">Status</span>
+            <span className={`text-sm ${getStatusColor(status)}`}>
+              {status.replace("_", " ")}
+            </span>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <span className="text-[#c0a480] text-sm">Components</span>
+            <span className="text-[#c0a480] text-sm">
+              {result ? Object.keys(result).filter(key => result[key as keyof AgentResult]).length : 0}/5
+            </span>
+          </div>
+        </div>
+
+        {result && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[#c0a480] text-sm">Character</span>
+              {result.character_data ? (
+                <CheckCircle className="w-4 h-4 text-green-400" />
+              ) : (
+                <Clock className="w-4 h-4 text-amber-400" />
+              )}
             </div>
-            <div className="flex justify-between">
-              <span>Total Iterations:</span>
-              <span>{progress.totalIterations}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[#c0a480] text-sm">Status Data</span>
+              {result.status_data ? (
+                <CheckCircle className="w-4 h-4 text-green-400" />
+              ) : (
+                <Clock className="w-4 h-4 text-amber-400" />
+              )}
             </div>
-            <div className="flex justify-between">
-              <span>Knowledge Base Size:</span>
-              <span>{progress.knowledgeBaseSize}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[#c0a480] text-sm">User Setting</span>
+              {result.user_setting_data ? (
+                <CheckCircle className="w-4 h-4 text-green-400" />
+              ) : (
+                <Clock className="w-4 h-4 text-amber-400" />
+              )}
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[#c0a480] text-sm">World View</span>
+              {result.world_view_data ? (
+                <CheckCircle className="w-4 h-4 text-green-400" />
+              ) : (
+                <Clock className="w-4 h-4 text-amber-400" />
+              )}
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[#c0a480] text-sm">Supplement</span>
+              {result.supplement_data && result.supplement_data.length >= 5 ? (
+                <CheckCircle className="w-4 h-4 text-green-400" />
+              ) : (
+                <Clock className="w-4 h-4 text-amber-400" />
+              )}
             </div>
           </div>
         )}
 
-        {showDetails && result && (
-          <div className="mt-4 pt-3 border-t border-amber-500/20">
-            <div>
-              <h4 className="text-[#c0a480] font-medium text-sm">Components Status</h4>
-              {[
-                { key: "character_data", label: "Character Card", icon: User },
-                { key: "status_data", label: "Status System", icon: Sparkles },
-                { key: "user_setting_data", label: "User Settings", icon: User },
-                { key: "world_view_data", label: "World View", icon: Brain },
-                { key: "supplement_data", label: "Supplements", icon: MessageSquare },
-              ].map(({ key, label, icon: Icon }) => (
-                <div key={key} className="flex items-center justify-between py-1">
-                  <div className="flex items-center space-x-2">
-                    <Icon className="w-3 h-3 text-[#c0a480]/60" />
-                    <span className="text-xs text-[#c0a480]/80">{label}</span>
-                  </div>
-                  <div className={`w-2 h-2 rounded-full ${
-                    result[key as keyof AgentResult] ? "bg-green-400" : "bg-gray-600"
-                  }`} />
-                </div>
-              ))}
-            </div>
+        {status === "completed" && result && (
+          <div className="space-y-2">
+            <AvatarGenerationSection sessionId={sessionId} />
+            <button
+              onClick={handleExportResult}
+              className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export Result</span>
+            </button>
           </div>
         )}
       </div>
@@ -302,330 +540,413 @@ const ProgressPanel = ({ progress, status, result }: {
   );
 };
 
+/**
+ * Main creator area page component
+ * 
+ * Manages all agent interactions and provides a comprehensive interface for:
+ * - Agent session management with URL parameters
+ * - Real-time message display and progress tracking
+ * - User input handling for agent decisions
+ * - Character and worldbook generation monitoring
+ * - Export functionality for completed results
+ * 
+ * @returns {JSX.Element} The complete agent creation interface
+ */
 export default function CreatorAreaPage() {
-  const { t, fontClass, serifFontClass } = useLanguage();
   const searchParams = useSearchParams();
-  const [mounted, setMounted] = useState(false);
-  const [sessionId, setSessionId] = useState<string>("");
+  const router = useRouter();
+  const sessionId = searchParams.get("id");
+  const { t, fontClass, serifFontClass } = useLanguage();
+
+  const [session, setSession] = useState<AgentSession | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [error, setError] = useState("");
   const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
-  const [progress, setProgress] = useState<SessionProgress>({ completedTasks: 0, totalIterations: 0, knowledgeBaseSize: 0 });
-  const [status, setStatus] = useState<string>("INITIALIZING");
-  const [result, setResult] = useState<AgentResult | undefined>();
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [error, setError] = useState<string>("");
-  const [pendingUserInput, setPendingUserInput] = useState<{
-    question: string;
-    options?: string[];
-  } | null>(null);
-  const [isRespondingToAgent, setIsRespondingToAgent] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [progress, setProgress] = useState<SessionProgress>({
+    completedTasks: 0,
+    totalIterations: 0,
+    knowledgeBaseSize: 0,
+  });
+  const [result, setResult] = useState<AgentResult | undefined>(undefined);
+  const [status, setStatus] = useState("IDLE");
+  
   const pollInterval = useRef<NodeJS.Timeout | null>(null);
+  const initializationRef = useRef(false);
+  const isInitializingRef = useRef(false);
+  const messageEndRef = useRef<HTMLDivElement>(null);
+  
+  const [loadingPhase, setLoadingPhase] = useState<string>("");
+  
+  const [errorToast, setErrorToast] = useState({
+    isVisible: false,
+    message: "",
+  });
+
+  const showErrorToast = useCallback((message: string) => {
+    setErrorToast({
+      isVisible: true,
+      message,
+    });
+  }, []);
+
+  const hideErrorToast = useCallback(() => {
+    setErrorToast({
+      isVisible: false,
+      message: "",
+    });
+  }, []);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: "smooth",
+      });
+    }, 100);
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, pendingUserInput]);
-
-  const startAgentSession = async (userRequest: string, existingSessionId?: string) => {
+  const startAgentSession = async (sessionId: string) => {
     try {
+      console.log("🔥 Starting agent execution for session:", sessionId);
       setIsInitializing(true);
-      setError("");
-      
-      const response = await startAgentGeneration({
-        userRequest,
-        sessionId: existingSessionId,
-        userInputCallback: async (message?: string, options?: string[]) => {
-          // This callback will be used by the agent service when it needs user input
-          if (message) {
-            setPendingUserInput({
-              question: message,
-              options: options,
-            });
-          }
-          return "waiting_for_user_response";
-        },
+      isInitializingRef.current = true; // Track in ref
+      setLoadingPhase("Starting agent execution...");
+
+      // Trigger agent execution asynchronously - don't wait for completion
+      executeAgentSession({
+        sessionId: sessionId,
+        // userRequest is NOT passed here - this is for starting execution
+        modelName: localStorage.getItem("openaiModel") || "",
+        baseUrl: localStorage.getItem("openaiBaseUrl") || "",
+        apiKey: localStorage.getItem("openaiApiKey") || "",
+        llmType: (localStorage.getItem("llmType") as "openai" | "ollama") || "openai",
+        language: (localStorage.getItem("language") as "zh" | "en") || "zh",
+      }).catch((error) => {
+        console.error("❌ Agent execution failed:", error);
+        showErrorToast("Failed to start agent execution");
+        setIsInitializing(false);
+        isInitializingRef.current = false;
       });
 
-      const data = await response.json();
-      
-      if (data.success) {
-        setSessionId(data.conversationId);
-        startPolling(data.conversationId);
-      } else {
-        setError(data.error || "Failed to start agent session");
-        setIsInitializing(false);
-      }
-    } catch (error) {
-      console.error("Error starting agent session:", error);
-      setError("Failed to start creation process");
+      // Small delay to allow execution to start
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      console.log("✅ Agent execution triggered, beginning polling");
+      // Start polling immediately to get status updates
+      startPolling(sessionId);
       setIsInitializing(false);
+      
+    } catch (error: any) {
+      console.error("❌ Error starting agent session:", error);
+      showErrorToast(error.message || "Failed to start agent session");
+      setIsInitializing(false);
+      isInitializingRef.current = false;
     }
   };
 
   const handleUserResponse = async (response: string) => {
-    if (!sessionId || !pendingUserInput) return;
-    
+    if (!session) return;
+
     try {
-      setIsRespondingToAgent(true);
-      
-      // Add user response to messages locally for immediate feedback
-      const userMessage: Message = {
-        id: `user-${Date.now()}`,
-        role: "user",
-        content: response,
-        type: "user_input",
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, userMessage]);
-      
-      // Send response to agent
-      const responseResult = await respondToAgent({
-        sessionId,
+      const result = await respondToAgentSession({
+        sessionId: session.id,
         userResponse: response,
       });
+
+      const data = await result.json();
       
-      const responseData = await responseResult.json();
-      
-      if (responseData.success) {
-        // Clear pending input and continue polling
-        setPendingUserInput(null);
-      } else {
-        setError("Failed to send response to agent");
+      if (!data.success) {
+        showErrorToast(data.error || "Failed to send response");
+        return;
+      }
+
+      // Continue polling for updates
+      if (!pollInterval.current) {
+        startPolling(session.id);
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error responding to agent:", error);
-      setError("Failed to send response");
-    } finally {
-      setIsRespondingToAgent(false);
+      showErrorToast(error.message || "Failed to send response");
     }
   };
 
   const startPolling = (sessionId: string) => {
-    pollInterval.current = setInterval(async () => {
-      try {
-        // Get session status
-        const statusResponse = await getAgentSessionStatus({ sessionId });
-        const statusData = await statusResponse.json();
-        
-        if (statusData.success) {
-          setStatus(statusData.status);
-          if (statusData.progress) {
-            setProgress(statusData.progress);
-          }
-          if (statusData.result) {
-            setResult(statusData.result);
-          }
-          
-          // Get messages
-          const messagesResponse = await getAgentSessionMessages({ sessionId });
-          const messagesData = await messagesResponse.json();
-          
-          if (messagesData.success) {
-            const formattedMessages = messagesData.messages.map((msg: any) => ({
-              id: msg.id || `${Date.now()}-${Math.random()}`,
-              role: msg.role,
-              content: msg.content,
-              type: msg.type || "agent_thinking",
-              timestamp: new Date(msg.timestamp || Date.now()),
-              metadata: msg.metadata,
-            }));
-            
-            setMessages(formattedMessages);
-            
-            // Check for pending user input by parsing message content
-            const latestMessage = formattedMessages[formattedMessages.length - 1];
-            if (latestMessage && latestMessage.role === "agent" && latestMessage.type === "agent_action" && 
-                latestMessage.content.startsWith("INPUT REQUIRED:") && !pendingUserInput && status === "WAITING_USER") {
-              
-              // Parse the message content to extract question and options
-              const content = latestMessage.content;
-              const questionMatch = content.match(/INPUT REQUIRED: (.*?)(?:\n\nOptions:|$)/);
-              const question = questionMatch ? questionMatch[1].trim() : "Please provide your input:";
-              
-              const optionsMatch = content.match(/Options: (.+)/);
-              const options = optionsMatch ? optionsMatch[1].split(", ").map((opt: string) => opt.trim()) : undefined;
-              
-              setPendingUserInput({
-                question,
-                options,
-              });
-            }
-          }
-          
-          // Stop polling if completed or failed
-          if (statusData.status === "COMPLETED" || statusData.status === "FAILED") {
-            if (pollInterval.current) {
-              clearInterval(pollInterval.current);
-            }
-            setIsInitializing(false);
-          }
-        }
-        
-        setIsInitializing(false);
-      } catch (error) {
-        console.error("Polling error:", error);
-        // Don't set error here to avoid interrupting the process
-      }
-    }, 2000); // Poll every 2 seconds
-  };
-
-  const goBack = () => {
     if (pollInterval.current) {
       clearInterval(pollInterval.current);
     }
-    window.history.back();
-  };
 
-  useEffect(() => {
-    setMounted(true);
-    
-    // Prevent double execution in React StrictMode
-    if (sessionId) return;
-    
-    const loadSessionOrCreate = async () => {
-      // Check if there's a session ID in URL params or localStorage (for resuming)
-      const urlSessionId = searchParams.get("sessionId");
-      const userRequest = searchParams.get("request");
-      console.log("Checking params - sessionId:", urlSessionId, "request:", userRequest); // Debug log
-      
-      if (urlSessionId) {
-        // Try to resume existing session - similar to loading existing dialogue
-        console.log("Found session ID, attempting to resume:", urlSessionId);
-        try {
-          const statusResponse = await getAgentSessionStatus({ sessionId: urlSessionId });
-          const statusData = await statusResponse.json();
-          
-          if (statusData.success && statusData.session) {
-            console.log("✅ Found existing session, resuming");
-            setSessionId(urlSessionId);
-            startPolling(urlSessionId);
-            return;
-          } else {
-            console.log("⚠️ Session not found or invalid, will create new session");
+    const poll = async () => {
+      try {
+        const response = await getAgentSessionStatus({ sessionId });
+        const data = await response.json();
+        
+        if (data.success && data.session) {
+          setSession(data.session);
+          const currentStatus = data.status || "idle";
+          setStatus(currentStatus);
+          setProgress(data.progress || { completedTasks: 0, totalIterations: 0, knowledgeBaseSize: 0 });
+          setResult(data.result);
+
+          // Stop initializing state when agent starts working
+          if (currentStatus !== "idle" && isInitializingRef.current) {
+            console.log("🎯 Agent status changed to:", currentStatus, "- stopping initialization");
+            setIsInitializing(false);
+            isInitializingRef.current = false;
           }
-        } catch (error) {
-          console.error("Error checking existing session:", error);
+
+          // Get messages
+          const sessionData = await getAgentSession(sessionId);
+          if (sessionData.success && sessionData.session) {
+            setMessages(sessionData.session.formattedMessages || []);
+          }
+
+          // Stop polling if completed or failed
+          if (currentStatus === "completed" || currentStatus === "failed") {
+            if (pollInterval.current) {
+              clearInterval(pollInterval.current);
+              pollInterval.current = null;
+            }
+          }
+          
+          scrollToBottom();
         }
-      }
-      
-      // Create new session if no sessionId or session doesn't exist - similar to initializeNewDialogue
-      if (userRequest && userRequest.trim()) {
-        console.log("Creating new session for request:", userRequest); // Debug log
-        await startAgentSession(decodeURIComponent(userRequest));
-      } else {
-        console.log("No user request found in URL params"); // Debug log
-        setError("No creation request found. Please start from the input page.");
-        setIsInitializing(false);
+      } catch (error) {
+        console.error("Polling error:", error);
       }
     };
-    
-    loadSessionOrCreate();
 
+    poll(); // Initial poll
+    pollInterval.current = setInterval(poll, 2000); // Poll every 2 seconds
+  };
+
+  // Load session data on component mount or sessionId change
+  useEffect(() => {
+    const loadSession = async () => {
+      if (!sessionId) {
+        setError("Session ID is missing from URL");
+        setIsLoading(false);
+        return;
+      }
+      
+      setIsLoading(true);
+      setIsInitializing(false);
+      isInitializingRef.current = false; // Reset ref
+      setError("");
+      setLoadingPhase("Loading agent session...");
+      
+      initializationRef.current = false;
+      
+      const startTime = Date.now();
+      const minLoadingTime = 500;
+      
+      try {
+        const response = await getAgentSession(sessionId);
+        if (!response.success) {
+          throw new Error(response.error || "Failed to load session");
+        }
+        
+        const sessionData = response.session;
+        
+        setSession({
+          id: sessionData.session.id,
+          title: sessionData.session.title,
+          status: sessionData.session.status,
+          research_state: sessionData.session.research_state,
+          generation_output: sessionData.session.generation_output,
+        });
+
+        if (sessionData.formattedMessages) {
+          setMessages(sessionData.formattedMessages);
+        }
+
+        // Check if session needs initialization
+        if (sessionData.session.status === "idle" && !initializationRef.current) {
+          console.log("🚀 Starting agent session - status is idle");
+          setLoadingPhase("Initializing agent...");
+          setIsInitializing(true);
+          initializationRef.current = true;
+          await startAgentSession(sessionId);
+        } else {
+          console.log("📊 Session status:", sessionData.session.status, "- starting polling");
+          // Session already active, start polling
+          startPolling(sessionId);
+        }
+        
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+        
+        if (remainingTime > 0) {
+          await new Promise(resolve => setTimeout(resolve, remainingTime));
+        }
+        
+        setIsLoading(false);
+        
+      } catch (err) {
+        console.error("Error loading session:", err);
+        const errorMessage = typeof err === "object" && err !== null && "message" in err 
+          ? (err as Error).message 
+          : "Failed to load session";
+        setError(errorMessage);
+        setIsLoading(false);
+        setIsInitializing(false);
+        isInitializingRef.current = false; // Reset ref on error
+      }
+    };
+
+    loadSession();
+    
+    // Cleanup polling on unmount
     return () => {
       if (pollInterval.current) {
         clearInterval(pollInterval.current);
       }
     };
-  }, [searchParams, sessionId]);
+  }, [sessionId]);
 
-  const toggleMessageExpansion = (messageId: string) => {
-    const newExpanded = new Set(expandedMessages);
-    if (newExpanded.has(messageId)) {
-      newExpanded.delete(messageId);
-    } else {
-      newExpanded.add(messageId);
-    }
-    setExpandedMessages(newExpanded);
+  const goBack = () => {
+    router.push("/");
   };
 
-  if (!mounted) return null;
+  const toggleMessageExpansion = (messageId: string) => {
+    setExpandedMessages(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(messageId)) {
+        newSet.delete(messageId);
+      } else {
+        newSet.add(messageId);
+      }
+      return newSet;
+    });
+  };
+
+  // Check if agent is waiting for user input
+  const needsUserInput = status === "waiting_user";
+  let userInputQuestion: string | undefined;
+  let userInputOptions: string[] | undefined;
+
+  if (needsUserInput && messages.length > 0) {
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.content.includes("INPUT REQUIRED:")) {
+      const lines = lastMessage.content.split("\n");
+      const questionLine = lines.find(line => line.includes("INPUT REQUIRED:"));
+      const optionsLine = lines.find(line => line.includes("Options:"));
+      
+      if (questionLine) {
+        userInputQuestion = questionLine.replace("INPUT REQUIRED:", "").trim();
+      }
+      if (optionsLine) {
+        userInputOptions = optionsLine
+          .replace("Options:", "")
+          .split(",")
+          .map(opt => opt.trim())
+          .filter(opt => opt.length > 0);
+      }
+    }
+  }
+
+  // Show loading animation during any loading phase
+  if (isLoading || isInitializing) {
+    return (
+      <div className="flex flex-col justify-center items-center h-full fantasy-bg">
+        <div className="relative w-12 h-12 flex items-center justify-center mb-4">
+          <div className="absolute inset-0 rounded-full border-2 border-t-[#f9c86d] border-r-[#c0a480] border-b-[#a18d6f] border-l-transparent animate-spin"></div>
+          <div className="absolute inset-2 rounded-full border-2 border-t-[#a18d6f] border-r-[#f9c86d] border-b-[#c0a480] border-l-transparent animate-spin-slow"></div>
+        </div>
+        <p className={`text-[#f4e8c1] ${serifFontClass} text-center mb-2`}>
+          {loadingPhase}
+        </p>
+        {isInitializing && (
+          <p className={`text-[#a18d6f] text-xs mt-4 max-w-xs text-center ${fontClass}`}>
+            Agent is analyzing your request and setting up the creation process...
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (error || !session) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full fantasy-bg">
+        <h1 className="text-2xl text-[#f4e8c1] mb-4">Error</h1>
+        <p className="text-[#c0a480] mb-6">{error || "Session not found"}</p>
+        <button
+          onClick={goBack}
+          className="bg-[#252220] hover:bg-[#342f25] text-[#f4e8c1] font-medium py-2 px-4 rounded border border-[#534741]"
+        >
+          Back to Home
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen w-full overflow-auto fantasy-bg relative">
-      <div className="flex h-screen">
-        {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <div className="bg-black/20 backdrop-blur-sm border-b border-amber-500/20 p-4">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={goBack}
-                className="text-[#c0a480]/60 hover:text-[#c0a480] transition-colors"
-                title="Go back"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold font-cinzel bg-clip-text text-transparent bg-gradient-to-r from-amber-500 via-orange-400 to-yellow-300">
-                  AI Character Creator
-                </h1>
-                <p className="text-[#c0a480]/80 text-sm mt-1">
-                  Creating your character with advanced AI assistance
-                </p>
+    <div className="h-full fantasy-bg">
+      <div className="container mx-auto px-4 py-6 h-full">
+        <div className="h-full flex gap-6">
+          {/* Left Panel - Messages */}
+          <div className="flex-1 flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={goBack}
+                  className="p-2 bg-black/20 backdrop-blur-sm border border-amber-500/20 rounded-lg hover:bg-black/30 transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5 text-[#c0a480]" />
+                </button>
+                <div>
+                  <h1 className={`text-2xl text-[#f4e8c1] ${serifFontClass}`}>
+                    {session.title}
+                  </h1>
+                  <p className="text-[#c0a480]/70 text-sm">
+                    {session.research_state.main_objective}
+                  </p>
+                </div>
               </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+              {messages.map((message) => (
+                <MessageCard
+                  key={message.id}
+                  message={message}
+                  expanded={expandedMessages.has(message.id)}
+                  onToggle={() => toggleMessageExpansion(message.id)}
+                />
+              ))}
+              
+              {needsUserInput && userInputQuestion && (
+                <div className="mt-4">
+                  <AgentUserInput
+                    question={userInputQuestion}
+                    options={userInputOptions}
+                    onResponse={handleUserResponse}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {isInitializing && messages.length === 0 && (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto mb-4"></div>
-                  <p className="text-[#c0a480] text-sm">Initializing AI character creation...</p>
-                </div>
-              </div>
-            )}
-
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-                <div className="flex items-center space-x-2">
-                  <AlertCircle className="w-5 h-5 text-red-400" />
-                  <span className="text-red-400 font-medium">Error</span>
-                </div>
-                <p className="text-red-300 text-sm mt-1">{error}</p>
-                <button
-                  onClick={() => setError("")}
-                  className="mt-2 text-red-400 text-sm hover:text-red-300 transition-colors"
-                >
-                  Dismiss
-                </button>
-              </div>
-            )}
-
-            {messages.map((message) => (
-              <MessageCard
-                key={message.id}
-                message={message}
-                expanded={expandedMessages.has(message.id)}
-                onToggle={() => toggleMessageExpansion(message.id)}
-              />
-            ))}
-
-            {/* User Input Component */}
-            {pendingUserInput && (
-              <AgentUserInput
-                question={pendingUserInput.question}
-                options={pendingUserInput.options}
-                onResponse={handleUserResponse}
-                isLoading={isRespondingToAgent}
-              />
-            )}
-
-            <div ref={messagesEndRef} />
+          {/* Right Panel - Progress */}
+          <div className="w-80">
+            <ProgressPanel 
+              progress={progress} 
+              status={status} 
+              result={result} 
+              sessionId={sessionId}
+            />
           </div>
         </div>
-
-        {/* Right Progress Panel */}
-        <div className="w-80 bg-black/10 backdrop-blur-sm border-l border-amber-500/20 p-4 overflow-y-auto">
-          <ProgressPanel progress={progress} status={status} result={result} />
-        </div>
       </div>
+
+      {/* Error Toast */}
+      <ErrorToast
+        isVisible={errorToast.isVisible}
+        message={errorToast.message}
+        onClose={hideErrorToast}
+      />
     </div>
   );
 }

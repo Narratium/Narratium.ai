@@ -174,48 +174,22 @@ export class AgentEngine {
   private model: any; // LLM model instance
   private configManager: ConfigManager;
   
-  // Add user input state management
-  private pendingUserInput: {
-    resolve: (value: string) => void;
-    reject: (error: Error) => void;
-  } | null = null;
-
   constructor(conversationId: string, userInputCallback?: UserInputCallback) {
     this.conversationId = conversationId;
     this.userInputCallback = userInputCallback;
     this.configManager = ConfigManager.getInstance();
   }
 
-  /**
-   * Handle user response for pending user input
-   */
-  async handleUserResponse(userResponse: string): Promise<void> {
-    if (this.pendingUserInput) {
-      // Resolve the pending promise with user response
-      this.pendingUserInput.resolve(userResponse);
-      this.pendingUserInput = null;
-      
-      // Update session status to continue execution
-      await ResearchSessionOperations.updateStatus(this.conversationId, SessionStatus.THINKING);
-    }
-  }
+  // handleUserResponse method removed - user responses now handled through session state
 
   /**
-   * Modified user input callback for web UI support
+   * Request user input through callback (CLI mode only)
    */
   private async requestUserInput(message?: string, options?: string[]): Promise<string> {
-    return new Promise((resolve, reject) => {
-      // Store the promise resolvers
-      this.pendingUserInput = { resolve, reject };
-      
-      // If there's a callback (for CLI or other interfaces), use it
-      if (this.userInputCallback) {
-        this.userInputCallback(message, options)
-          .then(resolve)
-          .catch(reject);
-      }
-      // For web UI, the promise will be resolved by handleUserResponse
-    });
+    if (!this.userInputCallback) {
+      throw new Error("No user input callback available");
+    }
+    return await this.userInputCallback(message, options);
   }
 
   /**
@@ -504,18 +478,37 @@ ${taskQueue.map((task, i) => `${i + 1}. ${task.description} (${task.sub_problems
           type: "agent_action",
         });
         
-        // Request user input using the callback method (consistent with CLI)
-        const userInput = await this.requestUserInput(result.result?.message, result.result?.options);
-        
-        // Add user response message
-        await ResearchSessionOperations.addMessage(this.conversationId, {
-          role: "user",
-          content: userInput,
-          type: "user_input",
-        });
-        
-        // Complete current sub-problem after successful user interaction
-        await ResearchSessionOperations.completeCurrentSubProblem(this.conversationId);
+        // If there's a callback (CLI mode), get user input and continue
+        if (this.userInputCallback) {
+          try {
+            const userInput = await this.requestUserInput(result.result?.message, result.result?.options);
+            
+            // Add user response message
+            await ResearchSessionOperations.addMessage(this.conversationId, {
+              role: "user",
+              content: userInput,
+              type: "user_input",
+            });
+            
+            // Complete current sub-problem after successful user interaction
+            await ResearchSessionOperations.completeCurrentSubProblem(this.conversationId);
+          } catch (error) {
+            console.error("Failed to get user input:", error);
+            await ResearchSessionOperations.updateStatus(this.conversationId, SessionStatus.FAILED);
+            return {
+              success: false,
+              error: "Failed to get user input",
+            };
+          }
+        } else {
+          // For web UI, gracefully exit the execution loop
+          // The session is now in WAITING_USER status and will be resumed later
+          console.log("🔄 Execution paused - waiting for user input via web UI");
+          return {
+            success: true,
+            result: "Execution paused - waiting for user input",
+          };
+        }
       }
 
       // Handle CHARACTER, STATUS, USER_SETTING, WORLD_VIEW, SUPPLEMENT tools - data updates and task completion evaluation
@@ -1939,6 +1932,52 @@ ${improvement_tasks.map(task => `• ${task}`).join("\n")}`;
     
     // All worldbook components complete
     return "OVERALL STATUS: ✅ Generation complete - Ready for final evaluation";
+  }
+
+  /**
+    * Continue execution after user input
+    * This method can be called on a fresh engine instance to resume execution
+    */
+  async continueExecution(userResponse?: string): Promise<{
+     success: boolean;
+     result?: any;
+     error?: string;
+   }> {
+    try {
+      // Initialize ConfigManager with localStorage data if not already configured
+      if (!this.configManager.isConfigured()) {
+        const config = loadConfigFromLocalStorage();
+        this.configManager.setConfig(config);
+      }
+
+      // Initialize the model
+      this.model = this.createLLM();
+       
+      // Get current execution context from session
+      const context = await this.buildExecutionContext();
+       
+      // Verify session is in a continuable state
+      const session = await ResearchSessionOperations.getSessionById(this.conversationId);
+      if (!session) {
+        throw new Error("Session not found");
+      }
+
+      // Complete the current sub-problem since user has responded
+      if (session.status === SessionStatus.THINKING || session.status === SessionStatus.IDLE) {
+        await ResearchSessionOperations.completeCurrentSubProblem(this.conversationId);
+      }
+
+      // Continue with the main execution loop
+      return await this.executionLoop();
+       
+    } catch (error) { 
+      await ResearchSessionOperations.updateStatus(this.conversationId, SessionStatus.FAILED);
+       
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    } 
   }
 } 
  

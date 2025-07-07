@@ -112,8 +112,18 @@ export class ConfigManager {
  */
 export function loadConfigFromLocalStorage(): AppConfig {
   if (typeof window === "undefined") {
-    // Server-side rendering or Node.js environment
-    return {};
+    // Server-side rendering or Node.js environment - load from env
+    return {
+      defaultType: (process.env.LLM_TYPE as "openai" | "ollama") || "openai",
+      defaultModel: process.env.LLM_MODEL || "",
+      defaultApiKey: process.env.OPENAI_API_KEY || "",
+      defaultBaseUrl: process.env.LLM_BASE_URL || "",
+      temperature: process.env.LLM_TEMPERATURE ? parseFloat(process.env.LLM_TEMPERATURE) : 0.7,
+      maxTokens: process.env.LLM_MAX_TOKENS ? parseInt(process.env.LLM_MAX_TOKENS) : 4000,
+      tavilyApiKey: process.env.NEXT_PUBLIC_TAVILY_API_KEY || "",
+      jinaApiKey: process.env.NEXT_PUBLIC_JINA_API_KEY || "",
+      falApiKey: process.env.NEXT_PUBLIC_FAL_API_KEY || "",
+    };
   }
 
   try {
@@ -129,17 +139,26 @@ export function loadConfigFromLocalStorage(): AppConfig {
     const jinaApiKey = localStorage.getItem("jinaApiKey");
     const falApiKey = localStorage.getItem("falApiKey");
 
-    return {
+    const config = {
       defaultType: llmType || "openai",
       defaultModel: llmType === "openai" ? openaiModel || "" : ollamaModel || "",
-      defaultApiKey: openaiApiKey || "",
+      defaultApiKey: openaiApiKey || process.env.OPENAI_API_KEY || "",
       defaultBaseUrl: llmType === "openai" ? openaiBaseUrl || "" : ollamaBaseUrl || "",
       temperature: temperature ? parseFloat(temperature) : 0.7,
       maxTokens: maxTokens ? parseInt(maxTokens) : 4000,
-      tavilyApiKey: tavilyApiKey || "",
-      jinaApiKey: jinaApiKey || "",
-      falApiKey: falApiKey || "",
+      tavilyApiKey: tavilyApiKey || process.env.NEXT_PUBLIC_TAVILY_API_KEY || "",
+      jinaApiKey: jinaApiKey || process.env.NEXT_PUBLIC_JINA_API_KEY || "",
+      falApiKey: falApiKey || process.env.NEXT_PUBLIC_FAL_API_KEY || "",
     };
+    
+    // Debug: Log configuration loading
+    console.log("Config loaded from localStorage:", {
+      tavilyFromStorage: tavilyApiKey ? "***has value***" : "empty",
+      tavilyFromEnv: process.env.NEXT_PUBLIC_TAVILY_API_KEY ? "***has value***" : "empty",
+      finalTavily: config.tavilyApiKey ? "***configured***" : "missing",
+    });
+    
+    return config;
   } catch (error) {
     console.warn("Failed to load configuration from localStorage:", error);
     return {};

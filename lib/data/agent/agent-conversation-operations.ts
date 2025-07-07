@@ -272,7 +272,7 @@ export class ResearchSessionOperations {
   }
 
   /**
-   * Get conversation summary for display
+   * Get session summary for UI display (similar to character dialogue info)
    */
   static async getSessionSummary(sessionId: string): Promise<{
     title: string;
@@ -286,19 +286,128 @@ export class ResearchSessionOperations {
     const session = await this.getSessionById(sessionId);
     if (!session) return null;
 
-    const averageCompletion = 0;
+    const hasCharacter = !!session.generation_output.character_data;
+    const hasWorldbook = !!(
+      session.generation_output.status_data ||
+      session.generation_output.user_setting_data ||
+      session.generation_output.world_view_data ||
+      (session.generation_output.supplement_data && session.generation_output.supplement_data.length > 0)
+    );
+
+    // Calculate completion percentage based on available data
+    let completedComponents = 0;
+    const totalComponents = 5; // character + 4 worldbook components
+    
+    if (session.generation_output.character_data) completedComponents++;
+    if (session.generation_output.status_data) completedComponents++;
+    if (session.generation_output.user_setting_data) completedComponents++;
+    if (session.generation_output.world_view_data) completedComponents++;
+    if (session.generation_output.supplement_data && session.generation_output.supplement_data.length >= 5) completedComponents++;
+
+    const completionPercentage = (completedComponents / totalComponents) * 100;
 
     return {
       title: session.title,
       status: session.status,
       messageCount: session.messages.length,
-      hasCharacter: !!session.generation_output.character_data,
-      hasWorldbook: !!(session.generation_output.status_data || 
-                       session.generation_output.user_setting_data || 
-                       session.generation_output.world_view_data || 
-                       (session.generation_output.supplement_data && session.generation_output.supplement_data.length > 0)),
-      completionPercentage: Math.round(averageCompletion),
+      hasCharacter,
+      hasWorldbook,
+      completionPercentage,
       knowledgeBaseSize: session.research_state.knowledge_base.length,
+    };
+  }
+
+  /**
+   * Get or create session for UI (similar to character dialogue loading)
+   */
+  static async getOrCreateSession(
+    sessionId?: string,
+    title?: string,
+    initialRequest?: string,
+  ): Promise<{ session: ResearchSession; isNew: boolean }> {
+    if (sessionId) {
+      const existingSession = await this.getSessionById(sessionId);
+      if (existingSession) {
+        return { session: existingSession, isNew: false };
+      }
+    }
+
+    if (!title || !initialRequest) {
+      throw new Error("Title and initial request required for new session");
+    }
+
+    const newSession = await this.createSession(title, initialRequest);
+    return { session: newSession, isNew: true };
+  }
+
+  /**
+   * Get session with formatted messages for UI display
+   */
+  static async getSessionForUI(sessionId: string): Promise<{
+    session: ResearchSession;
+    formattedMessages: Array<{
+      id: string;
+      role: "agent" | "user";
+      content: string;
+      type: "agent_thinking" | "agent_action" | "user_input" | "tool_execution" | "quality_evaluation" | "system_prompt";
+      timestamp: Date;
+      metadata?: any;
+    }>;
+    needsUserInput: boolean;
+    userInputQuestion?: string;
+    userInputOptions?: string[];
+  } | null> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) return null;
+
+    const formattedMessages = session.messages.map(msg => ({
+      id: msg.id,
+      role: msg.role as "agent" | "user",
+      content: msg.content,
+      type: msg.type || "agent_action" as any,
+      timestamp: new Date(msg.timestamp || Date.now()),
+      metadata: msg.metadata,
+    }));
+
+    // Check if waiting for user input
+    const needsUserInput = session.status === SessionStatus.WAITING_USER;
+    let userInputQuestion: string | undefined;
+    let userInputOptions: string[] | undefined;
+
+    if (needsUserInput) {
+      const lastMessage = session.messages[session.messages.length - 1];
+      if (lastMessage && lastMessage.content.includes("INPUT REQUIRED:")) {
+        const lines = lastMessage.content.split("\n");
+        const questionLine = lines.find(line => line.includes("INPUT REQUIRED:"));
+        const optionsLine = lines.find(line => line.includes("Options:"));
+        
+        if (questionLine) {
+          userInputQuestion = questionLine.replace("INPUT REQUIRED:", "").trim();
+        }
+        if (optionsLine) {
+          userInputOptions = optionsLine
+            .replace("Options:", "")
+            .split(",")
+            .map(opt => opt.trim())
+            .filter(opt => opt.length > 0);
+        }
+      }
+    }
+
+    return {
+      session,
+      // Cast formattedMessages to the expected type to resolve type mismatch error
+      formattedMessages: formattedMessages as Array<{
+        id: string;
+        role: "agent" | "user";
+        content: string;
+        type: "agent_thinking" | "agent_action" | "user_input" | "tool_execution" | "quality_evaluation" | "system_prompt";
+        timestamp: Date;
+        metadata?: any;
+      }>,
+      needsUserInput,
+      userInputQuestion,
+      userInputOptions,
     };
   }
 

@@ -2,11 +2,10 @@ import { AgentService } from "@/lib/core/agent-service";
 
 export async function startAgentGeneration(payload: {
   userRequest: string;
-  sessionId?: string;
   userInputCallback?: (message?: string, options?: string[]) => Promise<string>;
 }): Promise<Response> {
   try {
-    const { userRequest, sessionId, userInputCallback } = payload;
+    const { userRequest, userInputCallback } = payload;
 
     if (!userRequest || !userRequest.trim()) {
       return new Response(JSON.stringify({ 
@@ -18,7 +17,6 @@ export async function startAgentGeneration(payload: {
     const agentService = new AgentService();
     const result = await agentService.startGeneration(
       userRequest.trim(),
-      sessionId,
       userInputCallback,
     );
 
