@@ -16,9 +16,9 @@
  * - Character and worldbook generation progress
  * 
  * Dependencies:
- * - getAgentSession: For session loading and management
- * - executeAgentSession: For agent execution control
- * - respondToAgentSession: For user response handling
+ * - getResearchSession: For session loading and management
+ * - executeResearchSession: For agent execution control
+ * - respondToResearchSession: For user response handling
  * - AgentUserInput: For user interaction components
  */
 
@@ -28,11 +28,12 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../i18n";
-import { getAgentSession } from "@/function/agent/session";
-import { executeAgentSession, respondToAgentSession } from "@/function/agent/execute";
-import { getAgentSessionStatus } from "@/function/agent/status";
+import { getResearchSession  } from "@/function/agent/session";
+import { executeResearchSession, respondToResearchSession } from "@/function/agent/execute";
+import { getResearchSessionStatus } from "@/function/agent/status";
 import AgentUserInput from "@/components/AgentUserInput";
 import ErrorToast from "@/components/ErrorToast";
+import { generateAvatar } from "@/function/agent/avatar";
 import { 
   Brain, 
   Search, 
@@ -51,48 +52,12 @@ import {
   Palette,
   Loader2,
 } from "lucide-react";
-
-/**
- * Interface definitions for the component's data structures
- */
-interface AgentSession {
-  id: string;
-  title: string;
-  status: string;
-  research_state: {
-    main_objective: string;
-  };
-  generation_output?: any;
-}
-
-interface Message {
-  id: string;
-  role: "agent" | "user";
-  content: string;
-  type?: "agent_thinking" | "agent_action" | "user_input" | "tool_execution" | "quality_evaluation" | "system_prompt" | "user_response" | "tool_result" | "agent_message" | "system_message" | "error";
-  timestamp?: Date;
-  metadata?: {
-    tool?: string;
-    parameters?: any;
-    result?: any;
-    reasoning?: string;
-  };
-}
+import { Message, ResearchSession, GenerationOutput } from "@/lib/models/agent-model";
 
 interface SessionProgress {
   completedTasks: number;
   totalIterations: number;
   knowledgeBaseSize: number;
-}
-
-interface AgentResult {
-  character_data?: any;
-  status_data?: any;
-  user_setting_data?: any;
-  world_view_data?: any;
-  supplement_data?: any[];
-  knowledge_base?: any[];
-  completion_status?: any;
 }
 
 const MESSAGE_TYPE_ICONS = {
@@ -102,6 +67,8 @@ const MESSAGE_TYPE_ICONS = {
   tool_execution: Sparkles,
   quality_evaluation: CheckCircle,
   system_prompt: Search,
+  system_info: Search,
+  tool_failure: AlertCircle,
   user_response: User,
   tool_result: Sparkles,
   agent_message: MessageSquare,
@@ -116,6 +83,8 @@ const MESSAGE_TYPE_COLORS = {
   tool_execution: "text-amber-400 bg-amber-500/10",
   quality_evaluation: "text-emerald-400 bg-emerald-500/10",
   system_prompt: "text-cyan-400 bg-cyan-500/10",
+  system_info: "text-cyan-400 bg-cyan-500/10",
+  tool_failure: "text-red-400 bg-red-500/10",
   user_response: "text-green-400 bg-green-500/10",
   tool_result: "text-amber-400 bg-amber-500/10",
   agent_message: "text-blue-400 bg-blue-500/10",
@@ -210,10 +179,7 @@ const AvatarGenerationSection = ({ sessionId }: { sessionId: string | null }) =>
     if (!sessionId) return;
     
     setIsGenerating(true);
-    try {
-      // Import and call the generateAvatar function directly
-      const { generateAvatar } = await import("@/function/agent/avatar");
-      
+    try {      
       const params = new URLSearchParams({
         sessionId,
         imageChoice,
@@ -384,7 +350,7 @@ const AvatarGenerationSection = ({ sessionId }: { sessionId: string | null }) =>
 const ProgressPanel = ({ progress, status, result, sessionId }: { 
   progress: SessionProgress; 
   status: string; 
-  result?: AgentResult; 
+  result?: GenerationOutput; 
   sessionId: string | null;
 }) => {
   const [showDetails, setShowDetails] = useState(false);
@@ -427,10 +393,7 @@ const ProgressPanel = ({ progress, status, result, sessionId }: {
         world_view: result.world_view_data,
         supplement: result.supplement_data,
       },
-      metadata: {
-        created_at: new Date().toISOString(),
-        completion_status: result.completion_status,
-      },
+      created_at: new Date().toISOString(),
     };
     
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
@@ -473,7 +436,7 @@ const ProgressPanel = ({ progress, status, result, sessionId }: {
           <div className="flex justify-between items-center">
             <span className="text-[#c0a480] text-sm">Components</span>
             <span className="text-[#c0a480] text-sm">
-              {result ? Object.keys(result).filter(key => result[key as keyof AgentResult]).length : 0}/5
+              {result ? Object.keys(result).filter(key => result[key as keyof GenerationOutput]).length : 0}/5
             </span>
           </div>
         </div>
@@ -558,7 +521,7 @@ export default function CreatorAreaPage() {
   const sessionId = searchParams.get("id");
   const { t, fontClass, serifFontClass } = useLanguage();
 
-  const [session, setSession] = useState<AgentSession | null>(null);
+  const [session, setSession] = useState<ResearchSession | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitializing, setIsInitializing] = useState(false);
@@ -569,7 +532,7 @@ export default function CreatorAreaPage() {
     totalIterations: 0,
     knowledgeBaseSize: 0,
   });
-  const [result, setResult] = useState<AgentResult | undefined>(undefined);
+  const [result, setResult] = useState<GenerationOutput | undefined>(undefined);
   const [status, setStatus] = useState("IDLE");
   
   const pollInterval = useRef<NodeJS.Timeout | null>(null);
@@ -607,7 +570,7 @@ export default function CreatorAreaPage() {
     }, 100);
   };
 
-  const startAgentSession = async (sessionId: string) => {
+  const startResearchSession = async (sessionId: string) => {
     try {
       console.log("🔥 Starting agent execution for session:", sessionId);
       setIsInitializing(true);
@@ -615,7 +578,7 @@ export default function CreatorAreaPage() {
       setLoadingPhase("Starting agent execution...");
 
       // Trigger agent execution asynchronously - don't wait for completion
-      executeAgentSession({
+      executeResearchSession({
         sessionId: sessionId,
         // userRequest is NOT passed here - this is for starting execution
         modelName: localStorage.getItem("openaiModel") || "",
@@ -650,7 +613,7 @@ export default function CreatorAreaPage() {
     if (!session) return;
 
     try {
-      const result = await respondToAgentSession({
+      const result = await respondToResearchSession({
         sessionId: session.id,
         userResponse: response,
       });
@@ -680,7 +643,7 @@ export default function CreatorAreaPage() {
 
     const poll = async () => {
       try {
-        const response = await getAgentSessionStatus({ sessionId });
+        const response = await getResearchSessionStatus({ sessionId });
         const data = await response.json();
         
         if (data.success && data.session) {
@@ -698,7 +661,7 @@ export default function CreatorAreaPage() {
           }
 
           // Get messages
-          const sessionData = await getAgentSession(sessionId);
+          const sessionData = await getResearchSession(sessionId);
           if (sessionData.success && sessionData.session) {
             setMessages(sessionData.session.formattedMessages || []);
           }
@@ -743,7 +706,7 @@ export default function CreatorAreaPage() {
       const minLoadingTime = 500;
       
       try {
-        const response = await getAgentSession(sessionId);
+        const response = await getResearchSession(sessionId);
         if (!response.success) {
           throw new Error(response.error || "Failed to load session");
         }
@@ -756,6 +719,8 @@ export default function CreatorAreaPage() {
           status: sessionData.session.status,
           research_state: sessionData.session.research_state,
           generation_output: sessionData.session.generation_output,
+          messages: sessionData.session.messages || [],
+          execution_info: sessionData.session.execution_info || {},
         });
 
         if (sessionData.formattedMessages) {
@@ -768,7 +733,7 @@ export default function CreatorAreaPage() {
           setLoadingPhase("Initializing agent...");
           setIsInitializing(true);
           initializationRef.current = true;
-          await startAgentSession(sessionId);
+          await startResearchSession(sessionId);
         } else {
           console.log("📊 Session status:", sessionData.session.status, "- starting polling");
           // Session already active, start polling

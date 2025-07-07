@@ -4,9 +4,8 @@ import { ResearchSessionOperations } from "@/lib/data/agent/agent-conversation-o
  * Get agent session information (similar to getCharacterDialogue)
  * Handles session loading, creation, and initialization
  */
-export async function getAgentSession(
+export async function getResearchSession(
   sessionId: string | null,
-  title?: string,
   initialRequest?: string,
 ): Promise<{
   success: boolean;
@@ -15,18 +14,17 @@ export async function getAgentSession(
   error?: string;
 }> {
   try {
-    // If no sessionId provided, create new session if we have title and request
+    // If no sessionId provided, create new session if we have request
     if (!sessionId) {
-      if (!title || !initialRequest) {
+      if (!initialRequest) {
         return {
           success: false,
-          error: "Session ID is required, or title and initial request for new session",
+          error: "Session ID is required, or initial request for new session",
         };
       }
 
       const { session, isNew } = await ResearchSessionOperations.getOrCreateSession(
         undefined,
-        title,
         initialRequest,
       );
 
@@ -65,7 +63,6 @@ export async function getAgentSession(
  * Initialize new agent session (similar to initCharacterDialogue)
  */
 export async function initAgentSession(
-  title: string,
   initialRequest: string,
 ): Promise<{
   success: boolean;
@@ -73,7 +70,7 @@ export async function initAgentSession(
   error?: string;
 }> {
   try {
-    const session = await ResearchSessionOperations.createSession(title, initialRequest);
+    const session = await ResearchSessionOperations.createSession(initialRequest);
     
     return {
       success: true,

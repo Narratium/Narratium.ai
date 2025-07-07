@@ -1,10 +1,11 @@
 import { AgentService } from "@/lib/core/agent-service";
 import { ResearchSessionOperations } from "@/lib/data/agent/agent-conversation-operations";
+import { LLMConfig } from "@/lib/core/config-manager";
 
 /**
  * Start agent execution for a session (similar to handleCharacterChatRequest)
  */
-export async function executeAgentSession(payload: {
+export async function executeResearchSession(payload: {
   sessionId: string;
   userRequest?: string; // For new sessions or follow-up requests
   modelName?: string;
@@ -44,13 +45,13 @@ export async function executeAgentSession(payload: {
       const { ConfigManager } = await import("@/lib/core/config-manager");
       const configManager = ConfigManager.getInstance();
       
-      const tempConfig = {
-        defaultType: llmType,
-        defaultModel: finalModelName,
-        defaultApiKey: finalApiKey,
-        defaultBaseUrl: finalBaseUrl,
+      const tempConfig: LLMConfig = {
+        llm_type: llmType,
+        model_name: finalModelName,
+        api_key: finalApiKey,
+        base_url: finalBaseUrl,
         temperature: 0.7,
-        maxTokens: 4000,
+        max_tokens: 4000,
       };
       
       // Set the configuration before execution
@@ -114,7 +115,7 @@ export async function executeAgentSession(payload: {
 /**
  * Respond to agent user input request
  */
-export async function respondToAgentSession(payload: {
+export async function respondToResearchSession(payload: {
   sessionId: string;
   userResponse: string;
 }): Promise<Response> {

@@ -19,7 +19,6 @@ export class ResearchSessionOperations {
    * Create a new agent conversation with simplified initial state
    */
   static async createSession(
-    title: string,
     initialUserRequest: string,
   ): Promise<ResearchSession> {
     const conversationId = uuidv4();
@@ -49,7 +48,7 @@ export class ResearchSessionOperations {
 
     const session: ResearchSession = {
       id: conversationId,
-      title,
+      title: initialUserRequest ,
       status: SessionStatus.IDLE,
       messages: [initialMessage],
       research_state: ResearchState,
@@ -322,7 +321,6 @@ export class ResearchSessionOperations {
    */
   static async getOrCreateSession(
     sessionId?: string,
-    title?: string,
     initialRequest?: string,
   ): Promise<{ session: ResearchSession; isNew: boolean }> {
     if (sessionId) {
@@ -332,11 +330,11 @@ export class ResearchSessionOperations {
       }
     }
 
-    if (!title || !initialRequest) {
-      throw new Error("Title and initial request required for new session");
+    if (!initialRequest) {
+      throw new Error("initial request required for new session");
     }
 
-    const newSession = await this.createSession(title, initialRequest);
+    const newSession = await this.createSession(initialRequest);
     return { session: newSession, isNew: true };
   }
 
@@ -345,14 +343,7 @@ export class ResearchSessionOperations {
    */
   static async getSessionForUI(sessionId: string): Promise<{
     session: ResearchSession;
-    formattedMessages: Array<{
-      id: string;
-      role: "agent" | "user";
-      content: string;
-      type: "agent_thinking" | "agent_action" | "user_input" | "tool_execution" | "quality_evaluation" | "system_prompt";
-      timestamp: Date;
-      metadata?: any;
-    }>;
+    formattedMessages: Message[];
     needsUserInput: boolean;
     userInputQuestion?: string;
     userInputOptions?: string[];
@@ -396,15 +387,7 @@ export class ResearchSessionOperations {
 
     return {
       session,
-      // Cast formattedMessages to the expected type to resolve type mismatch error
-      formattedMessages: formattedMessages as Array<{
-        id: string;
-        role: "agent" | "user";
-        content: string;
-        type: "agent_thinking" | "agent_action" | "user_input" | "tool_execution" | "quality_evaluation" | "system_prompt";
-        timestamp: Date;
-        metadata?: any;
-      }>,
+      formattedMessages: formattedMessages as Message[],
       needsUserInput,
       userInputQuestion,
       userInputOptions,

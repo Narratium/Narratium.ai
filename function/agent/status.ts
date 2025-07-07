@@ -1,6 +1,6 @@
 import { AgentService } from "@/lib/core/agent-service";
 
-export async function getAgentSessionStatus(payload: {
+export async function getResearchSessionStatus(payload: {
   sessionId: string;
 }): Promise<Response> {
   try {

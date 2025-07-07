@@ -15,20 +15,6 @@ export class AgentService {
 
   constructor() {
     this.configManager = ConfigManager.getInstance();
-    // Initialize storage on construction
-    this.initialize();
-  }
-
-  /**
-   * Initialize service with storage
-   */
-  private async initialize(): Promise<void> {
-    try {
-      const { initializeDataFiles } = await import("../data/local-storage");
-      await initializeDataFiles();
-    } catch (error) {
-      console.error("Failed to initialize AgentService:", error);
-    }
   }
 
   /**
@@ -50,19 +36,8 @@ export class AgentService {
         this.configManager.setConfig(config);
       }
 
-      // Check if LLM configuration is available
-      if (!this.configManager.isConfigured()) {
-        return {
-          conversationId: "",
-          success: false,
-          error: "LLM configuration not found. Please run configuration setup first.",
-        };
-      }
-
-      // Create new conversation with fixed title and story as user request
       const session = await ResearchSessionOperations.createSession(
-        "Character & Worldbook Generation", // Fixed title
-        initialUserRequest, // Story description as user request
+        initialUserRequest,
       );
       
       // Create agent engine with user input callback

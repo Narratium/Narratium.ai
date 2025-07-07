@@ -207,7 +207,7 @@ export interface Message {
   id: string;
   role: "user" | "agent" | "system";
   content: string;
-  type: "user_input" | "agent_thinking" | "agent_action" | "system_info" | "quality_evaluation" | "tool_failure" | "tool_execution" | "system_prompt";
+  type: "user_input" | "agent_thinking" | "agent_action" | "system_info" | "quality_evaluation" | "tool_failure";
   timestamp?: string | Date; // Timestamp for message ordering
   metadata?: {
     tool?: string;

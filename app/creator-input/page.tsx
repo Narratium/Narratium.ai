@@ -41,8 +41,7 @@ export default function CreatorInputPage() {
     
     try {
       // Create new agent session
-      const title = `Character Creation - ${new Date().toLocaleDateString()}`;
-      const response = await initAgentSession(title, inputValue.trim());
+      const response = await initAgentSession(inputValue.trim());
       
       if (!response.success) {
         throw new Error(response.error || "Failed to create session");

@@ -14,28 +14,22 @@ export interface LLMConfig {
 }
 
 /**
- * Application configuration interface
- */
-export interface AppConfig {
-  defaultModel?: string;
-  defaultApiKey?: string;
-  defaultBaseUrl?: string;
-  defaultType?: "openai" | "ollama";
-  temperature?: number;
-  maxTokens?: number;
-  tavilyApiKey?: string;
-  jinaApiKey?: string;
-  falApiKey?: string;
-}
-
-/**
  * Configuration Manager
  * Provides centralized access to configuration without file system dependencies
  * Configuration is now passed as parameters from external sources (e.g., localStorage)
  */
 export class ConfigManager {
   private static instance: ConfigManager;
-  private config: AppConfig = {};
+  private config: LLMConfig = {
+    model_name: "",
+    api_key: "",
+    llm_type: "openai",
+    temperature: 0.7,
+    max_tokens: 4000,
+    tavily_api_key: "",
+    jina_api_key: "",
+    fal_api_key: "",
+  };
 
   private constructor() {}
 
@@ -50,7 +44,7 @@ export class ConfigManager {
    * Set configuration from external source (e.g., localStorage)
    * @param config Configuration object from external source
    */
-  setConfig(config: AppConfig): void {
+  setConfig(config: LLMConfig): void {
     this.config = { ...config };
   }
 
@@ -64,10 +58,10 @@ export class ConfigManager {
     baseUrl?: string;
     type?: "openai" | "ollama";
   }): LLMConfig {
-    const llmType = overrides?.type || this.config.defaultType || "openai";
-    const model = overrides?.model || this.config.defaultModel;
-    const apiKey = overrides?.apiKey || this.config.defaultApiKey;
-    const baseUrl = overrides?.baseUrl || this.config.defaultBaseUrl;
+    const llmType = overrides?.type || this.config.llm_type;
+    const model = overrides?.model || this.config.model_name;
+    const apiKey = overrides?.apiKey || this.config.api_key;
+    const baseUrl = overrides?.baseUrl || this.config.base_url;
 
     if (!model) {
       throw new Error("LLM model not configured. Please configure your AI model settings.");
@@ -82,11 +76,11 @@ export class ConfigManager {
       model_name: model,
       api_key: apiKey || "",
       base_url: baseUrl || (llmType === "ollama" ? "http://localhost:11434" : undefined),
-      temperature: this.config.temperature || 0.7,
-      max_tokens: this.config.maxTokens || 4000,
-      tavily_api_key: this.config.tavilyApiKey || "",
-      jina_api_key: this.config.jinaApiKey || "",
-      fal_api_key: this.config.falApiKey || "",
+      temperature: this.config.temperature,
+      max_tokens: this.config.max_tokens,
+      tavily_api_key: this.config.tavily_api_key || "",
+      jina_api_key: this.config.jina_api_key || "",
+      fal_api_key: this.config.fal_api_key || "",
     };
   }
 
@@ -94,8 +88,8 @@ export class ConfigManager {
    * Check if configuration is complete
    */
   isConfigured(): boolean {
-    const hasBasicConfig = !!(this.config.defaultType && this.config.defaultModel);
-    const hasApiKey = this.config.defaultType === "ollama" || !!this.config.defaultApiKey;
+    const hasBasicConfig = !!(this.config.llm_type && this.config.model_name);
+    const hasApiKey = this.config.llm_type === "ollama" || !!this.config.api_key;
     
     return hasBasicConfig && hasApiKey;
   }
@@ -103,29 +97,14 @@ export class ConfigManager {
 
 /**
  * Utility functions for Web environment
- * These functions should be used to bridge localStorage and ConfigManager
+ * These functions handle localStorage integration for LLM configuration
  */
 
 /**
  * Load configuration from localStorage
  * This function should be called from the UI layer
  */
-export function loadConfigFromLocalStorage(): AppConfig {
-  if (typeof window === "undefined") {
-    // Server-side rendering or Node.js environment - load from env
-    return {
-      defaultType: (process.env.LLM_TYPE as "openai" | "ollama") || "openai",
-      defaultModel: process.env.LLM_MODEL || "",
-      defaultApiKey: process.env.OPENAI_API_KEY || "",
-      defaultBaseUrl: process.env.LLM_BASE_URL || "",
-      temperature: process.env.LLM_TEMPERATURE ? parseFloat(process.env.LLM_TEMPERATURE) : 0.7,
-      maxTokens: process.env.LLM_MAX_TOKENS ? parseInt(process.env.LLM_MAX_TOKENS) : 4000,
-      tavilyApiKey: process.env.NEXT_PUBLIC_TAVILY_API_KEY || "",
-      jinaApiKey: process.env.NEXT_PUBLIC_JINA_API_KEY || "",
-      falApiKey: process.env.NEXT_PUBLIC_FAL_API_KEY || "",
-    };
-  }
-
+export function loadConfigFromLocalStorage(): LLMConfig {
   try {
     const llmType = localStorage.getItem("llmType") as "openai" | "ollama" | null;
     const openaiModel = localStorage.getItem("openaiModel");
@@ -139,29 +118,38 @@ export function loadConfigFromLocalStorage(): AppConfig {
     const jinaApiKey = localStorage.getItem("jinaApiKey");
     const falApiKey = localStorage.getItem("falApiKey");
 
-    const config = {
-      defaultType: llmType || "openai",
-      defaultModel: llmType === "openai" ? openaiModel || "" : ollamaModel || "",
-      defaultApiKey: openaiApiKey || process.env.OPENAI_API_KEY || "",
-      defaultBaseUrl: llmType === "openai" ? openaiBaseUrl || "" : ollamaBaseUrl || "",
+    const config: LLMConfig = {
+      llm_type: llmType || "openai",
+      model_name: llmType === "openai" ? openaiModel || "" : ollamaModel || "",
+      api_key: openaiApiKey || process.env.OPENAI_API_KEY || "",
+      base_url: llmType === "openai" ? openaiBaseUrl || "" : ollamaBaseUrl || "",
       temperature: temperature ? parseFloat(temperature) : 0.7,
-      maxTokens: maxTokens ? parseInt(maxTokens) : 4000,
-      tavilyApiKey: tavilyApiKey || process.env.NEXT_PUBLIC_TAVILY_API_KEY || "",
-      jinaApiKey: jinaApiKey || process.env.NEXT_PUBLIC_JINA_API_KEY || "",
-      falApiKey: falApiKey || process.env.NEXT_PUBLIC_FAL_API_KEY || "",
+      max_tokens: maxTokens ? parseInt(maxTokens) : 4000,
+      tavily_api_key: tavilyApiKey || process.env.NEXT_PUBLIC_TAVILY_API_KEY || "",
+      jina_api_key: jinaApiKey || process.env.NEXT_PUBLIC_JINA_API_KEY || "",
+      fal_api_key: falApiKey || process.env.NEXT_PUBLIC_FAL_API_KEY || "",
     };
     
     // Debug: Log configuration loading
     console.log("Config loaded from localStorage:", {
       tavilyFromStorage: tavilyApiKey ? "***has value***" : "empty",
       tavilyFromEnv: process.env.NEXT_PUBLIC_TAVILY_API_KEY ? "***has value***" : "empty",
-      finalTavily: config.tavilyApiKey ? "***configured***" : "missing",
+      finalTavily: config.tavily_api_key ? "***configured***" : "missing",
     });
     
     return config;
   } catch (error) {
     console.warn("Failed to load configuration from localStorage:", error);
-    return {};
+    return {
+      llm_type: "openai",
+      model_name: "",
+      api_key: "",
+      temperature: 0.7,
+      max_tokens: 4000,
+      tavily_api_key: "",
+      jina_api_key: "",
+      fal_api_key: "",
+    };
   }
 }
 
@@ -169,49 +157,43 @@ export function loadConfigFromLocalStorage(): AppConfig {
  * Save configuration to localStorage
  * This function should be called from the UI layer when configuration changes
  */
-export function saveConfigToLocalStorage(config: AppConfig): void {
+export function saveConfigToLocalStorage(config: LLMConfig): void {
   if (typeof window === "undefined") {
     console.warn("Cannot save to localStorage in server-side environment");
     return;
   }
 
   try {
-    if (config.defaultType) {
-      localStorage.setItem("llmType", config.defaultType);
+    localStorage.setItem("llmType", config.llm_type);
+    
+    const modelKey = config.llm_type === "openai" ? "openaiModel" : "ollamaModel";
+    localStorage.setItem(modelKey, config.model_name);
+    
+    if (config.api_key) {
+      localStorage.setItem("openaiApiKey", config.api_key);
     }
     
-    if (config.defaultModel) {
-      const modelKey = config.defaultType === "openai" ? "openaiModel" : "ollamaModel";
-      localStorage.setItem(modelKey, config.defaultModel);
+    if (config.base_url) {
+      const baseUrlKey = config.llm_type === "openai" ? "openaiBaseUrl" : "ollamaBaseUrl";
+      localStorage.setItem(baseUrlKey, config.base_url);
     }
     
-    if (config.defaultApiKey) {
-      localStorage.setItem("openaiApiKey", config.defaultApiKey);
+    localStorage.setItem("temperature", config.temperature.toString());
+    
+    if (config.max_tokens) {
+      localStorage.setItem("maxTokens", config.max_tokens.toString());
     }
     
-    if (config.defaultBaseUrl) {
-      const baseUrlKey = config.defaultType === "openai" ? "openaiBaseUrl" : "ollamaBaseUrl";
-      localStorage.setItem(baseUrlKey, config.defaultBaseUrl);
+    if (config.tavily_api_key !== undefined) {
+      localStorage.setItem("tavilyApiKey", config.tavily_api_key);
     }
     
-    if (config.temperature !== undefined) {
-      localStorage.setItem("temperature", config.temperature.toString());
+    if (config.jina_api_key !== undefined) {
+      localStorage.setItem("jinaApiKey", config.jina_api_key);
     }
     
-    if (config.maxTokens !== undefined) {
-      localStorage.setItem("maxTokens", config.maxTokens.toString());
-    }
-    
-    if (config.tavilyApiKey !== undefined) {
-      localStorage.setItem("tavilyApiKey", config.tavilyApiKey);
-    }
-    
-    if (config.jinaApiKey !== undefined) {
-      localStorage.setItem("jinaApiKey", config.jinaApiKey);
-    }
-    
-    if (config.falApiKey !== undefined) {
-      localStorage.setItem("falApiKey", config.falApiKey);
+    if (config.fal_api_key !== undefined) {
+      localStorage.setItem("falApiKey", config.fal_api_key);
     }
   } catch (error) {
     console.error("Failed to save configuration to localStorage:", error);
