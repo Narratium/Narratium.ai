@@ -169,8 +169,9 @@ For Download Version: please refer to the [Download for Mac, Windows, Linux](htt
 
 This project consists of two distinct parts with independent licenses:
 
-- ✅ Code: MIT License — open for commercial and non-commercial use with attribution.
+- 🔐 Code: AGPL-3.0 License — copyleft license requiring source code disclosure for network services, with mandatory GitHub attribution.
 - 🔒 Content: CC BY-NC-SA 4.0 — non-commercial use only, with attribution and same-license sharing required.
+- 🌐 Web Deployment: Must display visible link to https://github.com/Narratium/Narratium.ai
 
 > For full license details, please refer to the [LICENSE](./LICENSE).
 

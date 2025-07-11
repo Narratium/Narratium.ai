@@ -1,19 +1,25 @@
 import { AgentService } from "@/lib/core/agent-service";
 import { ResearchSessionOperations } from "@/lib/data/agent/agent-conversation-operations";
 import { LLMConfig } from "@/lib/core/config-manager";
+import { StreamingCallback } from "@/lib/core/agent-engine";
 
 /**
- * Start agent execution for a session (similar to handleCharacterChatRequest)
+ * Direct execution function for frontend calls with streaming support
  */
-export async function executeResearchSession(payload: {
+export async function executeAgentSession(payload: {
   sessionId: string;
-  userRequest?: string; // For new sessions or follow-up requests
+  userRequest?: string;
   modelName?: string;
   baseUrl?: string;
   apiKey?: string;
   llmType?: "openai" | "ollama";
   language?: "zh" | "en";
-}): Promise<Response> {
+  streamingCallback?: StreamingCallback;
+}): Promise<{
+  success: boolean;
+  result?: any;
+  error?: string;
+}> {
   try {
     const { 
       sessionId, 
@@ -23,13 +29,11 @@ export async function executeResearchSession(payload: {
       apiKey,
       llmType = "openai",
       language = "zh",
+      streamingCallback,
     } = payload;
 
     if (!sessionId) {
-      return new Response(JSON.stringify({ 
-        error: "Missing session ID", 
-        success: false, 
-      }), { status: 400 });
+      throw new Error("Missing session ID");
     }
 
     // Get LLM configuration from localStorage defaults or parameters
@@ -41,7 +45,6 @@ export async function executeResearchSession(payload: {
 
     // Configure ConfigManager with the provided parameters before execution
     if (finalModelName || finalBaseUrl || finalApiKey) {
-      // Import ConfigManager and create temporary configuration object
       const { ConfigManager } = await import("@/lib/core/config-manager");
       const configManager = ConfigManager.getInstance();
       
@@ -54,61 +57,43 @@ export async function executeResearchSession(payload: {
         max_tokens: 4000,
       };
       
-      // Set the configuration before execution
       configManager.setConfig(tempConfig);
     }
 
     // If userRequest provided, this is a user response to agent
     if (userRequest) {
       const respondResult = await agentService.respondToAgent(sessionId, userRequest);
-      
-      return new Response(JSON.stringify({
+      return {
         success: respondResult.success,
         error: respondResult.error,
-      }), {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      };
     }
 
     // Otherwise, start agent execution on existing session
     const session = await ResearchSessionOperations.getSessionById(sessionId);
     if (!session) {
-      return new Response(JSON.stringify({ 
-        error: "Session not found", 
-        success: false, 
-      }), { status: 404 });
+      throw new Error("Session not found");
     }
 
-    // Start agent execution on existing session - this will call AgentEngine.start()
+    // Start agent execution with streaming callback
     const result = await agentService.startExistingSession(
       sessionId,
       undefined, // userInputCallback will be handled through polling
+      streamingCallback,
     );
 
-    return new Response(JSON.stringify({
+    return {
       success: result.success,
-      conversationId: sessionId,
       result: result.result,
       error: result.error,
-    }), {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    };
 
   } catch (error: any) {
     console.error("Failed to execute agent session:", error);
-    return new Response(JSON.stringify({ 
-      error: `Failed to execute: ${error.message}`, 
-      success: false, 
-    }), { 
-      status: 500,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return {
+      success: false,
+      error: error.message || "Failed to execute session",
+    };
   }
 }
 

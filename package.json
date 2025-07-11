@@ -2,6 +2,7 @@
   "name": "Narratium",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0",
   "main": "electron/main.js",
   "scripts": {
     "dev": "next dev --turbopack",

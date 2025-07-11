@@ -17,6 +17,9 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ConfigManager, loadConfigFromLocalStorage } from "./config-manager";
 
+// Define streaming callback type for real-time token updates
+export type StreamingCallback = (chunk: string) => void;
+
 // ============================================================================
 // BACKGROUND KNOWLEDGE - CHARACTER CARDS AND WORLDBOOKS
 // ============================================================================
@@ -171,12 +174,18 @@ type UserInputCallback = (message?: string, options?: string[]) => Promise<strin
 export class AgentEngine {
   private conversationId: string;
   private userInputCallback?: UserInputCallback;
+  private streamingCallback?: StreamingCallback;
   private model: any; // LLM model instance
   private configManager: ConfigManager;
   
-  constructor(conversationId: string, userInputCallback?: UserInputCallback) {
+  constructor(
+    conversationId: string, 
+    userInputCallback?: UserInputCallback,
+    streamingCallback?: StreamingCallback,
+  ) {
     this.conversationId = conversationId;
     this.userInputCallback = userInputCallback;
+    this.streamingCallback = streamingCallback;
     this.configManager = ConfigManager.getInstance();
   }
 
@@ -1664,14 +1673,28 @@ ${improvement_tasks.map(task => `• ${task}`).join("\n")}`;
         },
         temperature: llmConfig.temperature,
         maxTokens: llmConfig.max_tokens,
-        streaming: false,
+        streaming: true, // Enable streaming for real-time token updates
+        callbacks: this.streamingCallback ? [{
+          handleLLMNewToken: (token: string) => {
+            if (this.streamingCallback) {
+              this.streamingCallback(token);
+            }
+          },
+        }] : undefined,
       });
     } else if (llmConfig.llm_type === "ollama") {
       return new ChatOllama({
         model: llmConfig.model_name,
         baseUrl: llmConfig.base_url || "http://localhost:11434",
         temperature: llmConfig.temperature,
-        streaming: false,
+        streaming: true, // Enable streaming for real-time token updates
+        callbacks: this.streamingCallback ? [{
+          handleLLMNewToken: (token: string) => {
+            if (this.streamingCallback) {
+              this.streamingCallback(token);
+            }
+          },
+        }] : undefined,
       });
     }
 

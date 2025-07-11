@@ -1,4 +1,4 @@
-import { AgentEngine } from "./agent-engine";
+import { AgentEngine, StreamingCallback } from "./agent-engine";
 import { ResearchSessionOperations } from "../data/agent/agent-conversation-operations";
 import { ResearchSession, SessionStatus } from "@/lib/models/agent-model";
 import { ConfigManager, loadConfigFromLocalStorage } from "./config-manager";
@@ -23,6 +23,7 @@ export class AgentService {
   async startGeneration(
     initialUserRequest: string,
     userInputCallback?: UserInputCallback,
+    streamingCallback?: StreamingCallback,
   ): Promise<{
     conversationId: string;
     success: boolean;
@@ -40,8 +41,8 @@ export class AgentService {
         initialUserRequest,
       );
       
-      // Create agent engine with user input callback
-      const engine = new AgentEngine(session.id, userInputCallback);
+      // Create agent engine with user input and streaming callbacks
+      const engine = new AgentEngine(session.id, userInputCallback, streamingCallback);
       
       // Start execution with callback
       const result = await engine.start(userInputCallback);
@@ -69,6 +70,7 @@ export class AgentService {
   async startExistingSession(
     sessionId: string,
     userInputCallback?: UserInputCallback,
+    streamingCallback?: StreamingCallback,
   ): Promise<{
     success: boolean;
     result?: any;
@@ -99,7 +101,7 @@ export class AgentService {
       }
 
       // Create new agent engine for this execution
-      const engine = new AgentEngine(sessionId, userInputCallback);
+      const engine = new AgentEngine(sessionId, userInputCallback, streamingCallback);
       
       // Start execution with callback
       const result = await engine.start(userInputCallback);
