@@ -3,15 +3,15 @@
  * 
  * This is the main agent creation interface that provides:
  * - Real-time AI agent interaction for character creation
- * - Chat-style message display with expandable details
- * - Progress tracking and component completion status
+ * - Streamlined message display with optimized visual hierarchy
+ * - Enhanced progress tracking and component completion status
  * - Export functionality for generated characters and worldbooks
- * - User input handling for agent decisions
+ * - Intuitive user input handling for agent decisions
  * 
  * The page handles all agent interactions and provides a comprehensive interface for:
- * - Agent thinking process visualization
- * - Tool execution monitoring
- * - Quality evaluation tracking
+ * - Agent thinking process visualization with modern design
+ * - Tool execution monitoring with clean indicators
+ * - Quality evaluation tracking with professional styling
  * - User choice handling for agent decisions
  * - Character and worldbook generation progress
  * 
@@ -34,7 +34,7 @@ import MessageStream from "@/components/MessageStream";
 import InlineUserInput from "@/components/InlineUserInput";
 import AgentProgressPanel from "@/components/AgentProgressPanel";
 import ErrorToast from "@/components/ErrorToast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import { Message, ResearchSession, GenerationOutput } from "@/lib/models/agent-model";
 
 /**
@@ -118,23 +118,25 @@ export default function CreatorAreaPage() {
 
       // Create streaming callback for real-time token updates
       const streamingCallback = (chunk: string) => {
-        setStreamingContent(prev => prev + chunk);
-        // Create or update current streaming message for display
-        if (!currentStreamingMessage) {
-          const newMessage: Message = {
-            id: `streaming_${Date.now()}`,
-            type: "agent_thinking", 
-            role: "agent",
-            content: chunk,
-            metadata: { streaming: true },
-          };
-          setCurrentStreamingMessage(newMessage);
-        } else {
-          setCurrentStreamingMessage(prev => prev ? {
-            ...prev,
-            content: prev.content + chunk,
-          } : null);
-        }
+        // Use functional updates to ensure we always have the latest state
+        setCurrentStreamingMessage(prev => {
+          if (!prev) {
+            // If no message is currently streaming, create a new one
+            return {
+              id: `streaming_${Date.now()}`,
+              type: "agent_thinking",
+              role: "agent",
+              content: chunk,
+              metadata: { streaming: true },
+            };
+          } else {
+            // If a message is already streaming, append the new chunk
+            return {
+              ...prev,
+              content: prev.content + chunk,
+            };
+          }
+        });
       };
 
       setIsInitializing(false);
@@ -370,19 +372,89 @@ export default function CreatorAreaPage() {
   // Show loading animation during any loading phase
   if (isLoading || isInitializing) {
     return (
-      <div className="flex flex-col justify-center items-center h-full fantasy-bg">
-        <div className="relative w-12 h-12 flex items-center justify-center mb-4">
-          <div className="absolute inset-0 rounded-full border-2 border-t-[#f9c86d] border-r-[#c0a480] border-b-[#a18d6f] border-l-transparent animate-spin"></div>
-          <div className="absolute inset-2 rounded-full border-2 border-t-[#a18d6f] border-r-[#f9c86d] border-b-[#c0a480] border-l-transparent animate-spin-slow"></div>
+      <div className="min-h-screen fantasy-bg flex items-center justify-center">
+        <div className="max-w-md w-full mx-4">
+          {/* Enhanced Loading Interface */}
+          <div className="bg-black/40 border border-amber-500/20 rounded-xl p-8 space-y-6">
+            {/* Header */}
+            <div className="text-center space-y-2">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-400/20">
+                  <Sparkles className="w-6 h-6 text-amber-400" />
+                </div>
+                <h2 className={`text-2xl text-[#f4e8c1] ${serifFontClass} font-bold`}>
+                  创作工坊
+                </h2>
+              </div>
+              <p className="text-[#c0a480]/80 text-sm">
+                正在为您准备AI创作环境
+              </p>
+            </div>
+
+            {/* Enhanced Progress Indicator */}
+            <div className="flex items-center justify-center">
+              <div className="relative w-20 h-20">
+                {/* Outer ring */}
+                <div className="absolute inset-0 rounded-full border-4 border-amber-500/20"></div>
+                {/* Animated ring */}
+                <div className="absolute inset-0 rounded-full border-4 border-t-amber-400 border-r-amber-400/50 border-b-transparent border-l-transparent animate-spin"></div>
+                {/* Inner ring */}
+                <div className="absolute inset-3 rounded-full border-2 border-t-orange-400 border-r-transparent border-b-orange-400/50 border-l-transparent animate-spin-slow"></div>
+                {/* Center dot */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Status Text */}
+            <div className="text-center space-y-3">
+              <p className={`text-[#f4e8c1] ${fontClass} font-medium`}>
+                {loadingPhase}
+              </p>
+              
+              {isInitializing && (
+                <div className="space-y-2">
+                  <div className="w-full bg-black/20 rounded-full h-2 overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full animate-pulse"></div>
+                  </div>
+                  <p className={`text-[#c0a480]/70 text-xs ${fontClass} leading-relaxed`}>
+                    智能体正在分析您的需求并设置创作流程...
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Stage Indicators */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#c0a480]/60">创作阶段</span>
+                <span className="text-amber-400">初始化中</span>
+              </div>
+              
+              <div className="grid grid-cols-4 gap-2">
+                {["分析", "规划", "创作", "完成"].map((stage, index) => (
+                  <div key={stage} className="text-center">
+                    <div className={`w-8 h-8 rounded-full border-2 mx-auto mb-1 flex items-center justify-center ${
+                      index === 0 
+                        ? "border-amber-400 bg-amber-400/20 text-amber-400" 
+                        : "border-slate-400/30 text-slate-400"
+                    }`}>
+                      <div className={`w-2 h-2 rounded-full ${
+                        index === 0 ? "bg-amber-400 animate-pulse" : "bg-slate-400/50"
+                      }`}></div>
+                    </div>
+                    <span className={`text-xs ${
+                      index === 0 ? "text-amber-400" : "text-slate-400"
+                    }`}>
+                      {stage}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-        <p className={`text-[#f4e8c1] ${serifFontClass} text-center mb-2`}>
-          {loadingPhase}
-        </p>
-        {isInitializing && (
-          <p className={`text-[#a18d6f] text-xs mt-4 max-w-xs text-center ${fontClass}`}>
-            Agent is analyzing your request and setting up the creation process...
-          </p>
-        )}
       </div>
     );
   }
@@ -403,64 +475,79 @@ export default function CreatorAreaPage() {
   }
 
   return (
-    <div className="h-full fantasy-bg">
-      <div className="container mx-auto px-4 py-6 h-full">
-        <div className="h-full flex gap-6">
-          {/* Left Panel - Messages */}
-          <div className="flex-1 flex flex-col">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-4">
+    <div className="min-h-screen fantasy-bg">
+      <div className="container mx-auto px-6 py-8 min-h-screen">
+        <div className="h-full flex gap-8">
+          {/* Left Panel - Messages with Enhanced Design */}
+          <div className="flex-1 flex flex-col min-h-0">
+            {/* Enhanced Header */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center space-x-6">
                 <button
                   onClick={goBack}
-                  className="p-2 bg-black/20 backdrop-blur-sm border border-amber-500/20 rounded-lg hover:bg-black/30 transition-colors"
+                  className="group p-3 bg-black/30 border border-amber-500/30 rounded-xl hover:bg-black/40 hover:border-amber-400/50 transition-all duration-200"
                 >
-                  <ArrowLeft className="w-5 h-5 text-[#c0a480]" />
+                  <ArrowLeft className="w-5 h-5 text-[#c0a480] group-hover:text-amber-400 transition-colors" />
                 </button>
-                <div>
-                  <h1 className={`text-2xl text-[#f4e8c1] ${serifFontClass}`}>
-                    {session.title}
-                  </h1>
-                  <p className="text-[#c0a480]/70 text-sm">
-                    {session.research_state.main_objective}
-                  </p>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3">
+                    <h1 className={`text-3xl text-[#f4e8c1] ${serifFontClass} font-bold`}>
+                      {session?.title || "创作工坊"}
+                    </h1>
+                    <div className="p-1 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-400/20">
+                      <Sparkles className="w-5 h-5 text-amber-400" />
+                    </div>
+                  </div>
+                  {session?.research_state?.main_objective && (
+                    <p className="text-[#c0a480]/80 text-sm max-w-md leading-relaxed">
+                      {session.research_state.main_objective}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto pr-2">
-              <div className="space-y-3 pb-4">
-                <MessageStream 
-                  messages={messages} 
-                  streamingMessage={currentStreamingMessage}
-                />
-                
-                {needsUserInput && userInputQuestion && (
-                  <InlineUserInput
-                    question={userInputQuestion}
-                    options={userInputOptions}
-                    onResponse={handleUserResponse}
-                    isLoading={isInitializing}
+            {/* Messages Container with Improved Styling */}
+            <div className="flex-1 overflow-hidden">
+              <div className="h-full overflow-y-auto pr-3 pb-6 space-y-1">
+                <div className="space-y-4">
+                  <MessageStream 
+                    messages={messages} 
+                    streamingMessage={currentStreamingMessage}
                   />
-                )}
-                
-                <div ref={messageEndRef} />
+                  
+                  {needsUserInput && userInputQuestion && (
+                    <div className="mt-6">
+                      <InlineUserInput
+                        question={userInputQuestion}
+                        options={userInputOptions}
+                        onResponse={handleUserResponse}
+                        isLoading={isInitializing}
+                      />
+                    </div>
+                  )}
+                  
+                  <div ref={messageEndRef} className="h-4" />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Right Panel - Progress */}
-          <div className="w-80">
-            <AgentProgressPanel 
-              progress={progress} 
-              status={status} 
-              result={result} 
-              sessionId={sessionId}
-            />
+          {/* Right Panel - Progress with Enhanced Design */}
+          <div className="w-full md:w-64 lg:w-72 flex-shrink-0">
+            <div className="sticky top-20">
+              <AgentProgressPanel 
+                progress={progress} 
+                status={status} 
+                result={result} 
+                sessionId={sessionId}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Error Toast */}
+      {/* Enhanced Error Toast */}
       <ErrorToast
         isVisible={errorToast.isVisible}
         message={errorToast.message}

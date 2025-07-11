@@ -40,7 +40,14 @@
     "expandCreator": "展开创作区",
     "goToUpdate": "前往更新",
     "newVersionAvailable": "发现新版本",
-    "currentVersion": "当前版本: v{version}"
+    "currentVersion": "当前版本: v{version}",
+    "creationHistory": "创作历史",
+    "confirmDelete": "您确定要删除这个会话吗？",
+    "deleteError": "删除会话失败。",
+    "deleteSession": "删除会话",
+    "collapseHistory": "折叠历史",
+    "expandHistory": "展开历史",
+    "noHistory": "暂无历史记录"
   },
   "modelSettings": {
     "title": "模型设置",

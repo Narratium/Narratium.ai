@@ -19,6 +19,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { PenSquare, Send, Plus } from "lucide-react";
 
 interface InlineUserInputProps {
   question: string;
@@ -68,85 +69,76 @@ const InlineUserInput: React.FC<InlineUserInputProps> = ({
       transition={{ duration: 0.3, ease: "easeOut" }}
       className="relative"
     >
-      {/* Question with subtle styling */}
-      <div className="mb-4">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-amber-400 bg-amber-500/10 border border-amber-400/20">
-            <span className="text-sm">🤔</span>
-            需要您的输入
-          </span>
+      {/* Redesigned Question Header */}
+      <div className="mb-5">
+        <div className="flex items-center gap-2 mb-3 text-amber-400 font-medium text-sm">
+          <PenSquare className="w-4 h-4" />
+          <span>需要您的输入</span>
         </div>
-        <div className="text-sm leading-relaxed text-[#c0a480]/90 ml-1">
+        <div className="pl-6 text-sm leading-relaxed text-[#c0a480]/90">
           {question}
         </div>
       </div>
 
-      {/* Options with cursor-style design */}
+      {/* Redesigned Options */}
       {options && options.length > 0 && !showCustomInput && (
-        <div className="space-y-2 mb-4">
+        <div className="pl-6 space-y-2 mb-4">
           {options.map((option, index) => (
             <motion.button
               key={index}
-              initial={{ opacity: 0, x: -15 }}
+              initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.08, duration: 0.3 }}
+              transition={{ delay: index * 0.07, duration: 0.25 }}
               onClick={() => handleOptionSelect(option)}
               disabled={isLoading}
-              className="group block w-full text-left px-4 py-3 text-sm text-[#c0a480] rounded-lg border border-amber-500/15 hover:border-amber-500/30 bg-black/5 hover:bg-black/10 transition-all duration-200 disabled:opacity-50"
+              className="group block w-full text-left px-4 py-2.5 text-sm text-[#c0a480] rounded-lg border border-transparent hover:border-amber-500/30 bg-black/10 hover:bg-black/20 transition-all duration-200 disabled:opacity-50"
             >
-              <div className="flex items-center justify-between">
-                <span className="group-hover:text-[#eae6db]">{option}</span>
-                <span className="opacity-0 group-hover:opacity-100 text-xs text-amber-400 transition-opacity">
-                  按 Enter 选择
-                </span>
-              </div>
+              <span className="group-hover:text-amber-400 transition-colors">{option}</span>
             </motion.button>
           ))}
           
-          {/* Custom input toggle with subtle style */}
+          {/* Redesigned custom input toggle */}
           <motion.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.3 }}
             onClick={() => setShowCustomInput(true)}
-            className="flex items-center gap-2 text-xs text-[#c0a480]/60 hover:text-[#c0a480] transition-colors ml-1 mt-3"
+            className="flex items-center gap-2 text-xs text-[#c0a480]/60 hover:text-amber-400 transition-colors pt-2"
           >
-            <span className="w-4 h-4 border border-dashed border-current rounded flex items-center justify-center">+</span>
-            自定义输入
+            <Plus className="w-3 h-3" />
+            <span>自定义输入</span>
           </motion.button>
         </div>
       )}
 
-      {/* Custom input with cursor-style */}
+      {/* Redesigned Custom Input */}
       {(showCustomInput || (!options || options.length === 0)) && (
         <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-black/5 rounded-lg border border-amber-500/15 p-3"
+          className="pl-6"
         >
-          <div className="flex items-end gap-3">
-            <div className="flex-1">
-              <input
-                type="text"
-                value={customInput}
-                onChange={(e) => setCustomInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="输入您的回复..."
-                disabled={isLoading}
-                className="w-full px-0 py-2 text-sm text-[#c0a480] bg-transparent border-0 border-b border-amber-500/20 focus:outline-none focus:border-amber-500/40 placeholder-[#c0a480]/40"
-                autoFocus
-              />
-            </div>
+          <div className="relative flex items-center">
+            <input
+              type="text"
+              value={customInput}
+              onChange={(e) => setCustomInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="输入您的回复..."
+              disabled={isLoading}
+              className="w-full pl-4 pr-12 py-3 text-sm text-[#eae6db] bg-black/20 rounded-lg border border-amber-500/20 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30 placeholder-[#c0a480]/50 transition-all"
+              autoFocus
+            />
             <button
               onClick={handleCustomSubmit}
               disabled={isLoading || !customInput.trim()}
-              className="px-4 py-2 text-xs font-medium text-black bg-amber-400 rounded-md hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex-shrink-0"
+              className="absolute right-2 p-2 text-amber-400 rounded-md hover:bg-amber-500/10 disabled:text-slate-400 disabled:bg-transparent transition-all duration-200"
             >
               {isLoading ? (
-                <div className="w-4 h-4 border border-black/20 border-t-black rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-slate-400/50 border-t-amber-400 rounded-full animate-spin" />
               ) : (
-                "发送"
+                <Send className="w-5 h-5" />
               )}
             </button>
           </div>

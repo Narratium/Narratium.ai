@@ -4,7 +4,7 @@
  * Displays a continuous stream of messages in an elegant chatbot-style interface.
  * Features:
  * - Unified message flow without individual card borders
- * - Color-coded message type tags with emoji icons
+ * - Color-coded message type tags with modern visual indicators
  * - Smooth animations and hover effects
  * - Metadata display on hover
  * - Clean, borderless, natural appearance
@@ -19,86 +19,110 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Message } from "@/lib/models/agent-model";
+import { 
+  BrainCircuit, 
+  Zap, 
+  Wrench,
+  PenSquare,
+  MessageSquare,
+  Cog,
+  ShieldCheck,
+  ClipboardCheck,
+  Bot,
+  AlertTriangle,
+  Info,
+} from "lucide-react";
 
-// Message type configuration with colors, icons, and labels
+// Simplified message type configuration with Lucide icons
 const MESSAGE_TYPE_CONFIG = {
+  // Thinking and decision-making
   agent_thinking: { 
-    label: "思考", 
+    label: "思考中", 
     color: "text-purple-400", 
-    bgColor: "bg-purple-500/10",
-    icon: "🤔", 
+    icon: BrainCircuit, 
+    pulse: true,
   },
+  
+  // Actions and execution
   agent_action: { 
     label: "执行", 
     color: "text-blue-400", 
-    bgColor: "bg-blue-500/10",
-    icon: "⚡", 
-  },
-  user_input: { 
-    label: "用户", 
-    color: "text-green-400", 
-    bgColor: "bg-green-500/10",
-    icon: "👤", 
+    icon: Zap,
+    pulse: false,
   },
   tool_execution: { 
-    label: "工具", 
+    label: "工具调用", 
     color: "text-amber-400", 
-    bgColor: "bg-amber-500/10",
-    icon: "🔧", 
+    icon: Wrench,
+    pulse: false,
   },
-  quality_evaluation: { 
-    label: "评估", 
+  
+  // User interactions
+  user_input: { 
+    label: "用户输入", 
     color: "text-emerald-400", 
-    bgColor: "bg-emerald-500/10",
-    icon: "✅", 
-  },
-  system_prompt: { 
-    label: "系统", 
-    color: "text-cyan-400", 
-    bgColor: "bg-cyan-500/10",
-    icon: "⚙️", 
-  },
-  system_info: { 
-    label: "信息", 
-    color: "text-cyan-400", 
-    bgColor: "bg-cyan-500/10",
-    icon: "ℹ️", 
-  },
-  tool_failure: { 
-    label: "错误", 
-    color: "text-red-400", 
-    bgColor: "bg-red-500/10",
-    icon: "❌", 
+    icon: PenSquare,
+    pulse: false,
   },
   user_response: { 
-    label: "回复", 
-    color: "text-green-400", 
-    bgColor: "bg-green-500/10",
-    icon: "💬", 
+    label: "用户回复", 
+    color: "text-emerald-400", 
+    icon: MessageSquare,
+    pulse: false,
   },
-  tool_result: { 
-    label: "结果", 
-    color: "text-amber-400", 
-    bgColor: "bg-amber-500/10",
-    icon: "📊", 
+  
+  // System and quality
+  system_info: { 
+    label: "系统信息", 
+    color: "text-slate-400", 
+    icon: Info,
+    pulse: false,
   },
-  agent_message: { 
-    label: "消息", 
-    color: "text-blue-400", 
-    bgColor: "bg-blue-500/10",
-    icon: "🤖", 
+  system_prompt: { 
+    label: "系统提示", 
+    color: "text-slate-400", 
+    icon: Cog,
+    pulse: false,
   },
   system_message: { 
-    label: "系统", 
+    label: "系统消息", 
+    color: "text-slate-400", 
+    icon: Info,
+    pulse: false,
+  },
+  quality_evaluation: { 
+    label: "质量评估", 
+    color: "text-teal-400", 
+    icon: ShieldCheck,
+    pulse: false,
+  },
+  
+  // Results and errors
+  tool_result: { 
+    label: "执行结果", 
     color: "text-cyan-400", 
-    bgColor: "bg-cyan-500/10",
-    icon: "💻", 
+    icon: ClipboardCheck,
+    pulse: false,
+  },
+  agent_message: { 
+    label: "智能体", 
+    color: "text-indigo-400", 
+    icon: Bot,
+    pulse: false,
+  },
+  
+  // Errors
+  tool_failure: { 
+    label: "执行失败", 
+    color: "text-red-400", 
+    icon: AlertTriangle,
+    pulse: true,
   },
   error: { 
-    label: "异常", 
+    label: "错误", 
     color: "text-red-400", 
-    bgColor: "bg-red-500/10",
-    icon: "🚨", 
+    icon: AlertTriangle,
+    pulse: true,
   },
 };
 
@@ -121,49 +145,47 @@ const MessageStream: React.FC<MessageStreamProps> = ({ messages, streamingMessag
   }
 
   return (
-    <div className="space-y-4 text-[#c0a480]">
+    <div className="space-y-3 text-[#c0a480]">
       {allMessages.map((message, index) => {
         const config = MESSAGE_TYPE_CONFIG[message.type] || MESSAGE_TYPE_CONFIG.agent_message;
         
         return (
           <motion.div
             key={message.id}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: Math.min(index * 0.03, 0.5) }}
+            transition={{ delay: Math.min(index * 0.02, 0.4) }}
             className="group relative"
           >
-            {/* Message header with inline tag */}
-            <div className="flex items-center gap-3 mb-2">
-              <span 
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${config.color} ${config.bgColor} border border-current/20`}
-              >
-                <span className="text-sm">{config.icon}</span>
-                {config.label}
-              </span>
+            {/* Simplified message header: Icon + Text */}
+            <div className={`flex items-center gap-2 mb-2.5 font-medium text-sm ${config.color} ${config.pulse ? "animate-pulse" : ""}`}>
+              <config.icon className="w-4 h-4" />
+              <span className="tracking-wide">{config.label}</span>
             </div>
             
-            {/* Message content */}
-            <div className="ml-1 text-sm leading-relaxed whitespace-pre-wrap break-words text-[#c0a480]/90">
+            {/* Message content with improved typography */}
+            <div className="pl-6 text-sm leading-relaxed whitespace-pre-wrap break-words text-[#c0a480]/90">
               {message.content || "No content available"}
-              {/* Add blinking cursor for streaming messages */}
+              {/* Modern blinking cursor for streaming messages */}
               {message.metadata?.streaming && (
-                <span className="ml-1 animate-pulse text-purple-400">▋</span>
+                <span className="ml-1 inline-block w-0.5 h-4 bg-purple-400 animate-pulse"></span>
               )}
             </div>
             
-            {/* Metadata (only show on hover) */}
+            {/* Enhanced metadata display */}
             {message.metadata && (message.metadata.tool || message.metadata.reasoning) && (
-              <div className="ml-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="text-xs text-[#c0a480]/50 bg-black/10 rounded-lg p-3 border border-amber-500/10">
+              <div className="pl-6 mt-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                <div className="text-xs text-[#c0a480]/60 bg-black/10 rounded-lg p-3 border border-amber-500/10">
                   {message.metadata.tool && (
                     <div className="mb-1">
-                      <span className="font-medium text-[#c0a480]/70">工具:</span> {message.metadata.tool}
+                      <span className="font-semibold text-[#c0a480]/80">工具:</span> 
+                      <span className="ml-1 text-[#c0a480]/70">{message.metadata.tool}</span>
                     </div>
                   )}
                   {message.metadata.reasoning && (
                     <div>
-                      <span className="font-medium text-[#c0a480]/70">推理:</span> {message.metadata.reasoning}
+                      <span className="font-semibold text-[#c0a480]/80">推理:</span> 
+                      <span className="ml-1 text-[#c0a480]/70">{message.metadata.reasoning}</span>
                     </div>
                   )}
                 </div>

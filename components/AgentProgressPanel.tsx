@@ -3,9 +3,9 @@
  * 
  * Displays real-time agent execution progress and status information.
  * Features:
- * - Status indicator with color coding
- * - Progress ring visualization
- * - Task completion statistics
+ * - Modern status indicator with enhanced visual design
+ * - Elegant progress ring visualization
+ * - Component completion tracking with step indicators
  * - Generation output monitoring
  * - Export functionality
  * - Avatar generation integration
@@ -29,6 +29,8 @@ import {
   Globe, 
   Plus,
   Loader2,
+  Brain,
+  Zap,
 } from "lucide-react";
 import { GenerationOutput } from "@/lib/models/agent-model";
 import AvatarGenerationSection from "@/components/AvatarGenerationSection";
@@ -60,15 +62,64 @@ const AgentProgressPanel: React.FC<AgentProgressPanelProps> = ({
   sessionId,
   onExport,
 }) => {
-  const getStatusColor = (status: string) => {
+  const getStatusConfig = (status: string) => {
     switch (status) {
-    case "idle": return "text-gray-400";
-    case "thinking": return "text-blue-400";
-    case "executing": return "text-yellow-400";
-    case "waiting_user": return "text-orange-400";
-    case "completed": return "text-green-400";
-    case "failed": return "text-red-400";
-    default: return "text-gray-400";
+    case "idle": 
+      return { 
+        color: "text-slate-400", 
+        bgColor: "bg-slate-400/20", 
+        label: "待机中",
+        icon: <Clock className="w-4 h-4" />,
+        pulse: false,
+      };
+    case "thinking": 
+      return { 
+        color: "text-purple-400", 
+        bgColor: "bg-purple-400/20", 
+        label: "思考中",
+        icon: <Brain className="w-4 h-4" />,
+        pulse: true,
+      };
+    case "executing": 
+      return { 
+        color: "text-blue-400", 
+        bgColor: "bg-blue-400/20", 
+        label: "执行中",
+        icon: <Zap className="w-4 h-4" />,
+        pulse: true,
+      };
+    case "waiting_user": 
+      return { 
+        color: "text-amber-400", 
+        bgColor: "bg-amber-400/20", 
+        label: "等待输入",
+        icon: <User className="w-4 h-4" />,
+        pulse: true,
+      };
+    case "completed": 
+      return { 
+        color: "text-emerald-400", 
+        bgColor: "bg-emerald-400/20", 
+        label: "已完成",
+        icon: <CheckCircle className="w-4 h-4" />,
+        pulse: false,
+      };
+    case "failed": 
+      return { 
+        color: "text-red-400", 
+        bgColor: "bg-red-400/20", 
+        label: "执行失败",
+        icon: <Clock className="w-4 h-4" />,
+        pulse: false,
+      };
+    default: 
+      return { 
+        color: "text-slate-400", 
+        bgColor: "bg-slate-400/20", 
+        label: "未知状态",
+        icon: <Clock className="w-4 h-4" />,
+        pulse: false,
+      };
     }
   };
 
@@ -112,12 +163,13 @@ const AgentProgressPanel: React.FC<AgentProgressPanelProps> = ({
     }
   };
 
+  const statusConfig = getStatusConfig(status);
   const progressPercentage = getProgressPercentage();
   const isCompleted = status === "completed";
   const hasResult = result && (result.character_data || result.status_data);
 
   return (
-    <div className="bg-black/40 backdrop-blur-sm border border-amber-500/20 rounded-lg p-6 space-y-6">
+    <div className="bg-black/40 border border-amber-500/20 rounded-lg p-6 space-y-6">
       {/* Header */}
       <div>
         <h3 className="text-lg font-semibold text-[#c0a480] font-cinzel mb-2">
@@ -128,107 +180,118 @@ const AgentProgressPanel: React.FC<AgentProgressPanelProps> = ({
         </p>
       </div>
 
-      {/* Status Indicator */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className={`w-3 h-3 rounded-full ${
-            status === "thinking" || status === "executing" ? "animate-pulse" : ""
-          } ${
-            status === "idle" ? "bg-gray-400" :
-              status === "thinking" ? "bg-blue-400" :
-                status === "executing" ? "bg-yellow-400" :
-                  status === "waiting_user" ? "bg-orange-400" :
-                    status === "completed" ? "bg-green-400" :
-                      status === "failed" ? "bg-red-400" : "bg-gray-400"
-          }`} />
-          <span className={`text-sm font-medium ${getStatusColor(status)}`}>
-            {status === "idle" ? "待机中" :
-              status === "thinking" ? "思考中" :
-                status === "executing" ? "执行中" :
-                  status === "waiting_user" ? "等待输入" :
-                    status === "completed" ? "已完成" :
-                      status === "failed" ? "执行失败" : "未知状态"}
-          </span>
+      {/* Enhanced Status Indicator */}
+      <div className="relative">
+        <div className={`flex items-center justify-between p-4 rounded-lg border ${statusConfig.bgColor} border-current/20`}>
+          <div className="flex items-center space-x-3">
+            <div className={`p-2 rounded-lg ${statusConfig.bgColor} ${statusConfig.pulse ? "animate-pulse" : ""}`}>
+              <div className={statusConfig.color}>
+                {statusConfig.icon}
+              </div>
+            </div>
+            <div>
+              <span className={`text-sm font-medium ${statusConfig.color}`}>
+                {statusConfig.label}
+              </span>
+              <p className="text-xs text-[#c0a480]/50 mt-0.5">
+                当前执行状态
+              </p>
+            </div>
+          </div>
+          
+          {(status === "thinking" || status === "executing") && (
+            <Loader2 className="w-5 h-5 text-[#c0a480]/60 animate-spin" />
+          )}
         </div>
-        
-        {(status === "thinking" || status === "executing") && (
-          <Loader2 className="w-4 h-4 text-[#c0a480]/60 animate-spin" />
-        )}
       </div>
 
-      {/* Progress Ring */}
+      {/* Progress Ring with Enhanced Design */}
       <div className="flex items-center justify-center">
-        <div className="relative w-32 h-32">
-          <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
+        <div className="relative w-36 h-36">
+          <svg className="w-36 h-36 transform -rotate-90" viewBox="0 0 144 144">
+            {/* Background ring */}
             <circle
-              cx="60"
-              cy="60"
-              r="54"
-              stroke="#534741"
-              strokeWidth="6"
+              cx="72"
+              cy="72"
+              r="64"
+              stroke="rgba(196, 164, 128, 0.1)"
+              strokeWidth="8"
               fill="transparent"
             />
+            {/* Progress ring */}
             <motion.circle
-              cx="60"
-              cy="60"
-              r="54"
-              stroke="#f9c86d"
-              strokeWidth="6"
+              cx="72"
+              cy="72"
+              r="64"
+              stroke="url(#progressGradient)"
+              strokeWidth="8"
               fill="transparent"
               strokeLinecap="round"
-              initial={{ strokeDasharray: "0 339.292" }}
+              initial={{ strokeDasharray: "0 402.124" }}
               animate={{ 
-                strokeDasharray: `${(progressPercentage / 100) * 339.292} 339.292`,
+                strokeDasharray: `${(progressPercentage / 100) * 402.124} 402.124`,
               }}
-              transition={{ duration: 1, ease: "easeOut" }}
+              transition={{ duration: 1.2, ease: "easeOut" }}
             />
+            {/* Define gradient */}
+            <defs>
+              <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f9c86d" />
+                <stop offset="100%" stopColor="#d1a35c" />
+              </linearGradient>
+            </defs>
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-2xl font-bold text-[#f9c86d]">
-              {progressPercentage}%
-            </span>
+            <div className="text-center">
+              <span className="text-2xl font-bold text-[#f9c86d] block">
+                {progressPercentage}%
+              </span>
+              <span className="text-xs text-[#c0a480]/60 mt-1">
+                总体进度
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Statistics */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-black/20 rounded-lg p-3">
-          <div className="flex items-center space-x-2 mb-1">
-            <CheckCircle className="w-4 h-4 text-green-400" />
-            <span className="text-xs text-[#c0a480]/60">已完成任务</span>
+      {/* Enhanced Statistics Grid */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-gradient-to-br from-black/30 to-black/10 rounded-lg p-3 border border-emerald-500/10">
+          <div className="flex items-center space-x-2 mb-2">
+            <CheckCircle className="w-4 h-4 text-emerald-400" />
+            <span className="text-xs text-[#c0a480]/70">已完成任务</span>
           </div>
-          <p className="text-lg font-semibold text-[#c0a480]">
+          <p className="text-lg font-bold text-emerald-400">
             {progress.completedTasks}
           </p>
         </div>
         
-        <div className="bg-black/20 rounded-lg p-3">
-          <div className="flex items-center space-x-2 mb-1">
+        <div className="bg-gradient-to-br from-black/30 to-black/10 rounded-lg p-3 border border-blue-500/10">
+          <div className="flex items-center space-x-2 mb-2">
             <Clock className="w-4 h-4 text-blue-400" />
-            <span className="text-xs text-[#c0a480]/60">迭代次数</span>
+            <span className="text-xs text-[#c0a480]/70">迭代次数</span>
           </div>
-          <p className="text-lg font-semibold text-[#c0a480]">
+          <p className="text-lg font-bold text-blue-400">
             {progress.totalIterations}
           </p>
         </div>
         
-        <div className="bg-black/20 rounded-lg p-3">
-          <div className="flex items-center space-x-2 mb-1">
+        <div className="bg-gradient-to-br from-black/30 to-black/10 rounded-lg p-3 border border-amber-500/10">
+          <div className="flex items-center space-x-2 mb-2">
             <FileText className="w-4 h-4 text-amber-400" />
-            <span className="text-xs text-[#c0a480]/60">知识条目</span>
+            <span className="text-xs text-[#c0a480]/70">知识条目</span>
           </div>
-          <p className="text-lg font-semibold text-[#c0a480]">
+          <p className="text-lg font-bold text-amber-400">
             {progress.knowledgeBaseSize}
           </p>
         </div>
         
-        <div className="bg-black/20 rounded-lg p-3">
-          <div className="flex items-center space-x-2 mb-1">
+        <div className="bg-gradient-to-br from-black/30 to-black/10 rounded-lg p-3 border border-purple-500/10">
+          <div className="flex items-center space-x-2 mb-2">
             <Globe className="w-4 h-4 text-purple-400" />
-            <span className="text-xs text-[#c0a480]/60">生成状态</span>
+            <span className="text-xs text-[#c0a480]/70">生成状态</span>
           </div>
-          <p className="text-sm font-medium text-[#c0a480]">
+          <p className="text-sm font-medium text-purple-400">
             {!result ? "未开始" :
               result.character_data && result.status_data ? "完整" :
                 result.character_data ? "角色" : "进行中"}
@@ -236,63 +299,118 @@ const AgentProgressPanel: React.FC<AgentProgressPanelProps> = ({
         </div>
       </div>
 
-      {/* Generation Components Status */}
+      {/* Enhanced Component Status with Step Indicators */}
       {result && (
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium text-[#c0a480]/80">生成组件状态</h4>
+        <div className="space-y-4">
+          <h4 className="text-sm font-semibold text-[#c0a480]/90 flex items-center gap-2">
+            <div className="w-1 h-4 bg-gradient-to-b from-amber-400 to-orange-400 rounded"></div>
+            生成组件状态
+          </h4>
           
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <User className="w-4 h-4 text-blue-400" />
-                <span className="text-sm text-[#c0a480]/70">角色卡片</span>
+          <div className="space-y-3">
+            {/* Character Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-blue-500/5 to-blue-500/10 border border-blue-500/20"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="p-1.5 rounded-lg bg-blue-500/20">
+                  <User className="w-4 h-4 text-blue-400" />
+                </div>
+                <span className="text-sm font-medium text-[#c0a480]">角色卡片</span>
               </div>
-              <div className={`w-2 h-2 rounded-full ${
-                result.character_data ? "bg-green-400" : "bg-gray-400"
+              <div className={`w-3 h-3 rounded-full border-2 ${
+                result.character_data 
+                  ? "bg-emerald-400 border-emerald-400 shadow-emerald-400/50 shadow-lg" 
+                  : "border-slate-400 bg-transparent"
               }`} />
-            </div>
+            </motion.div>
             
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <FileText className="w-4 h-4 text-cyan-400" />
-                <span className="text-sm text-[#c0a480]/70">状态系统</span>
+            {/* Status System */}
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-cyan-500/5 to-cyan-500/10 border border-cyan-500/20"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="p-1.5 rounded-lg bg-cyan-500/20">
+                  <FileText className="w-4 h-4 text-cyan-400" />
+                </div>
+                <span className="text-sm font-medium text-[#c0a480]">状态系统</span>
               </div>
-              <div className={`w-2 h-2 rounded-full ${
-                result.status_data ? "bg-green-400" : "bg-gray-400"
+              <div className={`w-3 h-3 rounded-full border-2 ${
+                result.status_data 
+                  ? "bg-emerald-400 border-emerald-400 shadow-emerald-400/50 shadow-lg" 
+                  : "border-slate-400 bg-transparent"
               }`} />
-            </div>
+            </motion.div>
             
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <User className="w-4 h-4 text-green-400" />
-                <span className="text-sm text-[#c0a480]/70">用户设定</span>
+            {/* User Setting */}
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-emerald-500/5 to-emerald-500/10 border border-emerald-500/20"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="p-1.5 rounded-lg bg-emerald-500/20">
+                  <User className="w-4 h-4 text-emerald-400" />
+                </div>
+                <span className="text-sm font-medium text-[#c0a480]">用户设定</span>
               </div>
-              <div className={`w-2 h-2 rounded-full ${
-                result.user_setting_data ? "bg-green-400" : "bg-gray-400"
+              <div className={`w-3 h-3 rounded-full border-2 ${
+                result.user_setting_data 
+                  ? "bg-emerald-400 border-emerald-400 shadow-emerald-400/50 shadow-lg" 
+                  : "border-slate-400 bg-transparent"
               }`} />
-            </div>
+            </motion.div>
             
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Globe className="w-4 h-4 text-purple-400" />
-                <span className="text-sm text-[#c0a480]/70">世界观</span>
+            {/* World View */}
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-purple-500/5 to-purple-500/10 border border-purple-500/20"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="p-1.5 rounded-lg bg-purple-500/20">
+                  <Globe className="w-4 h-4 text-purple-400" />
+                </div>
+                <span className="text-sm font-medium text-[#c0a480]">世界观</span>
               </div>
-              <div className={`w-2 h-2 rounded-full ${
-                result.world_view_data ? "bg-green-400" : "bg-gray-400"
+              <div className={`w-3 h-3 rounded-full border-2 ${
+                result.world_view_data 
+                  ? "bg-emerald-400 border-emerald-400 shadow-emerald-400/50 shadow-lg" 
+                  : "border-slate-400 bg-transparent"
               }`} />
-            </div>
+            </motion.div>
             
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Plus className="w-4 h-4 text-amber-400" />
-                <span className="text-sm text-[#c0a480]/70">
-                  补充条目 ({result.supplement_data?.length || 0}/5)
-                </span>
+            {/* Supplement Entries */}
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-amber-500/5 to-amber-500/10 border border-amber-500/20"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="p-1.5 rounded-lg bg-amber-500/20">
+                  <Plus className="w-4 h-4 text-amber-400" />
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-[#c0a480]">补充条目</span>
+                  <p className="text-xs text-[#c0a480]/60">
+                    {result.supplement_data?.length || 0}/5 条目完成
+                  </p>
+                </div>
               </div>
-              <div className={`w-2 h-2 rounded-full ${
-                (result.supplement_data?.length || 0) >= 5 ? "bg-green-400" : "bg-gray-400"
+              <div className={`w-3 h-3 rounded-full border-2 ${
+                (result.supplement_data?.length || 0) >= 5 
+                  ? "bg-emerald-400 border-emerald-400 shadow-emerald-400/50 shadow-lg" 
+                  : "border-slate-400 bg-transparent"
               }`} />
-            </div>
+            </motion.div>
           </div>
         </div>
       )}
@@ -302,13 +420,15 @@ const AgentProgressPanel: React.FC<AgentProgressPanelProps> = ({
         <AvatarGenerationSection sessionId={sessionId} />
       )}
 
-      {/* Export Button */}
+      {/* Enhanced Export Button */}
       {hasResult && (
         <motion.button
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleExportResult}
-          className="w-full bg-gradient-to-r from-amber-500 to-orange-400 text-black rounded-lg py-3 px-4 font-medium text-sm hover:from-amber-400 hover:to-orange-300 transition-all duration-200 flex items-center justify-center space-x-2"
+          className="w-full bg-gradient-to-r from-amber-500 to-orange-400 hover:from-amber-400 hover:to-orange-300 text-black rounded-lg py-3 px-4 font-semibold text-sm transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
         >
           <Download className="w-4 h-4" />
           <span>导出结果</span>
