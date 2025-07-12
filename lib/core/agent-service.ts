@@ -792,7 +792,7 @@ export class AgentService {
   /**
    * Generate image using fal-ai Stable Diffusion API
    */
-  private async generateImageWithAI(description: string, llmConfig: any): Promise<{
+  public async generateImageWithAI(description: string, llmConfig: any): Promise<{
     success: boolean;
     imageUrl?: string;
     error?: string;
@@ -925,7 +925,7 @@ Respond with just the search description, no additional text.
   /**
    * Search for images using Tavily API
    */
-  private async searchImages(query: string, tavilyApiKey: string): Promise<{
+  public async searchImages(query: string, tavilyApiKey: string): Promise<{
     success: boolean;
     images?: string[];
     error?: string;
@@ -1001,7 +1001,7 @@ Respond with just the search description, no additional text.
   /**
    * Check if URL is a valid image URL
    */
-  private isValidImageUrl(url: string): boolean {
+  public isValidImageUrl(url: string): boolean {
     try {
       const urlObj = new URL(url);
       const pathname = urlObj.pathname.toLowerCase();
@@ -1014,7 +1014,7 @@ Respond with just the search description, no additional text.
   /**
    * Select best image using Jina AI
    */
-  private async selectBestImage(imageUrls: string[], description: string, llmConfig: any, characterData: any): Promise<string | null> {
+  public async selectBestImage(imageUrls: string[], description: string, llmConfig: any, characterData: any): Promise<string | null> {
     try {
       // For simplicity, if Jina AI is not configured or fails, select the first image
       const jinaApiKey = llmConfig.jina_api_key;

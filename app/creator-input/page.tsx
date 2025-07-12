@@ -47,8 +47,8 @@ export default function CreatorInputPage() {
         throw new Error(response.error || "Failed to create session");
       }
       
-      // Navigate to creator-area with session ID
-      router.push(`/creator-area?id=${response.sessionId}`);
+      // // Navigate to creator-area with session ID
+      // router.push(`/creator-area?id=${response.sessionId}`);
       
     } catch (error: any) {
       console.error("Error creating session:", error);

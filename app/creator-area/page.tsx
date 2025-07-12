@@ -246,37 +246,12 @@ export default function CreatorAreaPage() {
             prevMessagesLengthRef.current = newMessages.length;
           }
 
-          // Stop polling only if truly failed
-          if (currentStatus === "failed") {
+          // Stop polling if completed or failed
+          if (currentStatus === "completed" || currentStatus === "failed") {
             if (pollInterval.current) {
               clearInterval(pollInterval.current);
               pollInterval.current = null;
             }
-          }
-          
-          // For completed status, check if there are recent messages indicating continued activity
-          if (currentStatus === "completed") {
-            const recentMessages = data.session?.messages || [];
-            const lastMessage = recentMessages[recentMessages.length - 1];
-            const lastMessageTime = lastMessage?.timestamp ? new Date(lastMessage.timestamp).getTime() : 0;
-            const currentTime = Date.now();
-            const timeSinceLastMessage = currentTime - lastMessageTime;
-            
-            // Stop polling only if no activity for more than 30 seconds after completion
-            // This allows time for quality evaluation and potential REFLECT tool execution
-            if (timeSinceLastMessage > 30000) {
-              if (pollInterval.current) {
-                clearInterval(pollInterval.current);
-                pollInterval.current = null;
-              }
-            }
-          }
-          
-          // If session status changed from completed back to active state, ensure polling is running
-          if (currentStatus !== "completed" && currentStatus !== "failed" && !pollInterval.current) {
-            console.log("🔄 Session status changed from completed to active, restarting polling");
-            // Restart polling if it was stopped but session is now active again
-            pollInterval.current = setInterval(poll, 2000);
           }
         }
       } catch (error) {
@@ -540,61 +515,56 @@ export default function CreatorAreaPage() {
       />
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col p-4 sm:p-6">
-        {/* Messages Container with Fantasy Design */}
-        <div className="flex-1 flex flex-col min-h-0 min-w-0 max-w-4xl mx-auto w-full">
-
-          {/* Messages Container with Fantasy Styling */}
-          <div className="flex-1 overflow-hidden">
-            <div 
-              ref={scrollContainerRef}
-              className="h-full overflow-y-auto pr-2 sm:pr-3 pb-6 space-y-1 fantasy-scrollbar"
-            >
-              <div className="space-y-4 max-w-full">
-                <MessageStream 
-                  messages={messages}
-                  progress={progress}
-                  status={status}
-                  generationOutput={result}
-                />
-                  
-                {/* Show thinking state when agent is working but not waiting for user */}
-                {(status === "thinking" || status === "executing") && !needsUserInput && (
-                  <div className="mt-6">
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-start gap-3"
-                    >
-                      <div className="p-2 bg-amber-500/10 border border-amber-500/20 rounded-full flex-shrink-0">
-                        <BrainCircuit className="w-5 h-5 text-amber-400 animate-pulse" />
-                      </div>
-                      <div className="flex-1 pt-1.5 min-w-0">
-                        <p className="text-[#c0a480] text-sm italic">
-                          {status === "thinking" ? "Agent is thinking..." : "Agent is executing..."}
-                        </p>
-                      </div>
-                    </motion.div>
-                  </div>
-                )}
-                  
-                {needsUserInput && userInputQuestion && (
-                  <div className="mt-6">
-                    <InlineUserInput
-                      question={userInputQuestion}
-                      options={userInputOptions}
-                      onResponse={handleUserResponse}
-                      isLoading={isInitializing}
-                    />
-                  </div>
-                )}
-                  
-                <div ref={messageEndRef} className="h-4" />
-              </div>
+      <div className="flex-1 p-4 sm:p-6">
+        {/* Messages Container with Fantasy Styling */}
+        <div className="flex-1 overflow-hidden">
+          <div 
+            ref={scrollContainerRef}
+            className="h-full overflow-y-auto pr-2 sm:pr-3 pb-6 space-y-1 fantasy-scrollbar"
+          >
+            <div className="space-y-4 max-w-full">
+              <MessageStream 
+                messages={messages} 
+                progress={progress}
+                status={status}
+                result={result}
+              />
+              
+              {/* Show thinking state when agent is working but not waiting for user */}
+              {(status === "thinking" || status === "executing") && !needsUserInput && (
+                <div className="mt-6">
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-start gap-3"
+                  >
+                    <div className="p-2 bg-amber-500/10 border border-amber-500/20 rounded-full flex-shrink-0">
+                      <BrainCircuit className="w-5 h-5 text-amber-400 animate-pulse" />
+                    </div>
+                    <div className="flex-1 pt-1.5 min-w-0">
+                      <p className="text-[#c0a480] text-sm italic">
+                        {status === "thinking" ? "Agent is thinking..." : "Agent is executing..."}
+                      </p>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+              
+              {needsUserInput && userInputQuestion && (
+                <div className="mt-6">
+                  <InlineUserInput
+                    question={userInputQuestion}
+                    options={userInputOptions}
+                    onResponse={handleUserResponse}
+                    isLoading={isInitializing}
+                  />
+                </div>
+              )}
+              
+              <div ref={messageEndRef} className="h-4" />
             </div>
           </div>
         </div>
-        
       </div>
 
       {/* Fantasy Error Toast */}
