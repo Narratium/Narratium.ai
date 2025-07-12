@@ -9,6 +9,8 @@
  * - Smooth animations and transitions
  * - Keyboard support (Enter to send)
  * - Loading states with spinner
+ * - Dynamic width matching content length
+ * - Auto line wrapping for long content
  * 
  * Dependencies:
  * - framer-motion: For smooth animations
@@ -17,7 +19,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { PenSquare, Send, Plus } from "lucide-react";
 
@@ -40,14 +42,16 @@ const InlineUserInput: React.FC<InlineUserInputProps> = ({
   onResponse, 
   isLoading, 
 }) => {
-  const [selectedOption, setSelectedOption] = useState<string>("");
   const [customInput, setCustomInput] = useState<string>("");
-  const [showCustomInput, setShowCustomInput] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleOptionSelect = (option: string) => {
-    setSelectedOption(option);
-    onResponse(option);
-  };
+  // Auto-resize textarea height
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto";
+      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+    }
+  }, [customInput]);
 
   const handleCustomSubmit = () => {
     if (customInput.trim()) {
@@ -80,70 +84,74 @@ const InlineUserInput: React.FC<InlineUserInputProps> = ({
         </div>
       </div>
 
-      {/* Redesigned Options */}
-      {options && options.length > 0 && !showCustomInput && (
-        <div className="pl-6 space-y-2 mb-4">
-          {options.map((option, index) => (
-            <motion.button
-              key={index}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.07, duration: 0.25 }}
-              onClick={() => handleOptionSelect(option)}
-              disabled={isLoading}
-              className="group block w-full text-left px-4 py-2.5 text-sm text-[#c0a480] rounded-lg border border-transparent hover:border-amber-500/30 bg-black/10 hover:bg-black/20 transition-all duration-200 disabled:opacity-50"
-            >
-              <span className="group-hover:text-amber-400 transition-colors">{option}</span>
-            </motion.button>
-          ))}
-          
-          {/* Redesigned custom input toggle */}
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            onClick={() => setShowCustomInput(true)}
-            className="flex items-center gap-2 text-xs text-[#c0a480]/60 hover:text-amber-400 transition-colors pt-2"
+      {/* Elegant Reference Options */}
+      {options && options.length > 0 && (
+        <div className="pl-6 mb-4">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-black/20 border border-amber-500/25 rounded-xl p-4 mb-3 backdrop-blur-sm"
           >
-            <Plus className="w-3 h-3" />
-            <span>自定义输入</span>
-          </motion.button>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1 h-4 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full"></div>
+              <span className="text-xs text-amber-400/90 font-medium tracking-wide">参考选项</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {options.map((option, index) => (
+                <motion.button
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05, duration: 0.25 }}
+                  className="inline-flex items-center px-3 py-1.5 text-xs text-[#c0a480]/80 bg-black/30 border border-amber-500/20 rounded-full hover:bg-black/40 hover:border-amber-400/40 hover:text-[#f4e8c1] transition-all duration-200 cursor-pointer"
+                  onClick={() => {
+                    setCustomInput(option);
+                    if (inputRef.current) {
+                      inputRef.current.focus();
+                    }
+                  }}
+                >
+                  {option}
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
         </div>
       )}
 
-      {/* Redesigned Custom Input */}
-      {(showCustomInput || (!options || options.length === 0)) && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="pl-6"
-        >
-          <div className="relative flex items-center">
-            <input
-              type="text"
-              value={customInput}
-              onChange={(e) => setCustomInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="输入您的回复..."
-              disabled={isLoading}
-              className="w-full pl-4 pr-12 py-3 text-sm text-[#eae6db] bg-black/20 rounded-lg border border-amber-500/20 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30 placeholder-[#c0a480]/50 transition-all"
-              autoFocus
-            />
-            <button
-              onClick={handleCustomSubmit}
-              disabled={isLoading || !customInput.trim()}
-              className="absolute right-2 p-2 text-amber-400 rounded-md hover:bg-amber-500/10 disabled:text-slate-400 disabled:bg-transparent transition-all duration-200"
-            >
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-slate-400/50 border-t-amber-400 rounded-full animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
-            </button>
-          </div>
-        </motion.div>
-      )}
+      {/* Elegant Compact Input */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="pl-6"
+      >
+        <div className="relative inline-flex items-center min-w-[280px] max-w-lg">
+          <input
+            ref={inputRef}
+            type="text"
+            value={customInput}
+            onChange={(e) => setCustomInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="输入您的回复..."
+            disabled={isLoading}
+            className="w-full pl-4 pr-12 py-2.5 text-sm text-[#f4e8c1] bg-black/30 border border-amber-500/30 rounded-full focus:outline-none focus:border-amber-400/60 focus:bg-black/40 placeholder-[#c0a480]/60 transition-all duration-300 hover:border-amber-500/40"
+            autoFocus
+          />
+          <button
+            onClick={handleCustomSubmit}
+            disabled={isLoading || !customInput.trim()}
+            className="absolute right-1.5 p-1.5 text-amber-400 rounded-full hover:bg-amber-500/15 disabled:text-[#c0a480]/40 disabled:hover:bg-transparent transition-all duration-200"
+          >
+            {isLoading ? (
+              <div className="w-4 h-4 border-2 border-[#c0a480]/40 border-t-amber-400 rounded-full animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+      </motion.div>
     </motion.div>
   );
 };

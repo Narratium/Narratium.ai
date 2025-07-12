@@ -32,10 +32,11 @@ import { executeAgentSession, respondToResearchSession } from "@/function/agent/
 import { getResearchSessionStatus } from "@/function/agent/status";
 import MessageStream from "@/components/MessageStream";
 import InlineUserInput from "@/components/InlineUserInput";
-import AgentProgressPanel from "@/components/AgentProgressPanel";
 import ErrorToast from "@/components/ErrorToast";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import CreatorAreaBanner from "@/components/CreatorAreaBanner";
+import { ArrowLeft, Sparkles, BrainCircuit } from "lucide-react";
 import { Message, ResearchSession, GenerationOutput } from "@/lib/models/agent-model";
+import { motion } from "framer-motion";
 
 /**
  * Main creator area page component
@@ -72,6 +73,8 @@ export default function CreatorAreaPage() {
   const initializationRef = useRef(false);
   const isInitializingRef = useRef(false);
   const messageEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const prevMessagesLengthRef = useRef<number>(0);
   
   const [loadingPhase, setLoadingPhase] = useState<string>("");
   
@@ -104,6 +107,29 @@ export default function CreatorAreaPage() {
         });
       }
     }, 100);
+  };
+
+  const maybeScrollToBottom = (threshold = 120) => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distance < threshold) {
+      scrollToBottom();
+    }
+  };
+
+  const shouldAutoScroll = (newMessages: Message[]) => {
+    // Always scroll on initial load
+    if (prevMessagesLengthRef.current === 0) {
+      return true;
+    }
+    
+    // Only scroll if new messages were added
+    if (newMessages.length > prevMessagesLengthRef.current) {
+      return true;
+    }
+    
+    return false;
   };
 
   const startResearchSession = async (sessionId: string) => {
@@ -170,6 +196,9 @@ export default function CreatorAreaPage() {
         startPolling(session.id);
       }
       
+      // Auto-scroll after user response since it's new content
+      setTimeout(() => maybeScrollToBottom(), 300);
+      
     } catch (error: any) {
       console.error("Error responding to agent:", error);
       showErrorToast(error.message || "Failed to send response");
@@ -203,18 +232,52 @@ export default function CreatorAreaPage() {
           // Get messages
           const sessionData = await getResearchSession(sessionId);
           if (sessionData.success && sessionData.session) {
-            setMessages(sessionData.session.formattedMessages || []);
+            const newMessages = sessionData.session.formattedMessages || [];
+            
+            // Check if we should auto-scroll
+            if (shouldAutoScroll(newMessages)) {
+              setMessages(newMessages);
+              maybeScrollToBottom();
+            } else {
+              setMessages(newMessages);
+            }
+            
+            // Update previous messages length
+            prevMessagesLengthRef.current = newMessages.length;
           }
 
-          // Stop polling if completed or failed
-          if (currentStatus === "completed" || currentStatus === "failed") {
+          // Stop polling only if truly failed
+          if (currentStatus === "failed") {
             if (pollInterval.current) {
               clearInterval(pollInterval.current);
               pollInterval.current = null;
             }
           }
           
-          scrollToBottom();
+          // For completed status, check if there are recent messages indicating continued activity
+          if (currentStatus === "completed") {
+            const recentMessages = data.session?.messages || [];
+            const lastMessage = recentMessages[recentMessages.length - 1];
+            const lastMessageTime = lastMessage?.timestamp ? new Date(lastMessage.timestamp).getTime() : 0;
+            const currentTime = Date.now();
+            const timeSinceLastMessage = currentTime - lastMessageTime;
+            
+            // Stop polling only if no activity for more than 30 seconds after completion
+            // This allows time for quality evaluation and potential REFLECT tool execution
+            if (timeSinceLastMessage > 30000) {
+              if (pollInterval.current) {
+                clearInterval(pollInterval.current);
+                pollInterval.current = null;
+              }
+            }
+          }
+          
+          // If session status changed from completed back to active state, ensure polling is running
+          if (currentStatus !== "completed" && currentStatus !== "failed" && !pollInterval.current) {
+            console.log("🔄 Session status changed from completed to active, restarting polling");
+            // Restart polling if it was stopped but session is now active again
+            pollInterval.current = setInterval(poll, 2000);
+          }
         }
       } catch (error) {
         console.error("Polling error:", error);
@@ -264,7 +327,9 @@ export default function CreatorAreaPage() {
         });
 
         if (sessionData.formattedMessages) {
-          setMessages(sessionData.formattedMessages);
+          const initialMessages = sessionData.formattedMessages;
+          setMessages(initialMessages);
+          prevMessagesLengthRef.current = initialMessages.length;
         }
 
         // Check if session needs initialization
@@ -465,75 +530,71 @@ export default function CreatorAreaPage() {
   }
 
   return (
-    <div className="min-h-screen fantasy-bg">
-      <div className="container mx-auto px-6 py-8 min-h-screen">
-        <div className="h-full flex gap-8">
-          {/* Left Panel - Messages with Fantasy Design */}
-          <div className="flex-1 flex flex-col min-h-0">
-            {/* Fantasy Header */}
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center space-x-6">
-                <button
-                  onClick={goBack}
-                  className="group p-3 bg-black/30 border border-amber-500/30 rounded-xl hover:bg-black/40 hover:border-amber-400/50 transition-all duration-200 backdrop-blur-sm"
-                >
-                  <ArrowLeft className="w-5 h-5 text-[#c0a480] group-hover:text-amber-400 transition-colors" />
-                </button>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-3">
-                    <h1 className={`text-3xl text-[#f4e8c1] ${serifFontClass} font-bold magical-text`}>
-                      {session?.title || "创作工坊"}
-                    </h1>
-                    <div className="p-2 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-400/20 border border-amber-500/30">
-                      <Sparkles className="w-5 h-5 text-amber-400 fantasy-glow" />
-                    </div>
+    <div className="min-h-screen fantasy-bg overflow-x-hidden creator-area-container flex flex-col">
+      {/* Header Banner */}
+      <CreatorAreaBanner 
+        session={session}
+        onBack={goBack}
+        fontClass={fontClass}
+        serifFontClass={serifFontClass}
+      />
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col p-4 sm:p-6">
+        {/* Messages Container with Fantasy Design */}
+        <div className="flex-1 flex flex-col min-h-0 min-w-0 max-w-4xl mx-auto w-full">
+
+          {/* Messages Container with Fantasy Styling */}
+          <div className="flex-1 overflow-hidden">
+            <div 
+              ref={scrollContainerRef}
+              className="h-full overflow-y-auto pr-2 sm:pr-3 pb-6 space-y-1 fantasy-scrollbar"
+            >
+              <div className="space-y-4 max-w-full">
+                <MessageStream 
+                  messages={messages}
+                  progress={progress}
+                  status={status}
+                  generationOutput={result}
+                />
+                  
+                {/* Show thinking state when agent is working but not waiting for user */}
+                {(status === "thinking" || status === "executing") && !needsUserInput && (
+                  <div className="mt-6">
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-start gap-3"
+                    >
+                      <div className="p-2 bg-amber-500/10 border border-amber-500/20 rounded-full flex-shrink-0">
+                        <BrainCircuit className="w-5 h-5 text-amber-400 animate-pulse" />
+                      </div>
+                      <div className="flex-1 pt-1.5 min-w-0">
+                        <p className="text-[#c0a480] text-sm italic">
+                          {status === "thinking" ? "Agent is thinking..." : "Agent is executing..."}
+                        </p>
+                      </div>
+                    </motion.div>
                   </div>
-                  {session?.research_state?.main_objective && (
-                    <p className="text-[#c0a480]/80 text-sm max-w-md leading-relaxed">
-                      {session.research_state.main_objective}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Messages Container with Fantasy Styling */}
-            <div className="flex-1 overflow-hidden">
-              <div className="h-full overflow-y-auto pr-3 pb-6 space-y-1 fantasy-scrollbar">
-                <div className="space-y-4">
-                  <MessageStream 
-                    messages={messages} 
-                  />
+                )}
                   
-                  {needsUserInput && userInputQuestion && (
-                    <div className="mt-6">
-                      <InlineUserInput
-                        question={userInputQuestion}
-                        options={userInputOptions}
-                        onResponse={handleUserResponse}
-                        isLoading={isInitializing}
-                      />
-                    </div>
-                  )}
+                {needsUserInput && userInputQuestion && (
+                  <div className="mt-6">
+                    <InlineUserInput
+                      question={userInputQuestion}
+                      options={userInputOptions}
+                      onResponse={handleUserResponse}
+                      isLoading={isInitializing}
+                    />
+                  </div>
+                )}
                   
-                  <div ref={messageEndRef} className="h-4" />
-                </div>
+                <div ref={messageEndRef} className="h-4" />
               </div>
-            </div>
-          </div>
-
-          {/* Right Panel - Progress with Fantasy Design */}
-          <div className="w-full md:w-64 lg:w-72 flex-shrink-0">
-            <div className="sticky top-20">
-              <AgentProgressPanel 
-                progress={progress} 
-                status={status} 
-                result={result} 
-                sessionId={sessionId}
-              />
             </div>
           </div>
         </div>
+        
       </div>
 
       {/* Fantasy Error Toast */}

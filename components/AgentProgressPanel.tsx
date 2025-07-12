@@ -40,9 +40,9 @@ import { useLanguage } from "@/app/i18n";
 
 interface AgentProgressPanelProps {
   progress: {
-    completedTasks: number;
-    totalIterations: number;
-    knowledgeBaseSize: number;
+  completedTasks: number;
+  totalIterations: number;
+  knowledgeBaseSize: number;
   };
   status: string;
   result?: {
@@ -158,7 +158,7 @@ const AgentProgressPanel: React.FC<AgentProgressPanelProps> = ({
                   </div>
                   <span className={`font-semibold text-[#f4e8c1] ${fontClass}`}>{progress.completedTasks}</span>
                 </div>
-                
+        
                 <div className="flex justify-between items-center text-xs">
                   <div className="flex items-center gap-1.5 text-[#c0a480]/80">
                     <Activity className="w-3 h-3" />
@@ -166,7 +166,7 @@ const AgentProgressPanel: React.FC<AgentProgressPanelProps> = ({
                   </div>
                   <span className={`font-semibold text-[#f4e8c1] ${fontClass}`}>{progress.totalIterations}</span>
                 </div>
-                
+        
                 <div className="flex justify-between items-center text-xs">
                   <div className="flex items-center gap-1.5 text-[#c0a480]/80">
                     <Database className="w-3 h-3" />
@@ -231,7 +231,7 @@ const AgentProgressPanel: React.FC<AgentProgressPanelProps> = ({
                       )}
                     </div>
                   </div>
-                  
+            
                   {/* Status System */}
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2 text-[#c0a480]">
@@ -253,7 +253,7 @@ const AgentProgressPanel: React.FC<AgentProgressPanelProps> = ({
                       )}
                     </div>
                   </div>
-                  
+            
                   {/* World Data */}
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2 text-[#c0a480]">

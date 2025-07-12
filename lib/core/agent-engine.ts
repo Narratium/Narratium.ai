@@ -536,30 +536,77 @@ ${taskQueue.map((task, i) => `${i + 1}. ${task.description} (${task.sub_problems
       ) {
         console.log(`✅ ${decision.tool} execution completed with generated content`);
         
+        let outputType: "character_data" | "status_data" | "user_setting_data" | "world_view_data" | "supplement_data" | undefined;
+        let generationData: any;
+        let contentDescription: string | undefined;
+        
         if (decision.tool === ToolType.CHARACTER && result.result?.character_data) {
           console.log("🔄 Updating generation output with character data");
           await ResearchSessionOperations.updateGenerationOutput(this.conversationId, {
             character_data: result.result.character_data,
           });
+          outputType = "character_data";
+          generationData = {
+            name: result.result.character_data.name,
+            wordCount: JSON.stringify(result.result.character_data).length,
+          };
+          contentDescription = `角色卡"${result.result.character_data.name}"已生成完成，包含完整的角色信息和设定。`;
         } else if (decision.tool === ToolType.STATUS && result.result?.status_data) {
           console.log("🔄 Updating generation output with status data");
           await ResearchSessionOperations.appendWorldbookData(this.conversationId, {
             status_data: result.result.status_data,
           });
+          outputType = "status_data";
+          generationData = {
+            wordCount: result.result.status_data.content?.length || 0,
+          };
+          contentDescription = "状态系统已生成完成，包含游戏界面和实时状态显示。";
         } else if (decision.tool === ToolType.USER_SETTING && result.result?.user_setting_data) {
           console.log("🔄 Updating generation output with user setting data");
           await ResearchSessionOperations.appendWorldbookData(this.conversationId, {
             user_setting_data: result.result.user_setting_data,
           });
+          outputType = "user_setting_data";
+          generationData = {
+            wordCount: result.result.user_setting_data.content?.length || 0,
+          };
+          contentDescription = "用户设定已生成完成，包含角色背景和个人信息。";
         } else if (decision.tool === ToolType.WORLD_VIEW && result.result?.world_view_data) {
           console.log("🔄 Updating generation output with world view data");
           await ResearchSessionOperations.appendWorldbookData(this.conversationId, {
             world_view_data: result.result.world_view_data,
           });
+          outputType = "world_view_data";
+          generationData = {
+            wordCount: result.result.world_view_data.content?.length || 0,
+          };
+          contentDescription = "世界观已生成完成，包含完整的世界设定和背景。";
         } else if (decision.tool === ToolType.SUPPLEMENT && result.result?.supplement_data) {
           console.log("🔄 Updating generation output with supplementary data");
           await ResearchSessionOperations.appendWorldbookData(this.conversationId, {
             supplement_data: result.result.supplement_data,
+          });
+          outputType = "supplement_data";
+          generationData = {
+            entries: Array.isArray(result.result.supplement_data) ? result.result.supplement_data.length : 1,
+            wordCount: Array.isArray(result.result.supplement_data) 
+              ? result.result.supplement_data.reduce((total: number, entry: any) => total + (entry.content?.length || 0), 0)
+              : result.result.supplement_data.content?.length || 0,
+          };
+          contentDescription = `补充内容已生成完成，新增了 ${generationData.entries} 个世界书条目。`;
+        }
+        
+        // Add generation output message to chat
+        if (outputType && contentDescription) {
+          await ResearchSessionOperations.addMessage(this.conversationId, {
+            role: "agent",
+            content: contentDescription,
+            type: "generation_output",
+            metadata: {
+              outputType,
+              generationData,
+              tool: decision.tool,
+            },
           });
         }
         
@@ -602,13 +649,75 @@ ${taskQueue.map((task, i) => `${i + 1}. ${task.description} (${task.sub_problems
           const evaluationResult = await this.evaluateGenerationProgress(generationOutput);
           if (evaluationResult === null) {
             console.log("✅ Final generation evaluation: Complete");
+            
+            // Add final completion message to chat
+            await ResearchSessionOperations.addMessage(this.conversationId, {
+              role: "agent",
+              content: "🎉 角色卡和世界书生成完成！所有内容已通过质量评估，可以开始使用了。",
+              type: "generation_output",
+              metadata: {
+                outputType: "character_data",
+                generationData: {
+                  name: generationOutput.character_data?.name || "未命名角色",
+                  completionStatus: "全部完成",
+                  components: "角色卡 + 完整世界书系统",
+                },
+                tool: "COMPLETE",
+              },
+            });
+            
             await ResearchSessionOperations.updateStatus(this.conversationId, SessionStatus.COMPLETED);
             return {
               success: true,
               result: await this.generateFinalResult(),
             };
           } else {
-            console.log("❓ Final generation evaluation: Incomplete, adding completion task");
+            console.log("❓ Final generation evaluation: Incomplete, using REFLECT tool to create improvement tasks");
+            
+            // Create a REFLECT decision to generate improvement tasks
+            const reflectDecision: ToolDecision = {
+              tool: ToolType.REFLECT,
+              parameters: {
+                evaluation_feedback: evaluationResult,
+                current_generation_status: "incomplete_quality_issues",
+                improvement_focus: "quality_enhancement_and_completion",
+              },
+              reasoning: "Task queue is empty but generation quality evaluation failed. Need to create new tasks to address quality issues and complete missing content.",
+              priority: 10,
+              taskAdjustment: {
+                reasoning: "Quality evaluation failed, need to create improvement tasks",
+                taskDescription: "Address quality issues and complete missing content based on evaluation feedback",
+                newSubproblems: ["Review evaluation feedback", "Create improvement tasks"],
+              },
+            };
+            
+            // Execute REFLECT tool to create new tasks
+            const reflectResult = await this.executeDecision(reflectDecision, currentContext);
+            
+            if (reflectResult.success) {
+              console.log("✅ REFLECT tool executed successfully, new tasks should be created");
+              
+              // Apply task adjustment
+              if (reflectDecision.taskAdjustment) {
+                await this.applyTaskAdjustment(reflectDecision.taskAdjustment);
+              }
+              
+              // Add new tasks if provided
+              if (reflectResult.result?.new_tasks && reflectResult.result.new_tasks.length > 0) {
+                await ResearchSessionOperations.addTasksToQueue(this.conversationId, reflectResult.result.new_tasks);
+                console.log(`📋 Added ${reflectResult.result.new_tasks.length} new improvement tasks to queue`);
+              }
+              
+              // Complete the reflect sub-problem
+              await ResearchSessionOperations.completeCurrentSubProblem(this.conversationId);
+              
+              // Continue to next iteration to process the new tasks
+              continue;
+            } else {
+              console.error("❌ REFLECT tool failed:", reflectResult.error);
+              // Continue to next iteration anyway
+              continue;
+            }
           }
         }
       }
@@ -1304,18 +1413,20 @@ Task Progress: ${currentTask.sub_problems.length - remainingSubProblems}/${curre
   ): Promise<ExecutionResult> {
     await ResearchSessionOperations.updateStatus(this.conversationId, SessionStatus.EXECUTING);
 
-    // Add execution message with proper metadata
-    await ResearchSessionOperations.addMessage(this.conversationId, {
-      role: "agent",
-      content: `Executing: ${decision.tool} - ${decision.reasoning}`,
-      type: "agent_action",
-      metadata: {
-        tool: decision.tool,
-        parameters: decision.parameters,
-        reasoning: decision.reasoning,
-        priority: decision.priority,
-      },
-    });
+    // Add execution message, but skip for ASK_USER as it has its own message format
+    if (decision.tool !== ToolType.ASK_USER) {
+      await ResearchSessionOperations.addMessage(this.conversationId, {
+        role: "agent",
+        content: `Executing: ${decision.tool} - ${decision.reasoning}`,
+        type: "agent_action",
+        metadata: {
+          tool: decision.tool,
+          parameters: decision.parameters,
+          reasoning: decision.reasoning,
+          priority: decision.priority,
+        },
+      });
+    }
 
     try {
       return await ToolRegistry.executeToolDecision(decision, context);

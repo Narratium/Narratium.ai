@@ -12,6 +12,7 @@
   --card-bg: #292929;
   --story-text-color: #c0c0c0;
   --user-input-color: #9c9c9c;
+  --sidebar-width: 0px; /* Default for mobile, will be updated by JavaScript */
 }
 
 body {
@@ -26,6 +27,8 @@ body {
 
 html, body {
   overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 
 h1,
@@ -133,4 +136,41 @@ select:focus {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+/* Creator area responsive styles */
+.creator-area-container {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.creator-area-container * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure text doesn't cause overflow */
+.creator-area-container p,
+.creator-area-container div,
+.creator-area-container span {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Creator area responsive styles */
 
