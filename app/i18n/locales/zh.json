@@ -734,6 +734,37 @@
     "selectGlobalRegexScript": "选择全局正则脚本",
     "willUseEachFileName": "将使用每个文件的名称作为脚本名称"
   },
+  "agentProgress": {
+    "title": "创作进度",
+    "subtitle": "AI创作监控",
+    "idle": "空闲",
+    "thinking": "思考中",
+    "executing": "执行中",
+    "waitingUser": "等待输入",
+    "completed": "已完成",
+    "failed": "失败",
+    "unknown": "未知状态",
+    "statistics": "统计信息",
+    "results": "生成结果",
+    "iterations": "迭代次数",
+    "knowledgeBase": "知识库",
+    "characterCard": "角色卡",
+    "statusSystem": "状态系统",
+    "worldData": "世界数据"
+  },
+  "creatorAreaLoading": {
+    "title": "创作工坊",
+    "subtitle": "正在为您准备AI创作环境",
+    "analyzingNeeds": "智能体正在分析您的需求并设置创作流程...",
+    "stage": "创作阶段",
+    "initializing": "初始化中",
+    "stages": {
+      "analyze": "分析",
+      "plan": "规划",
+      "create": "创作",
+      "complete": "完成"
+    }
+  },
   "tour": {
     "welcome": "欢迎使用 Narratium",
     "welcomeDescription": "Narratium 是一个智能角色对话平台，您可以与各种AI角色进行深度对话，创造独特的故事体验。让我们先了解一下基本功能。",

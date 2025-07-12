@@ -734,6 +734,37 @@
     "characterCount": "{count}/1000",
     "exampleStories": "Survival, Harry Potter, Lord of the Rings - any story at your will"
   },
+  "agentProgress": {
+    "title": "Creation Progress",
+    "subtitle": "Real-time AI creation monitoring",
+    "idle": "Idle",
+    "thinking": "Thinking",
+    "executing": "Executing",
+    "waitingUser": "Waiting for Input",
+    "completed": "Completed",
+    "failed": "Failed",
+    "unknown": "Unknown Status",
+    "statistics": "Statistics",
+    "results": "Results",
+    "iterations": "Iterations",
+    "knowledgeBase": "Knowledge Base",
+    "characterCard": "Character Card",
+    "statusSystem": "Status System",
+    "worldData": "World Data"
+  },
+  "creatorAreaLoading": {
+    "title": "Creation Workshop",
+    "subtitle": "Preparing the AI creation environment",
+    "analyzingNeeds": "The agent is analyzing your needs and setting up the workflow...",
+    "stage": "Creation Stage",
+    "initializing": "Initializing",
+    "stages": {
+      "analyze": "Analyze",
+      "plan": "Plan",
+      "create": "Create",
+      "complete": "Complete"
+    }
+  },
   "tour": {
     "welcome": "Welcome to Narratium",
     "welcomeDescription": "Narratium is an intelligent character dialogue platform where you can have in-depth conversations with various AI characters and create unique story experiences. Let's explore the basic features.",

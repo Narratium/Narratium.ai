@@ -476,7 +476,7 @@ ${taskQueue.map((task, i) => `${i + 1}. ${task.description} (${task.sub_problems
         await ResearchSessionOperations.completeCurrentSubProblem(this.conversationId); 
       }
 
-      // Handle ASK_USER tool - special case for user interaction flow control
+      // Handle ASK_USER tool - wait for user input
       if (decision.tool === ToolType.ASK_USER && result.success) {
         await ResearchSessionOperations.updateStatus(this.conversationId, SessionStatus.WAITING_USER);
         
@@ -485,6 +485,12 @@ ${taskQueue.map((task, i) => `${i + 1}. ${task.description} (${task.sub_problems
           role: "agent",
           content: `INPUT REQUIRED: ${result.result?.message || "Please provide your input"}${result.result?.options ? `\n\nOptions: ${result.result.options.join(", ")}` : ""}`,
           type: "agent_action",
+          metadata: {
+            tool: decision.tool,
+            parameters: decision.parameters,
+            reasoning: decision.reasoning,
+            result: result.result,
+          },
         });
         
         // If there's a callback (CLI mode), get user input and continue
@@ -1298,11 +1304,17 @@ Task Progress: ${currentTask.sub_problems.length - remainingSubProblems}/${curre
   ): Promise<ExecutionResult> {
     await ResearchSessionOperations.updateStatus(this.conversationId, SessionStatus.EXECUTING);
 
-    // Add execution message
+    // Add execution message with proper metadata
     await ResearchSessionOperations.addMessage(this.conversationId, {
       role: "agent",
       content: `Executing: ${decision.tool} - ${decision.reasoning}`,
       type: "agent_action",
+      metadata: {
+        tool: decision.tool,
+        parameters: decision.parameters,
+        reasoning: decision.reasoning,
+        priority: decision.priority,
+      },
     });
 
     try {

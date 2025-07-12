@@ -106,44 +106,18 @@ export default function CreatorAreaPage() {
     }, 100);
   };
 
-  const [streamingContent, setStreamingContent] = useState("");
-  const [currentStreamingMessage, setCurrentStreamingMessage] = useState<Message | null>(null);
-
   const startResearchSession = async (sessionId: string) => {
     try {
-      console.log("🔥 Starting streaming agent execution for session:", sessionId);
+      console.log("🔥 Starting agent execution for session:", sessionId);
       setIsInitializing(true);
       isInitializingRef.current = true;
       setLoadingPhase("Starting agent execution...");
-
-      // Create streaming callback for real-time token updates
-      const streamingCallback = (chunk: string) => {
-        // Use functional updates to ensure we always have the latest state
-        setCurrentStreamingMessage(prev => {
-          if (!prev) {
-            // If no message is currently streaming, create a new one
-            return {
-              id: `streaming_${Date.now()}`,
-              type: "agent_thinking",
-              role: "agent",
-              content: chunk,
-              metadata: { streaming: true },
-            };
-          } else {
-            // If a message is already streaming, append the new chunk
-            return {
-              ...prev,
-              content: prev.content + chunk,
-            };
-          }
-        });
-      };
 
       setIsInitializing(false);
       isInitializingRef.current = false;
       setLoadingPhase("");
 
-      // Call executeAgentSession directly with streaming support
+      // Call executeAgentSession directly without streaming
       executeAgentSession({
         sessionId: sessionId,
         modelName: localStorage.getItem("openaiModel") || "",
@@ -151,11 +125,8 @@ export default function CreatorAreaPage() {
         apiKey: localStorage.getItem("openaiApiKey") || "",
         llmType: (localStorage.getItem("llmType") as "openai" | "ollama") || "openai",
         language: (localStorage.getItem("language") as "zh" | "en") || "zh",
-        streamingCallback: streamingCallback,
       }).then((result) => {
         console.log("🎯 Agent execution completed:", result);
-        setStreamingContent("");
-        setCurrentStreamingMessage(null);
         
         if (result.success) {
           // Start regular polling for final result
@@ -171,8 +142,8 @@ export default function CreatorAreaPage() {
       });
       
     } catch (error: any) {
-      console.error("❌ Error starting streaming session:", error);
-      showErrorToast(error.message || "Failed to start streaming session");
+      console.error("❌ Error starting session:", error);
+      showErrorToast(error.message || "Failed to start session");
       setIsInitializing(false);
       isInitializingRef.current = false;
     }
@@ -371,85 +342,104 @@ export default function CreatorAreaPage() {
 
   // Show loading animation during any loading phase
   if (isLoading || isInitializing) {
+    const stages = [
+      t("creatorAreaLoading.stages.analyze"),
+      t("creatorAreaLoading.stages.plan"),
+      t("creatorAreaLoading.stages.create"),
+      t("creatorAreaLoading.stages.complete"),
+    ];
+
     return (
-      <div className="min-h-screen fantasy-bg flex items-center justify-center">
-        <div className="max-w-md w-full mx-4">
-          {/* Enhanced Loading Interface */}
-          <div className="bg-black/40 border border-amber-500/20 rounded-xl p-8 space-y-6">
+      <div className="min-h-screen fantasy-bg flex items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <div className="bg-black/40 border border-amber-500/20 rounded-xl p-6 space-y-5">
             {/* Header */}
-            <div className="text-center space-y-2">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-400/20">
-                  <Sparkles className="w-6 h-6 text-amber-400" />
-                </div>
-                <h2 className={`text-2xl text-[#f4e8c1] ${serifFontClass} font-bold`}>
-                  创作工坊
-                </h2>
+            <div className="text-center space-y-1.5">
+              <div className="inline-block p-2.5 bg-gradient-to-r from-amber-500/20 to-orange-400/20 rounded-full mb-2">
+                <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
               </div>
-              <p className="text-[#c0a480]/80 text-sm">
-                正在为您准备AI创作环境
+              <h2 className={`text-xl text-[#f4e8c1] ${serifFontClass} font-bold magical-text`}>
+                {t("creatorAreaLoading.title")}
+              </h2>
+              <p className={`text-xs text-[#c0a480]/80 ${fontClass}`}>
+                {t("creatorAreaLoading.subtitle")}
               </p>
             </div>
 
-            {/* Enhanced Progress Indicator */}
-            <div className="flex items-center justify-center">
-              <div className="relative w-20 h-20">
-                {/* Outer ring */}
-                <div className="absolute inset-0 rounded-full border-4 border-amber-500/20"></div>
-                {/* Animated ring */}
-                <div className="absolute inset-0 rounded-full border-4 border-t-amber-400 border-r-amber-400/50 border-b-transparent border-l-transparent animate-spin"></div>
-                {/* Inner ring */}
-                <div className="absolute inset-3 rounded-full border-2 border-t-orange-400 border-r-transparent border-b-orange-400/50 border-l-transparent animate-spin-slow"></div>
-                {/* Center dot */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 animate-pulse"></div>
-                </div>
-              </div>
+            {/* Animated SVG Spinner */}
+            <div className="flex items-center justify-center h-16">
+              <svg className="w-16 h-16" viewBox="0 0 100 100">
+                <defs>
+                  <linearGradient id="spinner-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="rgba(251, 191, 36, 0)" />
+                    <stop offset="50%" stopColor="rgba(251, 191, 36, 1)" />
+                    <stop offset="100%" stopColor="rgba(251, 191, 36, 0)" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M 50,50 m 0,-40 a 40,40 0 1 1 0,80 a 40,40 0 1 1 0,-80"
+                  stroke="url(#spinner-gradient)"
+                  strokeWidth="4"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray="125.6, 251.2"
+                >
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    from="0 50 50"
+                    to="360 50 50"
+                    dur="1.5s"
+                    repeatCount="indefinite"
+                  />
+                </path>
+                <path
+                  d="M 50,50 m 0,-30 a 30,30 0 1 1 0,60 a 30,30 0 1 1 0,-60"
+                  stroke="rgba(192, 164, 128, 0.2)"
+                  strokeWidth="2"
+                  fill="none"
+                />
+              </svg>
             </div>
 
-            {/* Status Text */}
-            <div className="text-center space-y-3">
-              <p className={`text-[#f4e8c1] ${fontClass} font-medium`}>
-                {loadingPhase}
+            {/* Status Text and Progress Bar */}
+            <div className="text-center space-y-3 pt-1">
+              <p className={`text-[#f4e8c1]/90 ${fontClass} text-sm font-medium`}>
+                {loadingPhase || t("creatorAreaLoading.initializing")}
               </p>
               
               {isInitializing && (
                 <div className="space-y-2">
-                  <div className="w-full bg-black/20 rounded-full h-2 overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full animate-pulse"></div>
+                  <div className="w-full bg-black/20 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full"
+                      style={{
+                        width: "100%",
+                        animation: "indeterminate-progress 2s infinite ease-in-out",
+                      }}
+                    />
                   </div>
                   <p className={`text-[#c0a480]/70 text-xs ${fontClass} leading-relaxed`}>
-                    智能体正在分析您的需求并设置创作流程...
+                    {t("creatorAreaLoading.analyzingNeeds")}
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Stage Indicators */}
-            <div className="space-y-3">
+            {/* Simplified Stage Indicators */}
+            <div className="pt-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[#c0a480]/60">创作阶段</span>
-                <span className="text-amber-400">初始化中</span>
-              </div>
-              
-              <div className="grid grid-cols-4 gap-2">
-                {["分析", "规划", "创作", "完成"].map((stage, index) => (
-                  <div key={stage} className="text-center">
-                    <div className={`w-8 h-8 rounded-full border-2 mx-auto mb-1 flex items-center justify-center ${
-                      index === 0 
-                        ? "border-amber-400 bg-amber-400/20 text-amber-400" 
-                        : "border-slate-400/30 text-slate-400"
-                    }`}>
-                      <div className={`w-2 h-2 rounded-full ${
-                        index === 0 ? "bg-amber-400 animate-pulse" : "bg-slate-400/50"
-                      }`}></div>
-                    </div>
-                    <span className={`text-xs ${
-                      index === 0 ? "text-amber-400" : "text-slate-400"
+                {stages.map((stage, index) => (
+                  <React.Fragment key={stage}>
+                    <span className={`transition-colors duration-300 ${fontClass} ${
+                      index === 0 ? "text-amber-400 font-semibold" : "text-[#c0a480]/60"
                     }`}>
                       {stage}
                     </span>
-                  </div>
+                    {index < stages.length - 1 && (
+                      <div className="flex-1 h-px bg-gradient-to-r from-amber-500/0 via-amber-500/20 to-amber-500/0 mx-2" />
+                    )}
+                  </React.Fragment>
                 ))}
               </div>
             </div>
@@ -478,24 +468,24 @@ export default function CreatorAreaPage() {
     <div className="min-h-screen fantasy-bg">
       <div className="container mx-auto px-6 py-8 min-h-screen">
         <div className="h-full flex gap-8">
-          {/* Left Panel - Messages with Enhanced Design */}
+          {/* Left Panel - Messages with Fantasy Design */}
           <div className="flex-1 flex flex-col min-h-0">
-            {/* Enhanced Header */}
+            {/* Fantasy Header */}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center space-x-6">
                 <button
                   onClick={goBack}
-                  className="group p-3 bg-black/30 border border-amber-500/30 rounded-xl hover:bg-black/40 hover:border-amber-400/50 transition-all duration-200"
+                  className="group p-3 bg-black/30 border border-amber-500/30 rounded-xl hover:bg-black/40 hover:border-amber-400/50 transition-all duration-200 backdrop-blur-sm"
                 >
                   <ArrowLeft className="w-5 h-5 text-[#c0a480] group-hover:text-amber-400 transition-colors" />
                 </button>
                 <div className="space-y-1">
                   <div className="flex items-center gap-3">
-                    <h1 className={`text-3xl text-[#f4e8c1] ${serifFontClass} font-bold`}>
+                    <h1 className={`text-3xl text-[#f4e8c1] ${serifFontClass} font-bold magical-text`}>
                       {session?.title || "创作工坊"}
                     </h1>
-                    <div className="p-1 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-400/20">
-                      <Sparkles className="w-5 h-5 text-amber-400" />
+                    <div className="p-2 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-400/20 border border-amber-500/30">
+                      <Sparkles className="w-5 h-5 text-amber-400 fantasy-glow" />
                     </div>
                   </div>
                   {session?.research_state?.main_objective && (
@@ -507,13 +497,12 @@ export default function CreatorAreaPage() {
               </div>
             </div>
 
-            {/* Messages Container with Improved Styling */}
+            {/* Messages Container with Fantasy Styling */}
             <div className="flex-1 overflow-hidden">
-              <div className="h-full overflow-y-auto pr-3 pb-6 space-y-1">
+              <div className="h-full overflow-y-auto pr-3 pb-6 space-y-1 fantasy-scrollbar">
                 <div className="space-y-4">
                   <MessageStream 
                     messages={messages} 
-                    streamingMessage={currentStreamingMessage}
                   />
                   
                   {needsUserInput && userInputQuestion && (
@@ -533,7 +522,7 @@ export default function CreatorAreaPage() {
             </div>
           </div>
 
-          {/* Right Panel - Progress with Enhanced Design */}
+          {/* Right Panel - Progress with Fantasy Design */}
           <div className="w-full md:w-64 lg:w-72 flex-shrink-0">
             <div className="sticky top-20">
               <AgentProgressPanel 
@@ -547,7 +536,7 @@ export default function CreatorAreaPage() {
         </div>
       </div>
 
-      {/* Enhanced Error Toast */}
+      {/* Fantasy Error Toast */}
       <ErrorToast
         isVisible={errorToast.isVisible}
         message={errorToast.message}

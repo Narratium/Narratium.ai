@@ -1,59 +1,61 @@
 /**
- * Agent Progress Panel Component
+ * Compact AgentProgressPanel Component with Fantasy Styling
  * 
- * Displays real-time agent execution progress and status information.
+ * An elegant, compact progress panel for displaying AI agent execution status.
  * Features:
- * - Modern status indicator with enhanced visual design
- * - Elegant progress ring visualization
- * - Component completion tracking with step indicators
- * - Generation output monitoring
- * - Export functionality
- * - Avatar generation integration
+ * - Ultra-compact design with collapsible sections
+ * - Refined fantasy-themed styling with a unified, elegant color palette
+ * - i18n support with proper font handling
+ * - Smooth, subtle animations and interactions
+ * - Prioritizes essential information for a clean look
  * 
  * Dependencies:
- * - framer-motion: For animations
- * - lucide-react: For icons
- * - GenerationOutput model: From agent model definitions
+ * - framer-motion: For smooth animations
+ * - lucide-react: For iconography
+ * - i18n: For internationalization
  */
 
 "use client";
 
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Clock, 
-  CheckCircle, 
-  Download, 
+  Brain, 
+  Zap, 
   User, 
-  FileText, 
-  Globe, 
-  Plus,
+  CheckCircle, 
+  AlertCircle,
   Loader2,
-  Brain,
-  Zap,
+  FileText,
+  Download,
+  Sparkles,
+  Activity,
+  Database,
+  ChevronDown,
+  ChevronUp,
+  Award,
 } from "lucide-react";
-import { GenerationOutput } from "@/lib/models/agent-model";
-import AvatarGenerationSection from "@/components/AvatarGenerationSection";
-
-interface SessionProgress {
-  completedTasks: number;
-  totalIterations: number;
-  knowledgeBaseSize: number;
-}
+import { useLanguage } from "@/app/i18n";
 
 interface AgentProgressPanelProps {
-  progress: SessionProgress;
+  progress: {
+    completedTasks: number;
+    totalIterations: number;
+    knowledgeBaseSize: number;
+  };
   status: string;
-  result?: GenerationOutput;
-  sessionId: string | null;
-  onExport?: () => void;
+  result?: {
+    character_data?: any;
+    status_data?: any;
+    world_data?: any;
+  };
+  sessionId?: string | null;
+  onExport?: (type: string, data: any) => void;
 }
 
 /**
- * AgentProgressPanel component for displaying execution progress
- * 
- * @param {AgentProgressPanelProps} props - Component props
- * @returns {JSX.Element} The progress panel component
+ * An elegant and compact AgentProgressPanel component with refined fantasy styling.
  */
 const AgentProgressPanel: React.FC<AgentProgressPanelProps> = ({
   progress,
@@ -62,377 +64,222 @@ const AgentProgressPanel: React.FC<AgentProgressPanelProps> = ({
   sessionId,
   onExport,
 }) => {
+  const { t, fontClass, serifFontClass } = useLanguage();
+  const [isExporting, setIsExporting] = useState(false);
+  const [isStatsExpanded, setIsStatsExpanded] = useState(false);
+  const [isResultsExpanded, setIsResultsExpanded] = useState(false);
+
   const getStatusConfig = (status: string) => {
-    switch (status) {
-    case "idle": 
-      return { 
-        color: "text-slate-400", 
-        bgColor: "bg-slate-400/20", 
-        label: "待机中",
-        icon: <Clock className="w-4 h-4" />,
-        pulse: false,
-      };
-    case "thinking": 
-      return { 
-        color: "text-purple-400", 
-        bgColor: "bg-purple-400/20", 
-        label: "思考中",
-        icon: <Brain className="w-4 h-4" />,
-        pulse: true,
-      };
-    case "executing": 
-      return { 
-        color: "text-blue-400", 
-        bgColor: "bg-blue-400/20", 
-        label: "执行中",
-        icon: <Zap className="w-4 h-4" />,
-        pulse: true,
-      };
-    case "waiting_user": 
-      return { 
-        color: "text-amber-400", 
-        bgColor: "bg-amber-400/20", 
-        label: "等待输入",
-        icon: <User className="w-4 h-4" />,
-        pulse: true,
-      };
-    case "completed": 
-      return { 
-        color: "text-emerald-400", 
-        bgColor: "bg-emerald-400/20", 
-        label: "已完成",
-        icon: <CheckCircle className="w-4 h-4" />,
-        pulse: false,
-      };
-    case "failed": 
-      return { 
-        color: "text-red-400", 
-        bgColor: "bg-red-400/20", 
-        label: "执行失败",
-        icon: <Clock className="w-4 h-4" />,
-        pulse: false,
-      };
-    default: 
-      return { 
-        color: "text-slate-400", 
-        bgColor: "bg-slate-400/20", 
-        label: "未知状态",
-        icon: <Clock className="w-4 h-4" />,
-        pulse: false,
-      };
-    }
-  };
-
-  const getProgressPercentage = () => {
-    if (!result) return 0;
-    
-    // Calculate based on character completion and worldbook progress
-    let characterProgress = 0;
-    let worldbookProgress = 0;
-    
-    if (result.character_data) {
-      const fields = ["name", "description", "personality", "scenario", 
-        "first_mes", "mes_example", "creator_notes", "tags"];
-      const completedFields = fields.filter(field => 
-        result.character_data?.[field] && result.character_data?.[field]?.length > 0,
-      );
-      characterProgress = (completedFields.length / fields.length) * 50; // 50% for character
-    }
-    
-    if (result.status_data) worldbookProgress += 12.5;
-    if (result.user_setting_data) worldbookProgress += 12.5;
-    if (result.world_view_data) worldbookProgress += 12.5;
-    if (result.supplement_data && result.supplement_data.length >= 5) worldbookProgress += 12.5;
-    
-    return Math.round(characterProgress + worldbookProgress);
-  };
-
-  const handleExportResult = () => {
-    if (onExport) {
-      onExport();
-    } else {
-      // Default export logic
-      const dataStr = JSON.stringify(result, null, 2);
-      const dataBlob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `agent_result_${Date.now()}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
-    }
+    const statusMap: { [key: string]: { color: string; label: string; icon: React.ReactNode; pulse?: boolean } } = {
+      idle: { color: "text-slate-400", label: t("agentProgress.idle") || "Idle", icon: <Clock size={14} /> },
+      thinking: { color: "text-amber-400", label: t("agentProgress.thinking") || "Thinking", icon: <Brain size={14} />, pulse: true },
+      executing: { color: "text-amber-400", label: t("agentProgress.executing") || "Executing", icon: <Zap size={14} />, pulse: true },
+      waiting_user: { color: "text-amber-400", label: t("agentProgress.waitingUser") || "Awaiting Input", icon: <User size={14} />, pulse: true },
+      completed: { color: "text-[#f4e8c1]", label: t("agentProgress.completed") || "Completed", icon: <Award size={14} /> },
+      failed: { color: "text-rose-400", label: t("agentProgress.failed") || "Failed", icon: <AlertCircle size={14} /> },
+    };
+    return statusMap[status] || { color: "text-slate-400", label: t("agentProgress.unknown") || "Unknown", icon: <Clock size={14} /> };
   };
 
   const statusConfig = getStatusConfig(status);
-  const progressPercentage = getProgressPercentage();
-  const isCompleted = status === "completed";
-  const hasResult = result && (result.character_data || result.status_data);
+
+  const handleExport = async (type: string, data: any) => {
+    if (!data || isExporting) return;
+    
+    setIsExporting(true);
+    try {
+      if (onExport) {
+        await onExport(type, data);
+      }
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
-    <div className="bg-black/40 border border-amber-500/20 rounded-lg p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h3 className="text-lg font-semibold text-[#c0a480] font-cinzel mb-2">
-          创作进度
+    <div className="bg-black/40 border border-amber-500/20 rounded-lg p-3 space-y-3">
+      {/* Compact Header */}
+      <div className="text-center">
+        <h3 className={`text-sm font-semibold text-[#f4e8c1] ${serifFontClass} magical-text`}>
+          {t("agentProgress.title") || "创作进度"}
         </h3>
-        <p className="text-sm text-[#c0a480]/60">
-          实时监控AI创作过程
+        <p className={`text-[11px] text-[#c0a480]/60 mt-0.5 ${fontClass}`}>
+          {t("agentProgress.subtitle") || "AI创作监控"}
         </p>
       </div>
 
-      {/* Enhanced Status Indicator */}
-      <div className="relative">
-        <div className={`flex items-center justify-between p-4 rounded-lg border ${statusConfig.bgColor} border-current/20`}>
-          <div className="flex items-center space-x-3">
-            <div className={`p-2 rounded-lg ${statusConfig.bgColor} ${statusConfig.pulse ? "animate-pulse" : ""}`}>
-              <div className={statusConfig.color}>
-                {statusConfig.icon}
-              </div>
-            </div>
-            <div>
-              <span className={`text-sm font-medium ${statusConfig.color}`}>
-                {statusConfig.label}
-              </span>
-              <p className="text-xs text-[#c0a480]/50 mt-0.5">
-                当前执行状态
-              </p>
+      {/* Simplified Status Indicator */}
+      <div className="bg-black/20 rounded-md px-3 py-2">
+        <div className="flex items-center gap-2">
+          <div className={`${statusConfig.color} ${statusConfig.pulse ? "animate-pulse" : ""}`}>
+            {statusConfig.icon}
+          </div>
+          <div className="flex-1">
+            <div className={`font-medium text-xs ${statusConfig.color} ${fontClass}`}>
+              {statusConfig.label}
             </div>
           </div>
-          
           {(status === "thinking" || status === "executing") && (
-            <Loader2 className="w-5 h-5 text-[#c0a480]/60 animate-spin" />
+            <Loader2 className="w-3.5 h-3.5 text-[#c0a480]/50 animate-spin" />
           )}
         </div>
       </div>
 
-      {/* Progress Ring with Enhanced Design */}
-      <div className="flex items-center justify-center">
-        <div className="relative w-36 h-36">
-          <svg className="w-36 h-36 transform -rotate-90" viewBox="0 0 144 144">
-            {/* Background ring */}
-            <circle
-              cx="72"
-              cy="72"
-              r="64"
-              stroke="rgba(196, 164, 128, 0.1)"
-              strokeWidth="8"
-              fill="transparent"
-            />
-            {/* Progress ring */}
-            <motion.circle
-              cx="72"
-              cy="72"
-              r="64"
-              stroke="url(#progressGradient)"
-              strokeWidth="8"
-              fill="transparent"
-              strokeLinecap="round"
-              initial={{ strokeDasharray: "0 402.124" }}
-              animate={{ 
-                strokeDasharray: `${(progressPercentage / 100) * 402.124} 402.124`,
-              }}
-              transition={{ duration: 1.2, ease: "easeOut" }}
-            />
-            {/* Define gradient */}
-            <defs>
-              <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#f9c86d" />
-                <stop offset="100%" stopColor="#d1a35c" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <span className="text-2xl font-bold text-[#f9c86d] block">
-                {progressPercentage}%
-              </span>
-              <span className="text-xs text-[#c0a480]/60 mt-1">
-                总体进度
+      {/* Collapsible Statistics */}
+      <div className="space-y-1.5">
+        <button
+          onClick={() => setIsStatsExpanded(!isStatsExpanded)}
+          className="w-full flex items-center justify-between p-1.5 rounded-md hover:bg-black/30 transition-colors"
+        >
+          <span className={`text-xs font-medium text-[#c0a480] ${fontClass}`}>
+            {t("agentProgress.statistics") || "统计信息"}
+          </span>
+          {isStatsExpanded ? (
+            <ChevronUp className="w-3.5 h-3.5 text-[#c0a480]/70" />
+          ) : (
+            <ChevronDown className="w-3.5 h-3.5 text-[#c0a480]/70" />
+          )}
+        </button>
+        
+        <AnimatePresence>
+          {isStatsExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-1.5 px-1.5 pb-1">
+                <div className="flex justify-between items-center text-xs">
+                  <div className="flex items-center gap-1.5 text-[#c0a480]/80">
+                    <CheckCircle className="w-3 h-3" />
+                    <span className={fontClass}>{t("agentProgress.completed") || "已完成"}</span>
+                  </div>
+                  <span className={`font-semibold text-[#f4e8c1] ${fontClass}`}>{progress.completedTasks}</span>
+                </div>
+                
+                <div className="flex justify-between items-center text-xs">
+                  <div className="flex items-center gap-1.5 text-[#c0a480]/80">
+                    <Activity className="w-3 h-3" />
+                    <span className={fontClass}>{t("agentProgress.iterations") || "迭代次数"}</span>
+                  </div>
+                  <span className={`font-semibold text-[#f4e8c1] ${fontClass}`}>{progress.totalIterations}</span>
+                </div>
+                
+                <div className="flex justify-between items-center text-xs">
+                  <div className="flex items-center gap-1.5 text-[#c0a480]/80">
+                    <Database className="w-3 h-3" />
+                    <span className={fontClass}>{t("agentProgress.knowledgeBase") || "知识库"}</span>
+                  </div>
+                  <span className={`font-semibold text-[#f4e8c1] ${fontClass}`}>{progress.knowledgeBaseSize}</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Collapsible Generation Results */}
+      {result && (
+        <div className="space-y-1.5">
+          <button
+            onClick={() => setIsResultsExpanded(!isResultsExpanded)}
+            className="w-full flex items-center justify-between p-1.5 rounded-md hover:bg-black/30 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400 fantasy-glow" />
+              <span className={`text-xs font-medium text-[#c0a480] ${fontClass}`}>
+                {t("agentProgress.results") || "生成结果"}
               </span>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Enhanced Statistics Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-gradient-to-br from-black/30 to-black/10 rounded-lg p-3 border border-emerald-500/10">
-          <div className="flex items-center space-x-2 mb-2">
-            <CheckCircle className="w-4 h-4 text-emerald-400" />
-            <span className="text-xs text-[#c0a480]/70">已完成任务</span>
-          </div>
-          <p className="text-lg font-bold text-emerald-400">
-            {progress.completedTasks}
-          </p>
-        </div>
-        
-        <div className="bg-gradient-to-br from-black/30 to-black/10 rounded-lg p-3 border border-blue-500/10">
-          <div className="flex items-center space-x-2 mb-2">
-            <Clock className="w-4 h-4 text-blue-400" />
-            <span className="text-xs text-[#c0a480]/70">迭代次数</span>
-          </div>
-          <p className="text-lg font-bold text-blue-400">
-            {progress.totalIterations}
-          </p>
-        </div>
-        
-        <div className="bg-gradient-to-br from-black/30 to-black/10 rounded-lg p-3 border border-amber-500/10">
-          <div className="flex items-center space-x-2 mb-2">
-            <FileText className="w-4 h-4 text-amber-400" />
-            <span className="text-xs text-[#c0a480]/70">知识条目</span>
-          </div>
-          <p className="text-lg font-bold text-amber-400">
-            {progress.knowledgeBaseSize}
-          </p>
-        </div>
-        
-        <div className="bg-gradient-to-br from-black/30 to-black/10 rounded-lg p-3 border border-purple-500/10">
-          <div className="flex items-center space-x-2 mb-2">
-            <Globe className="w-4 h-4 text-purple-400" />
-            <span className="text-xs text-[#c0a480]/70">生成状态</span>
-          </div>
-          <p className="text-sm font-medium text-purple-400">
-            {!result ? "未开始" :
-              result.character_data && result.status_data ? "完整" :
-                result.character_data ? "角色" : "进行中"}
-          </p>
-        </div>
-      </div>
-
-      {/* Enhanced Component Status with Step Indicators */}
-      {result && (
-        <div className="space-y-4">
-          <h4 className="text-sm font-semibold text-[#c0a480]/90 flex items-center gap-2">
-            <div className="w-1 h-4 bg-gradient-to-b from-amber-400 to-orange-400 rounded"></div>
-            生成组件状态
-          </h4>
+            {isResultsExpanded ? (
+              <ChevronUp className="w-3.5 h-3.5 text-[#c0a480]/70" />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5 text-[#c0a480]/70" />
+            )}
+          </button>
           
-          <div className="space-y-3">
-            {/* Character Card */}
-            <motion.div 
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-blue-500/5 to-blue-500/10 border border-blue-500/20"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="p-1.5 rounded-lg bg-blue-500/20">
-                  <User className="w-4 h-4 text-blue-400" />
+          <AnimatePresence>
+            {isResultsExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-1.5 px-1.5 pb-1">
+                  {/* Character Card */}
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 text-[#c0a480]">
+                      <User className="w-3 h-3 text-amber-400" />
+                      <span className={fontClass}>{t("agentProgress.characterCard") || "角色卡"}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full fantasy-glow ${
+                        result.character_data ? "bg-[#f4e8c1]" : "bg-slate-600"
+                      }`} />
+                      {result.character_data && (
+                        <button
+                          onClick={() => handleExport("character", result.character_data)}
+                          disabled={isExporting}
+                          className="p-0.5 rounded hover:bg-black/30 transition-colors"
+                        >
+                          <Download className="w-3 h-3 text-[#c0a480]/80 hover:text-[#f4e8c1]" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Status System */}
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 text-[#c0a480]">
+                      <FileText className="w-3 h-3 text-amber-400" />
+                      <span className={fontClass}>{t("agentProgress.statusSystem") || "状态系统"}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full fantasy-glow ${
+                        result.status_data ? "bg-[#f4e8c1]" : "bg-slate-600"
+                      }`} />
+                      {result.status_data && (
+                        <button
+                          onClick={() => handleExport("status", result.status_data)}
+                          disabled={isExporting}
+                          className="p-0.5 rounded hover:bg-black/30 transition-colors"
+                        >
+                          <Download className="w-3 h-3 text-[#c0a480]/80 hover:text-[#f4e8c1]" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* World Data */}
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 text-[#c0a480]">
+                      <Database className="w-3 h-3 text-amber-400" />
+                      <span className={fontClass}>{t("agentProgress.worldData") || "世界数据"}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full fantasy-glow ${
+                        result.world_data ? "bg-[#f4e8c1]" : "bg-slate-600"
+                      }`} />
+                      {result.world_data && (
+                        <button
+                          onClick={() => handleExport("world", result.world_data)}
+                          disabled={isExporting}
+                          className="p-0.5 rounded hover:bg-black/30 transition-colors"
+                        >
+                          <Download className="w-3 h-3 text-[#c0a480]/80 hover:text-[#f4e8c1]" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <span className="text-sm font-medium text-[#c0a480]">角色卡片</span>
-              </div>
-              <div className={`w-3 h-3 rounded-full border-2 ${
-                result.character_data 
-                  ? "bg-emerald-400 border-emerald-400 shadow-emerald-400/50 shadow-lg" 
-                  : "border-slate-400 bg-transparent"
-              }`} />
-            </motion.div>
-            
-            {/* Status System */}
-            <motion.div 
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-cyan-500/5 to-cyan-500/10 border border-cyan-500/20"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="p-1.5 rounded-lg bg-cyan-500/20">
-                  <FileText className="w-4 h-4 text-cyan-400" />
-                </div>
-                <span className="text-sm font-medium text-[#c0a480]">状态系统</span>
-              </div>
-              <div className={`w-3 h-3 rounded-full border-2 ${
-                result.status_data 
-                  ? "bg-emerald-400 border-emerald-400 shadow-emerald-400/50 shadow-lg" 
-                  : "border-slate-400 bg-transparent"
-              }`} />
-            </motion.div>
-            
-            {/* User Setting */}
-            <motion.div 
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-emerald-500/5 to-emerald-500/10 border border-emerald-500/20"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="p-1.5 rounded-lg bg-emerald-500/20">
-                  <User className="w-4 h-4 text-emerald-400" />
-                </div>
-                <span className="text-sm font-medium text-[#c0a480]">用户设定</span>
-              </div>
-              <div className={`w-3 h-3 rounded-full border-2 ${
-                result.user_setting_data 
-                  ? "bg-emerald-400 border-emerald-400 shadow-emerald-400/50 shadow-lg" 
-                  : "border-slate-400 bg-transparent"
-              }`} />
-            </motion.div>
-            
-            {/* World View */}
-            <motion.div 
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-purple-500/5 to-purple-500/10 border border-purple-500/20"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="p-1.5 rounded-lg bg-purple-500/20">
-                  <Globe className="w-4 h-4 text-purple-400" />
-                </div>
-                <span className="text-sm font-medium text-[#c0a480]">世界观</span>
-              </div>
-              <div className={`w-3 h-3 rounded-full border-2 ${
-                result.world_view_data 
-                  ? "bg-emerald-400 border-emerald-400 shadow-emerald-400/50 shadow-lg" 
-                  : "border-slate-400 bg-transparent"
-              }`} />
-            </motion.div>
-            
-            {/* Supplement Entries */}
-            <motion.div 
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-amber-500/5 to-amber-500/10 border border-amber-500/20"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="p-1.5 rounded-lg bg-amber-500/20">
-                  <Plus className="w-4 h-4 text-amber-400" />
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-[#c0a480]">补充条目</span>
-                  <p className="text-xs text-[#c0a480]/60">
-                    {result.supplement_data?.length || 0}/5 条目完成
-                  </p>
-                </div>
-              </div>
-              <div className={`w-3 h-3 rounded-full border-2 ${
-                (result.supplement_data?.length || 0) >= 5 
-                  ? "bg-emerald-400 border-emerald-400 shadow-emerald-400/50 shadow-lg" 
-                  : "border-slate-400 bg-transparent"
-              }`} />
-            </motion.div>
-          </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      )}
-
-      {/* Avatar Generation */}
-      {isCompleted && hasResult && (
-        <AvatarGenerationSection sessionId={sessionId} />
-      )}
-
-      {/* Enhanced Export Button */}
-      {hasResult && (
-        <motion.button
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleExportResult}
-          className="w-full bg-gradient-to-r from-amber-500 to-orange-400 hover:from-amber-400 hover:to-orange-300 text-black rounded-lg py-3 px-4 font-semibold text-sm transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
-        >
-          <Download className="w-4 h-4" />
-          <span>导出结果</span>
-        </motion.button>
       )}
     </div>
   );
