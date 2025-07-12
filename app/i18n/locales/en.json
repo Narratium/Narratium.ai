@@ -723,7 +723,17 @@
       "importing": "Importing...",
       "downloadAndImport": "Download and Import",
       "by": "By:",
-      "unknownAuthor": "Anonymous"
+      "unknownAuthor": "Anonymous",
+      "allCharacters": "All ({count})",
+      "tagFilter": "Filter by Tags",
+      "noCharactersInTag": "No characters found in this category",
+      "tags": {
+        "Cultivation": "Cultivation",
+        "Fantasy": "Fantasy", 
+        "NSFW": "NSFW",
+        "Fanfiction": "Fanfiction",
+        "Other": "Other"
+      }
   },
   "creatorInput": {
     "title": "Creator Studio",

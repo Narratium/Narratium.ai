@@ -509,7 +509,17 @@
       "importing": "导入中…",
       "downloadAndImport": "下载并导入",
       "by": "作者：",
-      "unknownAuthor": "佚名"
+      "unknownAuthor": "佚名",
+      "allCharacters": "全部 ({count})",
+      "tagFilter": "按标签筛选",
+      "noCharactersInTag": "此分类下暂无角色",
+      "tags": {
+        "Cultivation": "修仙",
+        "Fantasy": "玄幻",
+        "NSFW": "NSFW", 
+        "Fanfiction": "同人",
+        "Other": "其他"
+      }
   },
   "creatorInput": {
     "title": "Creator Studio",
