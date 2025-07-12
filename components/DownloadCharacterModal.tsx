@@ -38,9 +38,9 @@ const RAW_BASE_URL = "https://raw.githubusercontent.com/Narratium/Character-Card
 
 // Cache configuration
 const CACHE_KEY = "narratium_character_files";
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 1 day
 const IMAGE_CACHE_KEY = "narratium_character_images";
-const IMAGE_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+const IMAGE_CACHE_DURATION = 24 * 60 * 60 * 1000; // 1 day
 
 /**
  * Interface definitions for the component's props and data structures
@@ -54,6 +54,8 @@ interface DownloadCharacterModalProps {
 interface GithubFile {
   name: string;
   download_url: string;
+  sha?: string;
+  size?: number;
 }
 
 interface CharacterInfo {
@@ -65,6 +67,7 @@ interface CharacterInfo {
 interface CacheData {
   data: GithubFile[];
   timestamp: number;
+  fileHashes: Record<string, string>;
 }
 
 interface ImageCacheData {
@@ -76,15 +79,16 @@ interface ImageCacheData {
 
 // Hardcoded tag definitions for character categorization
 const TAGS = [
-  "Cultivation", "Fantasy", "NSFW", "Fanfiction", "Other",
+  "Cultivation", "Fantasy", "NSFW", "Fanfiction", "Anime", "Other",
 ];
 
 // Tag detection keywords mapping
 const TAG_KEYWORDS: Record<string, string[]> = {
-  "Cultivation": ["修仙", "cultivation", "仙侠", "immortal", "修炼"],
+  "Cultivation": ["x", "cultivation", "仙侠", "immortal", "修炼"],
   "Fantasy": ["玄幻", "fantasy", "魔法", "magic", "奇幻"],
   "NSFW": ["nsfw", "adult", "18+", "mature", "r18"],
   "Fanfiction": ["同人", "fanfiction", "fan", "二创", "doujin"],
+  "Anime": ["二次元", "anime", "动漫", "萌", "waifu", "少女", "萝莉", "御姐"],
 };
 
 /**
@@ -112,15 +116,16 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
   const [imageLoadingStates, setImageLoadingStates] = useState<Record<string, boolean>>({});
   const [preloadingImages, setPreloadingImages] = useState(false);
   const [loadingStage, setLoadingStage] = useState<"fetching" | "preloading" | "complete">("fetching");
+  const [nsfwViewStates, setNsfwViewStates] = useState<Record<string, boolean>>({});
 
   // Cache management functions
-  const getCachedData = useCallback((): GithubFile[] | null => {
+  const getCachedData = useCallback((): { data: GithubFile[], hashes: Record<string, string> } | null => {
     try {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
-        const { data, timestamp }: CacheData = JSON.parse(cached);
+        const { data, timestamp, fileHashes }: CacheData = JSON.parse(cached);
         if (Date.now() - timestamp < CACHE_DURATION) {
-          return data;
+          return { data, hashes: fileHashes || {} };
         }
       }
     } catch (error) {
@@ -131,9 +136,17 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
 
   const setCachedData = useCallback((data: GithubFile[]) => {
     try {
+      const fileHashes: Record<string, string> = {};
+      data.forEach(file => {
+        if (file.sha) {
+          fileHashes[file.name] = file.sha;
+        }
+      });
+      
       const cacheData: CacheData = {
         data,
         timestamp: Date.now(),
+        fileHashes,
       };
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
     } catch (error) {
@@ -141,18 +154,28 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
     }
   }, []);
 
-  const getImageCache = useCallback((): ImageCacheData => {
+  const getImageCache = useCallback((currentFileNames?: string[]): ImageCacheData => {
     try {
       const cached = localStorage.getItem(IMAGE_CACHE_KEY);
       if (cached) {
         const cache: ImageCacheData = JSON.parse(cached);
-        // Clean expired entries
         const now = Date.now();
+        
+        // Clean expired entries and entries that no longer exist in current files
         Object.keys(cache).forEach(key => {
-          if (now - cache[key].timestamp > IMAGE_CACHE_DURATION) {
+          const isExpired = now - cache[key].timestamp > IMAGE_CACHE_DURATION;
+          const isStillExists = !currentFileNames || currentFileNames.includes(key);
+          
+          if (isExpired || !isStillExists) {
             delete cache[key];
           }
         });
+        
+        // Update cache if we cleaned any entries
+        if (currentFileNames) {
+          localStorage.setItem(IMAGE_CACHE_KEY, JSON.stringify(cache));
+        }
+        
         return cache;
       }
     } catch (error) {
@@ -181,7 +204,9 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
     setPreloadingImages(true);
     setLoadingStage("preloading");
     
-    const imageCache = getImageCache();
+    // Get current file names for cache cleanup
+    const currentFileNames = files.map(file => file.name);
+    const imageCache = getImageCache(currentFileNames);
     const imagesToPreload = files.filter(file => !imageCache[file.name]?.loaded);
     
     if (imagesToPreload.length === 0) {
@@ -232,27 +257,65 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
       setLoadingStage("fetching");
 
       try {
-        // Try to get cached data first
-        const cachedData = getCachedData();
-        if (cachedData) {
-          setCharacterFiles(cachedData);
-          setLoading(false);
-          // Start preloading images
-          preloadImages(cachedData);
-          return;
-        }
-
-        // Fetch fresh data
+        // Fetch fresh data to check for updates
         const res = await fetch(GITHUB_API_URL);
         const data = await res.json();
         
         if (Array.isArray(data)) {
           const pngFiles = data.filter((item: any) => item.name.endsWith(".png"));
-          setCharacterFiles(pngFiles);
-          setCachedData(pngFiles);
-          setLoading(false);
-          // Start preloading images
-          preloadImages(pngFiles);
+          
+          // Try to get cached data for comparison
+          const cachedData = getCachedData();
+          let shouldUseCache = false;
+          
+          if (cachedData) {
+            // Check if any files have been updated by comparing hashes
+            const hasUpdates = pngFiles.some(file => {
+              const cachedHash = cachedData.hashes[file.name];
+              return !cachedHash || cachedHash !== file.sha;
+            });
+            
+            // Check if any files have been removed
+            const hasRemovals = Object.keys(cachedData.hashes).some(fileName => {
+              return !pngFiles.find(file => file.name === fileName);
+            });
+            
+            shouldUseCache = !hasUpdates && !hasRemovals;
+          }
+          
+          if (shouldUseCache && cachedData) {
+            // Use cached data
+            setCharacterFiles(cachedData.data);
+            setLoading(false);
+            // Start preloading images
+            preloadImages(cachedData.data);
+          } else {
+            // Use fresh data and update cache
+            setCharacterFiles(pngFiles);
+            setCachedData(pngFiles);
+            setLoading(false);
+            
+            // Clean up image cache for removed/updated files
+            const currentFileNames = pngFiles.map(file => file.name);
+            if (cachedData) {
+              // Clear cache for updated files
+              pngFiles.forEach(file => {
+                const cachedHash = cachedData.hashes[file.name];
+                if (cachedHash && cachedHash !== file.sha) {
+                  // File was updated, clear its image cache
+                  const imageCache = getImageCache();
+                  if (imageCache[file.name]) {
+                    delete imageCache[file.name];
+                    localStorage.setItem(IMAGE_CACHE_KEY, JSON.stringify(imageCache));
+                  }
+                }
+              });
+            }
+            getImageCache(currentFileNames);
+            
+            // Start preloading images
+            preloadImages(pngFiles);
+          }
         } else {
           throw new Error("Invalid response format");
         }
@@ -349,6 +412,10 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
     setImageLoadingStates(prev => ({ ...prev, [fileName]: false }));
   }, []);
 
+  const toggleNsfwView = useCallback((fileName: string) => {
+    setNsfwViewStates(prev => ({ ...prev, [fileName]: !prev[fileName] }));
+  }, []);
+
   if (!isOpen) return null;
 
   return (
@@ -370,12 +437,72 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
           <h2 className={`text-2xl text-[#eae6db] font-bold ${serifFontClass}`}>
             {t("downloadModal.title")}
           </h2>
-          <button 
-            className="text-[#c0a480] hover:text-[#ffd475] text-2xl transition-colors"
-            onClick={onClose}
-          >
-            ×
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={async () => {
+                localStorage.removeItem(CACHE_KEY);
+                localStorage.removeItem(IMAGE_CACHE_KEY);
+                setCharacterFiles([]);
+                setImageLoadingStates({});
+                setNsfwViewStates({});
+                setError(null);
+                setLoading(true);
+                setLoadingStage("fetching");
+                try {
+                  const res = await fetch(GITHUB_API_URL);
+                  const data = await res.json();
+                  if (Array.isArray(data)) {
+                    const pngFiles = data.filter((item: any) => item.name.endsWith(".png"));
+                    setCharacterFiles(pngFiles);
+                    setCachedData(pngFiles);
+                    setLoading(false);
+                    preloadImages(pngFiles);
+                  } else {
+                    throw new Error("Invalid response format");
+                  }
+                } catch (err) {
+                  console.error("Failed to fetch characters:", err);
+                  setError(t("downloadModal.fetchError"));
+                  setLoading(false);
+                  setLoadingStage("complete");
+                }
+              }}
+              disabled={loading}
+              className={`portal-button flex items-center justify-center px-4 py-2 rounded-lg border border-[#534741] bg-[#252220] hover:bg-[#3a2a2a] text-[#c0a480] hover:text-[#ffd475] shadow transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#ffd475] relative ${loading ? "opacity-60 cursor-wait" : ""} ${fontClass}`}
+              title={t("downloadModal.refresh")}
+              aria-label={t("downloadModal.refresh")}
+              type="button"
+            >
+              <div className="flex items-center gap-1">
+                <svg
+                  className={`w-5 h-5 ${loading ? "animate-spin" : ""} transition-colors duration-150`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0V4m0 5a8.003 8.003 0 0015.356 2"
+                  />
+                </svg>
+                <span className="ml-1">{loading ? t("downloadModal.refreshing") : t("downloadModal.refresh")}</span>
+              </div>
+              {loading && (
+                <span className="absolute inset-0 bg-black/30 rounded-lg" />
+              )}
+            </button>
+            <button 
+              className="portal-button flex items-center justify-center px-4 py-2 rounded-lg border border-[#534741] bg-[#252220] hover:bg-[#3a2a2a] text-[#c0a480] hover:text-[#ffd475] shadow transition-all duration-150 text-xl focus:outline-none focus:ring-2 focus:ring-[#ffd475]"
+              onClick={onClose}
+              title={t("common.close")}
+              aria-label={t("common.close")}
+              type="button"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {/* Tag Filter Section */}
@@ -445,6 +572,8 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                 {filteredCharacters.map((file, index) => {
                   const { displayName, author, tags } = extractCharacterInfo(file.name);
                   const isImageLoaded = imageLoadingStates[file.name];
+                  const isNsfw = tags.some(tag => tag.toLowerCase() === "nsfw");
+                  const isNsfwVisible = nsfwViewStates[file.name] || false;
                   
                   return (
                     <motion.div
@@ -470,20 +599,53 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                         <img 
                           src={RAW_BASE_URL + file.name} 
                           alt={file.name} 
-                          className={`w-full h-56 object-cover transition-opacity duration-300 ${
+                          className={`w-full h-56 object-cover transition-all duration-300 ${
                             isImageLoaded ? "opacity-100" : "opacity-0"
-                          }`}
+                          } ${isNsfw && !isNsfwVisible ? "blur-lg" : ""}`}
                           loading="lazy"
                           onLoad={() => handleImageLoad(file.name)}
                           onError={() => handleImageError(file.name)}
                         />
+                        
+                        {/* NSFW Overlay */}
+                        {isNsfw && !isNsfwVisible && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <button
+                              onClick={() => toggleNsfwView(file.name)}
+                              className={`px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors ${fontClass}`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                View
+                              </div>
+                            </button>
+                          </div>
+                        )}
+                        
+                        {/* Hide button for NSFW content */}
+                        {isNsfw && isNsfwVisible && (
+                          <button
+                            onClick={() => toggleNsfwView(file.name)}
+                            className="absolute top-2 right-2 p-1 bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.05 6.05M9.878 9.878a3 3 0 105.656 5.656l4.242 4.242L19.95 19.95M9.878 9.878l4.242 4.242" />
+                            </svg>
+                          </button>
+                        )}
+
                         {/* Tag Overlay */}
                         {tags.length > 0 && (
                           <div className="absolute top-2 left-2 flex flex-wrap gap-1">
                             {tags.slice(0, 2).map(tag => (
                               <span
                                 key={tag}
-                                className={`px-2 py-0.5 text-xs rounded-full bg-black/60 text-[#ffd475] ${fontClass}`}
+                                className={`px-2 py-0.5 text-xs rounded-full bg-black/60 text-[#ffd475] ${fontClass} ${
+                                  tag.toLowerCase() === "nsfw" ? "bg-red-600/80 text-white" : ""
+                                }`}
                               >
                                 {t(`downloadModal.tags.${tag}`)}
                               </span>

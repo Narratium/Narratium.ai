@@ -732,8 +732,11 @@
         "Fantasy": "Fantasy", 
         "NSFW": "NSFW",
         "Fanfiction": "Fanfiction",
+        "Anime": "Anime",
         "Other": "Other"
-      }
+      },
+      "refresh": "Refresh",
+      "refreshing": "Refreshing..."
   },
   "creatorInput": {
     "title": "Creator Studio",

@@ -518,8 +518,11 @@
         "Fantasy": "玄幻",
         "NSFW": "NSFW", 
         "Fanfiction": "同人",
+        "Anime": "二次元",
         "Other": "其他"
-      }
+      },
+      "refresh": "刷新",
+      "refreshing": "刷新中…"
   },
   "creatorInput": {
     "title": "Creator Studio",
