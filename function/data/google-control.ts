@@ -5,9 +5,9 @@ const token_url = "https://oauth2.googleapis.com/token";
 const refresh_token_url = "https://oauth2.googleapis.com/token";
 
 // Use environment variables for sensitive credentials
-const client_id = process.env.GOOGLE_OAUTH_CLIENT_ID || "";
-const client_secret = process.env.GOOGLE_OAUTH_CLIENT_SECRET || "";
-const redirect_uri = process.env.GOOGLE_OAUTH_REDIRECT_URI || "https://www.narratium.org/oauth2callback";
+const client_id = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID || "";
+const client_secret = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET || "";
+const redirect_uri = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI || "https://www.narratium.org/oauth2callback";
 
 export function getGoogleAjaxUrl(url: string, params: Record<string, string>) {
   const newUrl = new URL(url);
