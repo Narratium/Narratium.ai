@@ -60,7 +60,6 @@ interface GithubFile {
 
 interface CharacterInfo {
   displayName: string;
-  author: string;
   tags: string[];
 }
 
@@ -353,11 +352,9 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
     const parts = nameWithoutExt.split(/--/);
     
     let displayName = nameWithoutExt;
-    let author = t("downloadModal.unknownAuthor");
     
     if (parts.length === 2) {
       displayName = parts[0].trim();
-      author = parts[1].trim().length > 5 ? parts[1].trim().substring(0, 5) : parts[1].trim();
     }
     
     // Extract tags from the display name
@@ -376,7 +373,7 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
       tags.push("Other");
     }
     
-    return { displayName, author, tags };
+    return { displayName, tags };
   };
 
   // Filter characters based on selected tag
@@ -569,7 +566,7 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto pr-2">
               <AnimatePresence mode="wait">
                 {filteredCharacters.map((file, index) => {
-                  const { displayName, author, tags } = extractCharacterInfo(file.name);
+                  const { displayName, tags } = extractCharacterInfo(file.name);
                   const isImageLoaded = imageLoadingStates[file.name];
                   const isNsfw = tags.some(tag => tag.toLowerCase() === "nsfw");
                   const isNsfwVisible = nsfwViewStates[file.name] || false;
@@ -615,8 +612,8 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                             >
                               <div className="flex items-center gap-1.5">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  <path d="M12.5 10a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0"/>
+                                  <path d="M0 10s3-5.5 10-5.5S20 10 20 10s-3 5.5-10 5.5S0 10 0 10m10 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7"/>
                                 </svg>
                                 <span className="font-semibold">{t("downloadModal.viewNsfw")}</span>
                               </div>
@@ -664,9 +661,6 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                         <h3 className={`text-[#eae6db] text-sm font-medium mb-1 line-clamp-1 ${fontClass}`}>
                           {displayName}
                         </h3>
-                        <p className={`text-[#c0a480] text-xs ${fontClass}`}>
-                          {t("downloadModal.by")} {author}
-                        </p>
                       </div>
 
                       {/* Download Button */}
