@@ -113,7 +113,7 @@
     "topKDescription": "Limits token selection to the K most likely tokens. Lower values make output more focused.",
     "repeatPenalty": "Repeat Penalty",
     "repeatPenaltyDescription": "Penalizes repeated tokens. Higher values reduce repetition in Ollama models.",
-    "optional": "Optional, leave empty for default"
+    "optional": "Optional"
   },
   "sessionList": {
     "loading": "Summoning history scrolls...",
@@ -689,7 +689,9 @@
     "noGlobalRegexScripts": "No global regex scripts available",
     "createGlobalRegexScriptFirst": "Create a global regex script first",
     "selectGlobalRegexScript": "Select Global Regex Script",
-    "willUseEachFileName": "Each file's name will be used as the script name"
+    "willUseEachFileName": "Each file's name will be used as the script name",
+    "emptyReplaceHint": "Empty: Will remove matched text",
+    "optional": "Optional"
   },
   "dialogue": {
     "treeVisualization": "Context Manager",

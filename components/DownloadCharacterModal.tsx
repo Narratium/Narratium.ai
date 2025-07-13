@@ -84,7 +84,7 @@ const TAGS = [
 
 // Tag detection keywords mapping
 const TAG_KEYWORDS: Record<string, string[]> = {
-  "Cultivation": ["x", "cultivation", "仙侠", "immortal", "修炼"],
+  "Cultivation": ["x", "cultivation", "仙侠", "immortal", "修仙"],
   "Fantasy": ["玄幻", "fantasy", "魔法", "magic", "奇幻"],
   "NSFW": ["nsfw", "adult", "18+", "mature", "r18"],
   "Fanfiction": ["同人", "fanfiction", "fan", "二创", "doujin"],

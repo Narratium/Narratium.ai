@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/app/i18n";
 import { RegexScript, RegexScriptSettings } from "@/lib/models/regex-script-model";
 import { trackButtonClick } from "@/utils/google-analytics";
@@ -36,12 +36,25 @@ export default function RegexScriptEditor({ onClose, characterName, characterId 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [filterBy, setFilterBy] = useState<string>("all");
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  
+  // Add scroll container ref
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scriptRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     loadScriptsAndSettings();
     
     const timer = setTimeout(() => setAnimationComplete(true), 100);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      // Clean up refs and timeouts on unmount
+      scriptRefs.current.clear();
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = null;
+      }
+    };
   }, [characterId]);
 
   const loadScriptsAndSettings = async () => {
@@ -158,6 +171,8 @@ export default function RegexScriptEditor({ onClose, characterName, characterId 
   };
 
   const toggleScriptExpansion = (scriptId: string) => {
+    const wasExpanded = expandedScripts.has(scriptId);
+    
     setExpandedScripts(prev => {
       const newSet = new Set(prev);
       if (newSet.has(scriptId)) {
@@ -166,6 +181,76 @@ export default function RegexScriptEditor({ onClose, characterName, characterId 
         newSet.add(scriptId);
       }
       return newSet;
+    });
+
+    if (!wasExpanded) {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      setTimeout(() => {
+        scrollToExpandedScript(scriptId);
+      }, 150);
+      
+      scrollTimeoutRef.current = setTimeout(() => {
+        scrollToExpandedScript(scriptId);
+        scrollTimeoutRef.current = null;
+      }, 350);
+    }
+  };
+
+  const scrollToExpandedScript = (scriptId: string) => {
+    const scrollContainer = scrollContainerRef.current;
+    const scriptElement = scriptRefs.current.get(scriptId);
+    
+    if (!scrollContainer || !scriptElement) return;
+    requestAnimationFrame(() => {
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const scriptRect = scriptElement.getBoundingClientRect();
+      
+      const buffer = 30;
+      const isFullyVisible = 
+        scriptRect.top >= containerRect.top + buffer &&
+        scriptRect.bottom <= containerRect.bottom - buffer;
+
+      if (!isFullyVisible) {
+        const containerHeight = containerRect.height;
+        const scriptHeight = scriptRect.height;
+        
+        const scriptOffsetTop = scriptElement.offsetTop;
+        
+        const filteredScripts = filterScripts(scripts, filterBy);
+        const sortedScriptEntries = sortScripts(filteredScripts, sortBy, sortOrder);
+        const sortedScriptIds = sortedScriptEntries.map(([id]) => id);
+        const isLastScript = sortedScriptIds.indexOf(scriptId) === sortedScriptIds.length - 1;
+        
+        let targetScrollTop;
+        
+        if (isLastScript) {
+          const extraPadding = 120;
+          if (scriptHeight > containerHeight - 120) {
+            targetScrollTop = scriptOffsetTop - 40;
+          } else {
+            targetScrollTop = scriptOffsetTop + scriptHeight - containerHeight + extraPadding;
+          }
+        } else if (scriptHeight > containerHeight - 80) {
+          targetScrollTop = scriptOffsetTop - 40;
+        } else if (scriptRect.bottom > containerRect.bottom) {
+          targetScrollTop = scriptOffsetTop + scriptHeight - containerHeight + 80; // 80px padding
+        } else if (scriptRect.top < containerRect.top) {
+          targetScrollTop = scriptOffsetTop - 40;
+        } else {
+          return;
+        }
+        
+        const maxScrollTop = scrollContainer.scrollHeight - containerHeight;
+        targetScrollTop = Math.min(Math.max(0, targetScrollTop), maxScrollTop);
+        
+        scrollContainer.scrollTo({
+          top: targetScrollTop,
+          behavior: "smooth",
+        });
+      }
     });
   };
 
@@ -449,7 +534,10 @@ export default function RegexScriptEditor({ onClose, characterName, characterId 
             </div>
           </div>
         </div>
-        <div className="h-full overflow-y-auto p-2 sm:p-4 pb-8 space-y-2 sm:space-y-4">
+        <div 
+          ref={scrollContainerRef}
+          className="h-full overflow-y-auto p-2 sm:p-4 pb-16 space-y-2 sm:space-y-4"
+        >
           {Object.keys(scripts).length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-[#a18d6f]">
               <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="mb-4 opacity-50">
@@ -460,12 +548,19 @@ export default function RegexScriptEditor({ onClose, characterName, characterId 
               <p className={`text-sm opacity-70 ${fontClass}`}>{t("regexScriptEditor.noScriptsDescription")}</p>
             </div>
           ) : (
-            <div className="space-y-2 sm:space-y-3 pb-12">
+            <div className="space-y-2 sm:space-y-3 pb-32">
               {sortedScripts.map(([scriptId, script], index) => {
                 const isExpanded = expandedScripts.has(scriptId);
                 return (
                   <div
                     key={scriptId}
+                    ref={(el) => {
+                      if (el) {
+                        scriptRefs.current.set(scriptId, el);
+                      } else {
+                        scriptRefs.current.delete(scriptId);
+                      }
+                    }}
                     className={`rounded-lg border transition-all duration-300 ${
                       script.disabled
                         ? "bg-[#1a1816] border-[#534741] opacity-60"

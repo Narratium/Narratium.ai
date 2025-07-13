@@ -745,7 +745,9 @@
     "noGlobalRegexScripts": "暂无全局正则脚本",
     "createGlobalRegexScriptFirst": "请先创建全局正则脚本",
     "selectGlobalRegexScript": "选择全局正则脚本",
-    "willUseEachFileName": "将使用每个文件的名称作为脚本名称"
+    "willUseEachFileName": "将使用每个文件的名称作为脚本名称",
+    "emptyReplaceHint": "空：将删除匹配的文本",
+    "optional": "可选"
   },
   "agentProgress": {
     "title": "创作进度",
