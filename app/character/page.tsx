@@ -115,6 +115,7 @@ export default function CharacterPage() {
     isVisible: false,
     message: "",
   });
+  const [isMobile, setIsMobile] = useState(false);
 
   const showErrorToast = useCallback((message: string) => {
     setErrorToast({
@@ -128,6 +129,17 @@ export default function CharacterPage() {
       isVisible: false,
       message: "",
     });
+  }, []);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   const switchToView = (
@@ -561,13 +573,20 @@ export default function CharacterPage() {
       }
     };
 
+    // Handle closing character sidebar when model sidebar opens on mobile
+    const handleCloseCharacterSidebar = () => {
+      setSidebarCollapsed(true);
+    };
+
     window.addEventListener("switchToPresetView", handleSwitchToPresetView);
+    window.addEventListener("closeCharacterSidebar", handleCloseCharacterSidebar);
 
     return () => {
       window.removeEventListener(
         "switchToPresetView",
         handleSwitchToPresetView,
       );
+      window.removeEventListener("closeCharacterSidebar", handleCloseCharacterSidebar);
     };
   }, []);
 
@@ -661,7 +680,15 @@ export default function CharacterPage() {
   };
 
   const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
+    const newSidebarState = !sidebarCollapsed;
+    setSidebarCollapsed(newSidebarState);
+    
+    // On mobile, when opening CharacterSidebar, close ModelSidebar to prevent conflicts
+    if (isMobile && !newSidebarState) {
+      // Dispatch custom event to notify MainLayout to close ModelSidebar
+      const closeModelSidebarEvent = new CustomEvent("closeModelSidebar");
+      window.dispatchEvent(closeModelSidebarEvent);
+    }
   };
 
   const handleSuggestedInput = (input: string) => {
