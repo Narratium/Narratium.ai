@@ -717,28 +717,31 @@
     "manualPositions": "Manual Positions"
   },
   "downloadModal": {
-      "title": "Download Character from Community Repository",
-      "loading": "Loading...",
-      "fetchError": "Unable to fetch character list",
-      "downloadFailed": "Download failed",
-      "importFailed": "Import failed",
-      "importing": "Importing...",
-      "downloadAndImport": "Download and Import",
-      "by": "By:",
-      "unknownAuthor": "Anonymous",
-      "allCharacters": "All ({count})",
-      "tagFilter": "Filter by Tags",
-      "noCharactersInTag": "No characters found in this category",
-      "tags": {
-        "Cultivation": "Cultivation",
-        "Fantasy": "Fantasy", 
-        "NSFW": "NSFW",
-        "Fanfiction": "Fanfiction",
-        "Anime": "Anime",
-        "Other": "Other"
-      },
-      "refresh": "Refresh",
-      "refreshing": "Refreshing..."
+    "title": "Character Market",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing...",
+    "fetchError": "Failed to fetch characters from the market. Please try again later.",
+    "downloadFailed": "Download failed.",
+    "importFailed": "Import failed.",
+    "unknownAuthor": "Unknown",
+    "allCharacters": "All ({count})",
+    "tagFilter": "Tags",
+    "tags": {
+      "Cultivation": "Cultivation",
+      "Fantasy": "Fantasy",
+      "NSFW": "NSFW",
+      "Fanfiction": "Fanfic",
+      "Anime": "Anime",
+      "Other": "Other"
+    },
+    "noCharactersInTag": "No characters found for this tag.",
+    "loading": "Conjuring characters from the market...",
+    "preloading": "Preloading images...",
+    "preloadingDescription": "Optimizing image loading experience, please wait...",
+    "viewNsfw": "View",
+    "by": "By",
+    "importing": "Importing...",
+    "downloadAndImport": "Download & Import"
   },
   "creatorInput": {
     "title": "Creator Studio",

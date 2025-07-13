@@ -250,7 +250,11 @@
     "edit": "编辑",
     "chat": "聊天",
     "recentlyCreated": "最近创建",
-    "downloadCharacter": "社区下载角色"
+    "downloadCharacter": "下载角色",
+    "createCharacter": "创建角色",
+    "startChat": "开始对话",
+    "confirmDelete": "您确定要删除此角色吗？",
+    "deleteSuccess": "角色删除成功"
   },
   "editCharacterModal": {
     "title": "编辑角色",
@@ -499,30 +503,33 @@
     "responsePlaceholder": "编辑回复内容...",
     "resetLayout": "重置布局",
     "manualPositions": "手动位置"
-  },  
+  },
   "downloadModal": {
-      "title": "从社区仓库下载角色",
-      "loading": "加载中…",
-      "fetchError": "无法获取角色列表",
-      "downloadFailed": "下载失败",
-      "importFailed": "导入失败",
-      "importing": "导入中…",
-      "downloadAndImport": "下载并导入",
-      "by": "作者：",
-      "unknownAuthor": "佚名",
-      "allCharacters": "全部 ({count})",
-      "tagFilter": "按标签筛选",
-      "noCharactersInTag": "此分类下暂无角色",
-      "tags": {
-        "Cultivation": "修仙",
-        "Fantasy": "玄幻",
-        "NSFW": "NSFW", 
-        "Fanfiction": "同人",
-        "Anime": "二次元",
-        "Other": "其他"
-      },
-      "refresh": "刷新",
-      "refreshing": "刷新中…"
+    "title": "角色市场",
+    "refresh": "刷新",
+    "refreshing": "刷新中...",
+    "fetchError": "从市场获取角色失败，请稍后再试。",
+    "downloadFailed": "下载失败。",
+    "importFailed": "导入失败。",
+    "unknownAuthor": "未知",
+    "allCharacters": "全部 ({count})",
+    "tagFilter": "标签",
+    "tags": {
+      "Cultivation": "修仙",
+      "Fantasy": "玄幻",
+      "NSFW": "NSFW",
+      "Fanfiction": "同人",
+      "Anime": "二次元",
+      "Other": "其它"
+    },
+    "noCharactersInTag": "该标签下没有找到角色。",
+    "loading": "正在从市场中召唤角色...",
+    "preloading": "预加载图片中...",
+    "preloadingDescription": "正在优化图片加载体验，请稍候...",
+    "viewNsfw": "查看",
+    "by": "作者：",
+    "importing": "导入中...",
+    "downloadAndImport": "下载并导入"
   },
   "creatorInput": {
     "title": "Creator Studio",

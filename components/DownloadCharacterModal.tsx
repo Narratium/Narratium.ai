@@ -468,39 +468,38 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                 }
               }}
               disabled={loading}
-              className={`portal-button flex items-center justify-center px-4 py-2 rounded-lg border border-[#534741] bg-[#252220] hover:bg-[#3a2a2a] text-[#c0a480] hover:text-[#ffd475] shadow transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#ffd475] relative ${loading ? "opacity-60 cursor-wait" : ""} ${fontClass}`}
+              className={`group p-2 rounded-full text-[#a18d6f] hover:text-[#f9c86d] hover:bg-[#252220] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#ffd475]/40 relative ${loading ? "opacity-60 cursor-wait" : ""}`}
               title={t("downloadModal.refresh")}
               aria-label={t("downloadModal.refresh")}
               type="button"
             >
-              <div className="flex items-center gap-1">
-                <svg
-                  className={`w-5 h-5 ${loading ? "animate-spin" : ""} transition-colors duration-150`}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0V4m0 5a8.003 8.003 0 0015.356 2"
-                  />
-                </svg>
-                <span className="ml-1">{loading ? t("downloadModal.refreshing") : t("downloadModal.refresh")}</span>
-              </div>
+              <svg
+                className={`w-5 h-5 ${loading ? "animate-spin" : ""} transition-transform duration-300 group-hover:rotate-180`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M20 11A8.1 8.1 0 004.5 9M4 5v6h6M20 19v-6h-6"
+                />
+              </svg>
               {loading && (
-                <span className="absolute inset-0 bg-black/30 rounded-lg" />
+                <span className="absolute inset-0 bg-black/30 rounded-full" />
               )}
             </button>
-            <button 
-              className="portal-button flex items-center justify-center px-4 py-2 rounded-lg border border-[#534741] bg-[#252220] hover:bg-[#3a2a2a] text-[#c0a480] hover:text-[#ffd475] shadow transition-all duration-150 text-xl focus:outline-none focus:ring-2 focus:ring-[#ffd475]"
+            <button
+              className="p-2 rounded-full text-[#a18d6f] hover:text-[#f9c86d] hover:bg-[#252220] transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#ffd475]/40"
               onClick={onClose}
               title={t("common.close")}
               aria-label={t("common.close")}
               type="button"
             >
-              ×
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
         </div>
@@ -516,8 +515,8 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
               onClick={() => setSelectedTag("all")}
               className={`px-3 py-1.5 rounded-full text-sm transition-all duration-200 ${fontClass} ${
                 selectedTag === "all"
-                  ? "bg-[#e0cfa0] text-[#534741] shadow-md"
-                  : "bg-[#252220] text-[#c0a480] hover:bg-[#3a2a2a] border border-[#534741]"
+                  ? "bg-gradient-to-br from-[#e0cfa0] to-[#f0e2b8] text-[#534741] font-semibold shadow-lg shadow-[#e0cfa0]/20 border border-transparent"
+                  : "bg-transparent text-[#c0a480] hover:bg-[#252220] hover:text-[#e0cfa0] border border-[#534741]/50 hover:border-[#534741]"
               }`}
             >
               {t("downloadModal.allCharacters").replace("{count}", tagCounts.all.toString())}
@@ -530,8 +529,8 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                 onClick={() => setSelectedTag(tag)}
                 className={`px-3 py-1.5 rounded-full text-sm transition-all duration-200 ${fontClass} ${
                   selectedTag === tag
-                    ? "bg-[#e0cfa0] text-[#534741] shadow-md"
-                    : "bg-[#252220] text-[#c0a480] hover:bg-[#3a2a2a] border border-[#534741]"
+                    ? "bg-gradient-to-br from-[#e0cfa0] to-[#f0e2b8] text-[#534741] font-semibold shadow-lg shadow-[#e0cfa0]/20 border border-transparent"
+                    : "bg-transparent text-[#c0a480] hover:bg-[#252220] hover:text-[#e0cfa0] border border-[#534741]/50 hover:border-[#534741]"
                 } ${tagCounts[tag] === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
                 disabled={tagCounts[tag] === 0}
               >
@@ -612,14 +611,14 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                             <button
                               onClick={() => toggleNsfwView(file.name)}
-                              className={`px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors ${fontClass}`}
+                              className={`px-3 py-1.5 bg-red-600/80 hover:bg-red-600 text-white rounded-lg text-sm transition-all backdrop-blur-sm border border-white/20 ${fontClass}`}
                             >
-                              <div className="flex items-center gap-2">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              <div className="flex items-center gap-1.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
-                                View
+                                <span className="font-semibold">{t("downloadModal.viewNsfw")}</span>
                               </div>
                             </button>
                           </div>
@@ -629,10 +628,11 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                         {isNsfw && isNsfwVisible && (
                           <button
                             onClick={() => toggleNsfwView(file.name)}
-                            className="absolute top-2 right-2 p-1 bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors"
+                            className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.05 6.05M9.878 9.878a3 3 0 105.656 5.656l4.242 4.242L19.95 19.95M9.878 9.878l4.242 4.242" />
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
+                              <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.742L2.458 6.697C3.732 10.754 7.522 14 12 14a9.95 9.95 0 00.454-.029z" />
                             </svg>
                           </button>
                         )}
@@ -672,10 +672,10 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                       {/* Download Button */}
                       <button
                         disabled={!!importing}
-                        className={`w-full px-3 py-2 text-sm rounded-lg transition-all duration-200 ${fontClass} ${
+                        className={`group w-full px-3 py-2 text-sm rounded-lg transition-all duration-200 ${fontClass} ${
                           importing === file.name
                             ? "bg-[#534741] text-[#c0a480] cursor-wait"
-                            : "bg-[#e0cfa0] text-[#534741] hover:bg-[#ffd475] hover:shadow-md"
+                            : "bg-gradient-to-br from-[#e0cfa0] to-[#f9d77e] text-[#534741] hover:shadow-lg hover:shadow-[#e0cfa0]/20 hover:from-[#f0e2b8] hover:to-[#f9d77e]"
                         }`}
                         onClick={() => handleDownloadAndImport(file)}
                       >
@@ -685,7 +685,13 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                             {t("downloadModal.importing")}
                           </div>
                         ) : (
-                          t("downloadModal.downloadAndImport")
+                          <div className="flex items-center justify-center gap-2 font-semibold">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 opacity-80 group-hover:opacity-100 transition-opacity" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z" />
+                              <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
+                            </svg>
+                            {t("downloadModal.downloadAndImport")}
+                          </div>
                         )}
                       </button>
                     </motion.div>
