@@ -106,9 +106,9 @@ const CharacterCardGrid: React.FC<CharacterCardGridProps> = ({
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                   </svg>
                 </Link>
-                {/* move character to top of the list */}
+                {/* move character to top of the screen */}
                 <button
-                  onClick={(e) => {trackButtonClick("move_to_top_character_btn", "置顶角色"); onMoveToTopClick(character.id);}}
+                  onClick={(e) => {e.stopPropagation(); trackButtonClick("move_to_top_character_btn", "置顶角色"); onMoveToTopClick(character.id);}}
                   className="p-2 sm:p-1.5 bg-[#252220] hover:bg-[#3a2a2a] rounded-full text-[#c0a480] hover:text-[#ffd475] transition-colors"
                   title={t("characterCardsPage.move_to_top")}
                   aria-label={t("characterCardsPage.move_to_top")}

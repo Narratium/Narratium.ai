@@ -74,7 +74,12 @@ export class LocalCharacterRecordOperations {
     return true;
   }
 
-  // move character to end of the array
+  /**
+ * As we rendering the array as descending order, 
+ * we need to move character to end of the array to bring the card to the top of the screen
+ * @param characterId 
+ * @returns 
+ */
   static async moveCharacterToTop(characterId: string): Promise<boolean> {
     const characterRecords = await readData(CHARACTERS_RECORD_FILE);
     const index = characterRecords.findIndex((characterRecord: CharacterRecord) => characterRecord.id === characterId);
