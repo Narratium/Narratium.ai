@@ -467,7 +467,6 @@ export default function CharacterCards() {
                 characters={characters}
                 onEditClick={handleEditClick}
                 onDeleteClick={handleDeleteCharacter}
-                onMoveToTopClick={handleMoveCharToTop}
               />
             )}
           </div>
