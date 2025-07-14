@@ -42,6 +42,8 @@ import CharacterChatHeader from "@/components/CharacterChatHeader";
 import UserTour from "@/components/UserTour";
 import { useTour } from "@/hooks/useTour";
 import ErrorToast from "@/components/ErrorToast";
+import LoginModal from "@/components/LoginModal";
+import { useAuth } from "@/hooks/useAuth";
 
 /**
  * Interface definitions for the component's data structures
@@ -77,6 +79,7 @@ export default function CharacterPage() {
   const searchParams = useSearchParams();
   const characterId = searchParams.get("id");
   const { t, fontClass, serifFontClass } = useLanguage();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const {
     isTourVisible,
     currentTourSteps,
@@ -98,6 +101,7 @@ export default function CharacterPage() {
   const [activeView, setActiveView] = useState<
     "chat" | "worldbook" | "regex" | "preset"
   >("chat");
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [activeModes, setActiveModes] = useState<Record<string, any>>({
     "story-progress": false,
     perspective: {
@@ -205,6 +209,12 @@ export default function CharacterPage() {
 
   const handleRegenerate = async (nodeId: string) => {
     if (!characterId) return;
+
+    // Check if user is authenticated before allowing regeneration
+    if (!isAuthenticated) {
+      setIsLoginModalOpen(true);
+      return;
+    }
 
     try {
       const messageIndex = messages.findIndex(
@@ -471,6 +481,12 @@ export default function CharacterPage() {
   const handleSendMessage = async (message: string) => {
     if (!character || isSending) return;
 
+    // Check if user is authenticated before allowing LLM response
+    if (!isAuthenticated) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+
     try {
       setIsSending(true);
       setError("");
@@ -635,6 +651,12 @@ export default function CharacterPage() {
     e.preventDefault();
     if (!userInput.trim() || isSending) return;
 
+    // Check authentication before processing message
+    if (!isAuthenticated) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+
     let message = userInput;
     let hints: string[] = [];
 
@@ -783,6 +805,10 @@ export default function CharacterPage() {
         message={errorToast.message}
         isVisible={errorToast.isVisible}
         onClose={hideErrorToast}
+      />
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
       />
     </div>
   );

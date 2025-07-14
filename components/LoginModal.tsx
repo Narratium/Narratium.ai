@@ -405,7 +405,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                           <div className="w-full h-full bg-gradient-to-r from-transparent via-[#c0a480] to-transparent"></div>
                         </div>
                       </div>
-                      
+
                       {/* Send Code Button - positioned on the right */}
                       <button
                         type="button"

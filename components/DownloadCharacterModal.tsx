@@ -701,8 +701,8 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                           <h3 className={`text-[#eae6db] font-medium line-clamp-1 ${fontClass} ${
                             isMobile ? "text-sm mb-1" : "text-sm mb-1"
                           }`}>
-                            {displayName}
-                          </h3>
+                          {displayName}
+                        </h3>
                           
                           {/* Tags for mobile - display below title */}
                           {isMobile && tags.length > 0 && (
@@ -724,37 +724,37 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                               )}
                             </div>
                           )}
-                        </div>
+                      </div>
 
-                        {/* Download Button */}
-                        <button
-                          disabled={!!importing}
+                      {/* Download Button */}
+                      <button
+                        disabled={!!importing}
                           className={`group w-full rounded-lg transition-all duration-200 ${fontClass} ${
-                            importing === file.name
-                              ? "bg-[#534741] text-[#c0a480] cursor-wait"
-                              : "bg-gradient-to-br from-[#e0cfa0] to-[#f9d77e] text-[#534741] hover:shadow-lg hover:shadow-[#e0cfa0]/20 hover:from-[#f0e2b8] hover:to-[#f9d77e]"
+                          importing === file.name
+                            ? "bg-[#534741] text-[#c0a480] cursor-wait"
+                            : "bg-gradient-to-br from-[#e0cfa0] to-[#f9d77e] text-[#534741] hover:shadow-lg hover:shadow-[#e0cfa0]/20 hover:from-[#f0e2b8] hover:to-[#f9d77e]"
                           } ${isMobile ? "px-2 py-1.5 text-xs" : "px-3 py-2 text-sm"}`}
-                          onClick={() => handleDownloadAndImport(file)}
-                        >
-                          {importing === file.name ? (
-                            <div className="flex items-center justify-center gap-2">
+                        onClick={() => handleDownloadAndImport(file)}
+                      >
+                        {importing === file.name ? (
+                          <div className="flex items-center justify-center gap-2">
                               <div className={`animate-spin border-2 border-[#c0a480] border-t-transparent rounded-full ${
                                 isMobile ? "w-3 h-3" : "w-4 h-4"
                               }`}></div>
                               {isMobile ? t("downloadModal.importingShort") : t("downloadModal.importing")}
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-center gap-2 font-semibold">
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center gap-2 font-semibold">
                               <svg xmlns="http://www.w3.org/2000/svg" className={`opacity-80 group-hover:opacity-100 transition-opacity ${
                                 isMobile ? "h-3 w-3" : "h-4 w-4"
                               }`} viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z" />
-                                <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
-                              </svg>
+                              <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z" />
+                              <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
+                            </svg>
                               {isMobile ? t("downloadModal.downloadShort") : t("downloadModal.downloadAndImport")}
-                            </div>
-                          )}
-                        </button>
+                          </div>
+                        )}
+                      </button>
                       </div>
                     </motion.div>
                   );
