@@ -193,7 +193,7 @@ const CharacterCardCarousel: React.FC<CharacterCardCarouselProps> = ({
                     </svg>
                   </button>
                 </div>
-              
+                    
                 <Link
                   href={`/character?id=${character.id}`}
                   className="block h-full flex flex-col"

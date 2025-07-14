@@ -73,4 +73,23 @@ export class LocalCharacterRecordOperations {
     
     return true;
   }
+
+  // move character to end of the array
+  static async moveCharacterToTop(characterId: string): Promise<boolean> {
+    const characterRecords = await readData(CHARACTERS_RECORD_FILE);
+    const index = characterRecords.findIndex((characterRecord: CharacterRecord) => characterRecord.id === characterId);
+    
+    if (index === characterRecords.length - 1) {
+      return true;
+    } else if (index === -1) {
+      return false;
+    }
+
+    const characterRecord = characterRecords[index];
+    characterRecords.splice(index, 1);
+    characterRecords.push(characterRecord);
+    await writeData(CHARACTERS_RECORD_FILE, characterRecords);
+
+    return true;
+  }
 }

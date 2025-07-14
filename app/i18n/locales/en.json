@@ -242,6 +242,7 @@
     "fetchError": "Failed to fetch characters",
     "deleteFailed": "Failed to delete character",
     "delete": "Delete",
+    "move_to_top": "Move to Top",
     "edit": "Edit",
     "chat": "Chat",
     "recentlyCreated": "Recently Created",

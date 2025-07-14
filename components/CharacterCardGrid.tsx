@@ -48,6 +48,7 @@ interface CharacterCardGridProps {
   characters: Character[];
   onEditClick: (character: Character, e: React.MouseEvent) => void;
   onDeleteClick: (characterId: string) => void;
+  onMoveToTopClick: (characterId: string) => void;
 }
 
 /**
@@ -60,6 +61,7 @@ const CharacterCardGrid: React.FC<CharacterCardGridProps> = ({
   characters,
   onEditClick,
   onDeleteClick,
+  onMoveToTopClick,
 }) => {
   const { t, fontClass, serifFontClass } = useLanguage();
 
@@ -104,6 +106,19 @@ const CharacterCardGrid: React.FC<CharacterCardGridProps> = ({
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                   </svg>
                 </Link>
+                {/* move character to top of the list */}
+                <button
+                  onClick={(e) => {trackButtonClick("move_to_top_character_btn", "置顶角色"); onMoveToTopClick(character.id);}}
+                  className="p-2 sm:p-1.5 bg-[#252220] hover:bg-[#3a2a2a] rounded-full text-[#c0a480] hover:text-[#ffd475] transition-colors"
+                  title={t("characterCardsPage.move_to_top")}
+                  aria-label={t("characterCardsPage.move_to_top")}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sm:w-3.5 sm:h-3.5">
+                    <path d="M3 6h18"/>
+                    <path d="M12 18V8"/>
+                    <path d="M8 12l4-4 4 4"/>
+                  </svg>
+                </button>
                 <button
                   onClick={(e) => {trackButtonClick("edit_character_btn", "编辑角色"); onEditClick(character, e);}}
                   className="p-1 sm:p-1.5 bg-[#252220] hover:bg-[#3a2a2a] rounded-full text-[#c0a480] hover:text-[#ffd475] transition-colors"

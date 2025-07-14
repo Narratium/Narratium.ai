@@ -240,6 +240,7 @@
     "fetchError": "获取角色失败",
     "deleteFailed": "删除角色失败",
     "delete": "删除",
+    "move_to_top": "置顶",
     "edit": "编辑",
     "chat": "聊天",
     "recentlyCreated": "最近创建",
