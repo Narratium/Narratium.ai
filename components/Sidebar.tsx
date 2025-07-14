@@ -10,6 +10,7 @@ import "@/app/styles/fantasy-ui.css";
 import { History, Trash2, ChevronDown } from "lucide-react";
 import { listAgentSessions } from "@/function/agent/list";
 import { deleteAgentSession } from "@/function/agent/delete-session";
+import { useAuth } from "@/hooks/useAuth";
 
 // Current app version from package.json
 const CURRENT_VERSION = "1.1.9";
@@ -23,8 +24,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, toggleSidebar, openLoginModal }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState("");
+  const { user, isAuthenticated, logout } = useAuth();
   const [isHomeOpen, setIsHomeOpen] = useState(true);
   const [isGameOpen, setIsGameOpen] = useState(true);
 
@@ -42,14 +42,6 @@ export default function Sidebar({ isOpen, toggleSidebar, openLoginModal }: Sideb
   }, []);
 
   useEffect(() => {
-    const loggedIn = localStorage.getItem("isLoggedIn") === "true";
-    const storedUsername = localStorage.getItem("username");
-
-    setIsLoggedIn(loggedIn);
-    if (storedUsername) {
-      setUsername(storedUsername);
-    }
-    
     if (isCreatorOpen && isOpen) {
       fetchHistory();
     }
@@ -103,12 +95,7 @@ export default function Sidebar({ isOpen, toggleSidebar, openLoginModal }: Sideb
   }, [hasCheckedUpdate]);
 
   const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("username");
-    localStorage.removeItem("userId");
-
-    setIsLoggedIn(false);
-
+    logout();
     router.push("/");
   };
 
@@ -436,7 +423,7 @@ export default function Sidebar({ isOpen, toggleSidebar, openLoginModal }: Sideb
         `}</style>
         
         <div className="mb-2">
-          {!isLoggedIn ? (
+          {!isAuthenticated ? (
             <button 
               onClick={openLoginModal}
               data-tour="login-button"
@@ -493,7 +480,7 @@ export default function Sidebar({ isOpen, toggleSidebar, openLoginModal }: Sideb
                   <div className="ml-2 transition-all duration-300 ease-in-out overflow-hidden" style={{ transitionDelay: isOpen ? "50ms" : "0ms", opacity: isOpen ? 1 : 0 }}>
                     <div>
                       <span className={`magical-text whitespace-nowrap block text-xs font-medium bg-clip-text text-transparent bg-gradient-to-r from-[#f8d36a] to-[#ffc107] ${fontClass}`}>
-                        {isOpen && username.split("").map((char, index) => (
+                        {isOpen && user?.username.split("").map((char, index) => (
                           <span 
                             key={index} 
                             className="inline-block transition-all duration-300" 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/app/i18n";
+import AuthAPI from "@/lib/api/auth";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -10,24 +11,20 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  const { t,  fontClass, titleFontClass, serifFontClass } = useLanguage();
-  const [activeTab, setActiveTab] = useState("password");
+  const { t, fontClass, titleFontClass, serifFontClass } = useLanguage();
+  const [mode, setMode] = useState<"login" | "register">("login"); // login or register mode
+  const [registerStep, setRegisterStep] = useState<1 | 2>(1); // registration step: 1 = email/password/code, 2 = username
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [step, setStep] = useState(1);
-  const [showQuestion, setShowQuestion] = useState(true);
+  const [codeSent, setCodeSent] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false); // Track if email verification passed
+  const [tempToken, setTempToken] = useState(""); // Store temporary token for registration
 
   const modalRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isOpen, step, showQuestion]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -53,76 +50,95 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     };
   }, [isOpen, onClose]);
 
-  const questions = [
-    {
-      id: 1,
-      text: t("auth.wizardQuestion").replace("邮箱", "名称"),
-      placeholder: t("auth.emailPlaceholder").replace("邮箱", "名称"),
-    },
-    {
-      id: 2,
-      text: activeTab === "password"
-        ? t("auth.spellQuestion")
-        : t("auth.codeQuestion"),
-      placeholder: activeTab === "password"
-        ? t("auth.passwordPlaceholder")
-        : t("auth.codePlaceholder"),
-    },
-  ];
-
-  const currentQuestion = questions.find(q => q.id === step) || questions[0];
-
-  const handleNext = () => {
-    if (step < questions.length) {
-      setShowQuestion(false);
-      setTimeout(() => {
-        setStep(step + 1);
-        setShowQuestion(true);
-      }, 300);
-    }
+  const resetForm = () => {
+    setUsername("");
+    setEmail("");
+    setPassword("");
+    setVerificationCode("");
+    setError("");
+    setCodeSent(false);
+    setEmailVerified(false);
+    setRegisterStep(1);
+    setTempToken("");
   };
 
-  const handlePrev = () => {
-    if (step > 1) {
-      setShowQuestion(false);
-      setTimeout(() => {
-        setStep(step - 1);
-        setShowQuestion(true);
-      }, 300);
-    }
+  const handleModeSwitch = (newMode: "login" | "register") => {
+    setMode(newMode);
+    resetForm();
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-
-      if (username.trim() !== "") {
-        handleLogin(e as unknown as React.FormEvent);
-      }
-    }
+  const renderInput = (
+    type: "text" | "email" | "password",
+    value: string,
+    onChange: (value: string) => void,
+    placeholder: string,
+    icon?: string,
+  ) => {
+    return (
+      <div className="relative w-full group">
+        <div className="relative magical-input min-h-[60px] flex items-center justify-center">
+          <input
+            type={type}
+            className={`bg-transparent border-0 outline-none w-full text-center text-base text-[#eae6db] placeholder-[#a18d6f] shadow-none focus:ring-0 focus:border-0 ${serifFontClass}`}
+            placeholder={placeholder}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={isLoading}
+            autoComplete="off"
+            style={{
+              caretColor: "#f9c86d",
+              caretShape: "bar",
+              background: "transparent",
+              boxShadow: "none",
+              border: "none",
+              borderWidth: "0",
+              borderColor: "transparent",
+              letterSpacing: "0.05em",
+            }}
+          />
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-32 h-0.5 opacity-100 transition-opacity duration-300">
+            <div className="w-full h-full bg-gradient-to-r from-transparent via-[#c0a480] to-transparent"></div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-
-    switch (step) {
-    case 1:
-      setUsername(value);
-      break;
-    case 2:
-      if (activeTab === "password") {
-        setPassword(value);
+  const handleSendVerificationCode = async () => {
+    if (!email.trim()) {
+      setError(t("auth.emailRequired"));
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const response = await AuthAPI.sendVerificationCode(email);
+      
+      if (response.success) {
+        setCodeSent(true);
+        setError("");
       } else {
-        setVerificationCode(value);
+        setError(response.message || t("auth.sendCodeFailed"));
       }
-      break;
+    } catch (err) {
+      console.error("Send verification code error:", err);
+      setError(t("auth.sendCodeFailed"));
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!username.trim()) {
+  const handleEmailVerification = async () => {
+    if (!email.trim()) {
+      setError(t("auth.emailRequired"));
+      return;
+    }
+    if (!password.trim()) {
+      setError(t("auth.passwordRequired"));
+      return;
+    }
+    if (!verificationCode.trim()) {
+      setError(t("auth.codeRequired"));
       return;
     }
 
@@ -130,64 +146,132 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     setError("");
 
     try {
-      const userId = Math.floor(Math.random() * 10000).toString();
+      const response = await AuthAPI.verifyEmail(email, verificationCode, password);
       
-      localStorage.setItem("username", username);
-      localStorage.setItem("userId", userId);
-      localStorage.setItem("isLoggedIn", "true");
-
-      onClose();
-      setStep(1);
-      setUsername("");
-      setPassword("");
-      setVerificationCode("");
-      window.location.reload();
+      if (response.success && response.tempToken) {
+        setEmailVerified(true);
+        setTempToken(response.tempToken);
+        setRegisterStep(2);
+      } else {
+        setError(response.message || t("auth.verificationFailed"));
+      }
     } catch (err) {
-      console.error("Login error:", err);
-      setError("登录失败，请重试");
+      console.error("Email verification error:", err);
+      setError(t("auth.verificationFailed"));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSendVerificationCode = () => {
-    if (!username.trim()) {
-      setError("请输入名称");
-      return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (mode === "login") {
+      // Login mode - only email and password
+      if (!email.trim()) {
+        setError(t("auth.emailRequired"));
+        return;
+      }
+      if (!password.trim()) {
+        setError(t("auth.passwordRequired"));
+        return;
+      }
+
+      setIsLoading(true);
+      setError("");
+
+      try {
+        // Call login API with email and password
+        const response = await AuthAPI.login(email, password);
+        if (response.success && response.token && response.user) {
+          // Store authentication data
+          localStorage.setItem("authToken", response.token);
+          localStorage.setItem("username", response.user.username);
+          localStorage.setItem("userId", response.user.id);
+          localStorage.setItem("email", response.user.email);
+          localStorage.setItem("isLoggedIn", "true");
+
+          onClose();
+          resetForm();
+          window.location.reload();
+        } else {
+          setError(response.message || t("auth.loginFailed"));
+        }
+      } catch (err) {
+        console.error("Login error:", err);
+        setError(t("auth.loginFailed"));
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // Register mode
+      if (registerStep === 1) {
+        // First step: email verification
+        await handleEmailVerification();
+      } else {
+        // Second step: username input and final registration
+        if (!username.trim()) {
+          setError(t("auth.usernameRequired"));
+          return;
+        }
+
+        setIsLoading(true);
+        setError("");
+
+        try {
+          const response = await AuthAPI.register(username, tempToken);
+          
+          if (response.success && response.token && response.user) {
+            // Store authentication data
+            localStorage.setItem("authToken", response.token);
+            localStorage.setItem("username", response.user.username);
+            localStorage.setItem("userId", response.user.id);
+            localStorage.setItem("email", response.user.email);
+            localStorage.setItem("isLoggedIn", "true");
+
+            onClose();
+            resetForm();
+            window.location.reload();
+          } else {
+            setError(response.message || t("auth.registerFailed"));
+          }
+        } catch (err) {
+          console.error("Registration error:", err);
+          setError(t("auth.registerFailed"));
+        } finally {
+          setIsLoading(false);
+        }
+      }
     }
   };
 
-  const renderInput = () => {
-    const placeholder = currentQuestion.placeholder;
+  const handleBackToStep1 = () => {
+    setRegisterStep(1);
+    setError("");
+  };
 
-    return (
-      <div className="relative w-full">
-        <input
-          ref={inputRef}
-          type={step === 2 && activeTab === "password" ? "password" : "text"}
-          className={`bg-transparent border-0 outline-none w-full text-center text-base sm:text-lg text-[#eae6db] placeholder-[#a18d6f] shadow-none focus:ring-0 focus:border-0 ${serifFontClass}`}
-          placeholder={placeholder}
-          value={step === 1 ? username : (activeTab === "password" ? password : verificationCode)}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyPress}
-          disabled={isLoading}
-          autoComplete="off"
-          style={{
-            caretColor: "#f9c86d",
-            caretShape: "bar",
-            background: "transparent",
-            boxShadow: "none",
-            border: "none",
-            borderWidth: "0",
-            borderColor: "transparent",
-            letterSpacing: "0.05em",
-          }}
-        />
-        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-32 h-0.5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300">
-          <div className="w-full h-full bg-gradient-to-r from-transparent via-[#c0a480] to-transparent"></div>
-        </div>
-      </div>
-    );
+  const getTitle = () => {
+    if (mode === "login") {
+      return t("auth.welcomeBack");
+    } else {
+      if (registerStep === 1) {
+        return t("auth.verifyEmail");
+      } else {
+        return t("auth.chooseName");
+      }
+    }
+  };
+
+  const getSubmitButtonText = () => {
+    if (mode === "login") {
+      return isLoading ? t("auth.loggingIn") : t("auth.login");
+    } else {
+      if (registerStep === 1) {
+        return isLoading ? t("auth.verifying") : t("auth.verifyAndContinue");
+      } else {
+        return isLoading ? t("auth.registering") : t("auth.completeRegistration");
+      }
+    }
   };
 
   return (
@@ -218,133 +302,234 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
             </button>
-            <div className="text-center mb-4 sm:mb-6">
-              <h1 className={"text-2xl sm:text-3xl font-bold text-[#f9c86d] mb-2 font-cinzel"}>Welcome Back</h1>
-              <p className={`text-sm sm:text-base text-[#c0a480] ${serifFontClass}`}>{t("auth.continueJourney")}</p>
+            
+            <div className="text-center mb-6">
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#f9c86d] mb-2 font-cinzel">
+                {getTitle()}
+              </h1>
+              {/* Back button for register step 2 */}
+              {mode === "register" && registerStep === 2 && (
+                <button
+                  onClick={handleBackToStep1}
+                  className={`group inline-flex items-center gap-1.5 px-3 py-1 bg-transparent border border-[#a18d6f]/50 text-[#a18d6f] rounded-full text-xs font-medium transition-all duration-300 hover:border-[#c0a480] hover:text-[#c0a480] hover:shadow-sm hover:shadow-[#a18d6f]/10 ${serifFontClass}`}
+                >
+                  <svg className="w-3 h-3 transition-transform duration-300 group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  <span className="tracking-wide">{t("auth.backToVerification")}</span>
+                </button>
+              )}
             </div>
 
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-[#a18d6f] text-xs sm:text-sm text-center mb-4"
+                className="text-red-400 text-xs sm:text-sm text-center mb-4 p-2 bg-red-900/20 rounded border border-red-500/20"
               >
                 {error}
               </motion.div>
             )}
 
-            <form onSubmit={handleLogin} className="w-full">
-              <AnimatePresence mode="wait">
-                {showQuestion && (
-                  <motion.div
-                    key={`question-${step}-${activeTab}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="text-center"
-                  >
-                    <h2 
-                      className={`text-lg sm:text-xl magical-login-text mb-6 sm:mb-8 tracking-wide ${serifFontClass}`}
-                      dangerouslySetInnerHTML={{
-                        __html: currentQuestion.text
-                          .replace("✨", "<span>✨</span>")
-                          .replace("🔮", "<span>🔮</span>")
-                          .replace("⚡", "<span>⚡</span>"),
-                      }}
-                    />
+            <form onSubmit={handleSubmit} className="w-full space-y-4">
+              {mode === "login" && (
+                <>
+                  {/* Login: Email Input */}
+                  <div>
+                    {renderInput(
+                      "email",
+                      email,
+                      setEmail,
+                      t("auth.emailPlaceholder"),
+                    )}
+                  </div>
 
-                    <div className="magical-input min-h-[80px] sm:min-h-[100px] flex items-center justify-center">
-                      {renderInput()}
-                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-24 sm:w-32 h-1 opacity-0 transition-opacity duration-300 magical-input-glow"></div>
-                    </div>
+                  {/* Login: Password Input */}
+                  <div>
+                    {renderInput(
+                      "password",
+                      password,
+                      setPassword,
+                      t("auth.spellPlaceholder"),
+                    )}
+                  </div>
+                </>
+              )}
 
-                    {step === 2 && activeTab === "code" && (
-                      <motion.button
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
+              {mode === "register" && registerStep === 1 && (
+                <>
+                  {/* Register Step 1: Email Input */}
+                  <div>
+                    {renderInput(
+                      "email",
+                      email,
+                      setEmail,
+                      t("auth.emailPlaceholder"),
+                    )}
+                  </div>
+
+                  {/* Register Step 1: Password Input */}
+                  <div>
+                    {renderInput(
+                      "password",
+                      password,
+                      setPassword,
+                      t("auth.createSpellPlaceholder"),
+                    )}
+                  </div>
+
+                  {/* Register Step 1: Verification Code Input */}
+                  <div className="relative">
+                    <div className="relative w-full group">
+                      <div className="relative magical-input min-h-[60px] flex items-center justify-center">
+                        <input
+                          type="text"
+                          className={`bg-transparent border-0 outline-none w-full text-center text-base text-[#eae6db] placeholder-[#a18d6f] shadow-none focus:ring-0 focus:border-0 pr-20 ${serifFontClass}`}
+                          placeholder={t("auth.codePlaceholder")}
+                          value={verificationCode}
+                          onChange={(e) => setVerificationCode(e.target.value)}
+                          disabled={isLoading}
+                          autoComplete="off"
+                          style={{
+                            caretColor: "#f9c86d",
+                            caretShape: "bar",
+                            background: "transparent",
+                            boxShadow: "none",
+                            border: "none",
+                            borderWidth: "0",
+                            borderColor: "transparent",
+                            letterSpacing: "0.05em",
+                          }}
+                        />
+                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-32 h-0.5 opacity-100 transition-opacity duration-300">
+                          <div className="w-full h-full bg-gradient-to-r from-transparent via-[#c0a480] to-transparent"></div>
+                        </div>
+                      </div>
+                      
+                      {/* Send Code Button - positioned on the right */}
+                      <button
                         type="button"
-                        className={`mt-4 portal-button text-xs sm:text-sm ${fontClass}`}
                         onClick={handleSendVerificationCode}
+                        disabled={isLoading || !email.trim() || codeSent}
+                        className={`group absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-transparent border border-[#a18d6f]/60 text-[#a18d6f] rounded-full text-xs font-medium transition-all duration-300 hover:border-[#c0a480] hover:text-[#c0a480] hover:shadow-md hover:shadow-[#a18d6f]/20 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden ${serifFontClass}`}
                       >
-                        {t("auth.getCode")}
-                      </motion.button>
+                        {/* Elegant background pulse */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#a18d6f]/0 via-[#a18d6f]/8 to-[#a18d6f]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-600"></div>
+                        
+                        {/* Subtle inner glow */}
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-[#c0a480]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        
+                        {/* Button content */}
+                        <div className="relative z-10 flex items-center justify-center gap-1">
+                          {codeSent ? (
+                            <>
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                              <span className="tracking-wide text-[10px] hidden sm:inline">{t("auth.codeSent")}</span>
+                              <span className="tracking-wide text-[10px] sm:hidden">{t("auth.codeSentShort")}</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-3 h-3 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                              </svg>
+                              <span className="tracking-wide text-[10px] hidden sm:inline">{t("auth.sendCode")}</span>
+                              <span className="tracking-wide text-[10px] sm:hidden">{t("auth.sendCodeShort")}</span>
+                            </>
+                          )}
+                        </div>
+                        
+                        {/* Subtle border animation */}
+                        <div className="absolute inset-0 rounded-full border border-[#c0a480]/30 scale-105 opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {mode === "register" && registerStep === 2 && (
+                <>
+                  {/* Register Step 2: Username Input */}
+                  <div>
+                    {renderInput(
+                      "text",
+                      username,
+                      setUsername,
+                      t("auth.namePlaceholder"),
                     )}
+                  </div>
+                </>
+              )}
 
-                    {isLoading && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className={`mt-6 sm:mt-8 text-sm sm:text-base text-[#c0a480] ${serifFontClass}`}
-                      >
-                        <span className="inline-block animate-pulse">✨</span> {t("auth.openingMagicDoor")}
-                      </motion.div>
+              {/* Submit Button */}
+              <div className="text-center mt-8">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className={`group relative px-6 py-2.5 bg-transparent border border-[#c0a480] text-[#c0a480] rounded-full text-sm font-medium transition-all duration-500 hover:border-[#f9c86d] hover:text-[#f9c86d] hover:shadow-lg hover:shadow-[#c0a480]/20 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden ${serifFontClass}`}
+                >
+                  {/* Animated background */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#c0a480]/0 via-[#c0a480]/10 to-[#c0a480]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                  
+                  {/* Subtle inner glow */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-[#f9c86d]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  
+                  {/* Button content */}
+                  <div className="relative z-10 flex items-center justify-center gap-2">
+                    {isLoading ? (
+                      <>
+                        <div className="animate-spin w-3.5 h-3.5 border border-[#c0a480] border-t-transparent rounded-full"></div>
+                        <span className="tracking-wide">{getSubmitButtonText()}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="tracking-wide">{getSubmitButtonText()}</span>
+                        {/* Elegant arrow icon */}
+                        <svg 
+                          className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </>
                     )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* <div className="flex justify-center mt-6">
-                <button
-                  type="button"
-                  className={`px-3 py-1 mx-2 text-xs portal-button ${activeTab === "password" ? "text-[#f9c86d]" : "text-[#a18d6f]"} transition-colors ${fontClass}`}
-                  onClick={() => {
-                    setActiveTab("password");
-                    if (step === 2) {
-                      setShowQuestion(false);
-                      setTimeout(() => {
-                        setShowQuestion(true);
-                      }, 300);
-                    }
-                  }}
-                >
-                  {t("auth.magicSpell")}
+                  </div>
+                  
+                  {/* Subtle border animation */}
+                  <div className="absolute inset-0 rounded-full border border-[#f9c86d]/20 scale-105 opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
                 </button>
-                <button
-                  type="button"
-                  className={`px-3 py-1 mx-2 text-xs portal-button ${activeTab === "code" ? "text-[#f9c86d]" : "text-[#a18d6f]"} transition-colors ${fontClass}`}
-                  onClick={() => {
-                    setActiveTab("code");
-                    if (step === 2) {
-                      setShowQuestion(false);
-                      setTimeout(() => {
-                        setShowQuestion(true);
-                      }, 300);
-                    }
-                  }}
-                >
-                  {t("auth.starCode")}
-                </button>
-              </div> */}
-
-              <div className={`text-center mt-6 sm:mt-8 text-xs text-[#a18d6f] ${fontClass}`}>
-                <p className="text-xs">{t("auth.agreementText")}</p>
-                <div className="flex justify-center space-x-2 mt-1">
-                  <a href="#" className="text-[#c0a480] hover:text-[#f9c86d] transition-colors text-xs">{t("auth.termsOfService")}</a>
-                  <span>•</span>
-                  <a href="#" className="text-[#c0a480] hover:text-[#f9c86d] transition-colors text-xs">{t("auth.privacyPolicy")}</a>
-                </div>
               </div>
 
-              {/* <div className="flex justify-center mt-6 sm:mt-8">
-                <div className="flex space-x-3 sm:space-x-4">
-                  <button type="button" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border border-[#333333] bg-[#1a1a1a] hover:bg-[#252525] transition-colors">
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z"></path>
-                    </svg>
-                  </button>
-                  <button type="button" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border border-[#333333] bg-[#1a1a1a] hover:bg-[#252525] transition-colors">
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M23.954 4.569c-.885.389-1.83.654-2.825.775 1.014-.611 1.794-1.574 2.163-2.723-.951.555-2.005.959-3.127 1.184-.896-.959-2.173-1.559-3.591-1.559-2.717 0-4.92 2.203-4.92 4.917 0 .39.045.765.127 1.124C7.691 8.094 4.066 6.13 1.64 3.161c-.427.722-.666 1.561-.666 2.475 0 1.71.87 3.213 2.188 4.096-.807-.026-1.566-.248-2.228-.616v.061c0 2.385 1.693 4.374 3.946 4.827-.413.111-.849.171-1.296.171-.314 0-.615-.03-.916-.086.631 1.953 2.445 3.377 4.604 3.417-1.68 1.319-3.809 2.105-6.102 2.105-.39 0-.779-.023-1.17-.067 2.189 1.394 4.768 2.209 7.557 2.209 9.054 0 14-7.503 14-14 0-.21-.005-.42-.015-.63.961-.689 1.8-1.56 2.46-2.548l-.047-.02z"></path>
-                    </svg>
-                  </button>
-                  <button type="button" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border border-[#333333] bg-[#1a1a1a] hover:bg-[#252525] transition-colors">
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"></path>
-                    </svg>
+              {/* Mode Switch - only show on login or register step 1 */}
+              {(mode === "login" || registerStep === 1) && (
+                <div className={`text-center mt-6 text-xs text-[#a18d6f] ${fontClass}`}>
+                  <span>
+                    {mode === "login" ? t("auth.noAccount") : t("auth.hasAccount")}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleModeSwitch(mode === "login" ? "register" : "login")}
+                    className="ml-2 text-[#c0a480] hover:text-[#f9c86d] transition-colors underline"
+                  >
+                    {mode === "login" ? t("auth.registerNow") : t("auth.loginNow")}
                   </button>
                 </div>
-              </div> */}
+              )}
+
+              {/* Terms and Privacy - only show on login or register step 1 */}
+              {(mode === "login" || registerStep === 1) && (
+                <div className={`text-center mt-4 text-xs text-[#a18d6f] ${fontClass}`}>
+                  <p className="text-xs">{t("auth.agreementText")}</p>
+                  <div className="flex justify-center space-x-2 mt-1">
+                    <a href="#" className="text-[#c0a480] hover:text-[#f9c86d] transition-colors text-xs">{t("auth.termsOfService")}</a>
+                    <span>•</span>
+                    <a href="#" className="text-[#c0a480] hover:text-[#f9c86d] transition-colors text-xs">{t("auth.privacyPolicy")}</a>
+                  </div>
+                </div>
+              )}
             </form>
           </motion.div>
         </div>
