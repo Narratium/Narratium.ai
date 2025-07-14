@@ -210,12 +210,6 @@ export default function CharacterPage() {
   const handleRegenerate = async (nodeId: string) => {
     if (!characterId) return;
 
-    // Check if user is authenticated before allowing regeneration
-    if (!isAuthenticated) {
-      setIsLoginModalOpen(true);
-      return;
-    }
-
     try {
       const messageIndex = messages.findIndex(
         (msg) => msg.id === nodeId && msg.role === "assistant",
@@ -481,12 +475,6 @@ export default function CharacterPage() {
   const handleSendMessage = async (message: string) => {
     if (!character || isSending) return;
 
-    // Check if user is authenticated before allowing LLM response
-    if (!isAuthenticated) {
-      setIsLoginModalOpen(true);
-      return;
-    }
-
     try {
       setIsSending(true);
       setError("");
@@ -650,12 +638,6 @@ export default function CharacterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userInput.trim() || isSending) return;
-
-    // Check authentication before processing message
-    if (!isAuthenticated) {
-      setIsLoginModalOpen(true);
-      return;
-    }
 
     let message = userInput;
     let hints: string[] = [];

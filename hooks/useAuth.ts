@@ -27,6 +27,28 @@ export const useAuth = () => {
 
   const checkAuthStatus = async () => {
     try {
+      // Check for guest login first
+      const isLoggedIn = localStorage.getItem("isLoggedIn");
+      const loginMode = localStorage.getItem("loginMode");
+      const username = localStorage.getItem("username");
+      const userId = localStorage.getItem("userId");
+      const email = localStorage.getItem("email");
+
+      if (isLoggedIn === "true" && loginMode === "guest" && username && userId) {
+        // Guest login mode
+        setAuthState({
+          user: {
+            id: userId,
+            username: username,
+            email: email || "",
+          },
+          isLoading: false,
+          isAuthenticated: true,
+        });
+        return;
+      }
+
+      // Regular API-based authentication
       const response = await AuthAPI.getCurrentUser();
       
       if (response?.success && response.user) {
@@ -79,12 +101,23 @@ export const useAuth = () => {
   };
 
   const logout = () => {
+    // Clear all auth-related localStorage items
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("username");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("email");
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("loginMode");
+    
     AuthAPI.logout();
     setAuthState({
       user: null,
       isLoading: false,
       isAuthenticated: false,
     });
+    
+    // Refresh the page to ensure all components are properly updated
+    window.location.reload();
   };
 
   const refreshAuth = () => {

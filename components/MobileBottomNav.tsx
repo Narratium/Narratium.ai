@@ -27,6 +27,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useLanguage } from "@/app/i18n";
+import { useAuth } from "@/hooks/useAuth";
 import "@/app/styles/fantasy-ui.css";
 
 /**
@@ -34,6 +35,7 @@ import "@/app/styles/fantasy-ui.css";
  */
 interface MobileBottomNavProps {
   openLoginModal: () => void;
+  openAccountModal?: () => void;
 }
 
 /**
@@ -48,23 +50,12 @@ interface MobileBottomNavProps {
  * @param {MobileBottomNavProps} props - Component props
  * @returns {JSX.Element | null} The mobile bottom navigation or null on desktop
  */
-export default function MobileBottomNav({ openLoginModal }: MobileBottomNavProps) {
+export default function MobileBottomNav({ openLoginModal, openAccountModal }: MobileBottomNavProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState("");
+  const { isAuthenticated } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
   const { t, fontClass } = useLanguage();
-  
-  useEffect(() => {
-    const loggedIn = localStorage.getItem("isLoggedIn") === "true";
-    const storedUsername = localStorage.getItem("username");
-
-    setIsLoggedIn(loggedIn);
-    if (storedUsername) {
-      setUsername(storedUsername);
-    }
-  }, []);
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -84,14 +75,10 @@ export default function MobileBottomNav({ openLoginModal }: MobileBottomNavProps
     return null;
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("username");
-    localStorage.removeItem("userId");
-
-    setIsLoggedIn(false);
-
-    router.push("/");
+  const handleOpenAccount = () => {
+    if (openAccountModal) {
+      openAccountModal();
+    }
   };
 
   const isActive = (path: string) => {
@@ -165,19 +152,18 @@ export default function MobileBottomNav({ openLoginModal }: MobileBottomNavProps
 
         {/* Login/User */}
         <button
-          onClick={isLoggedIn ? handleLogout : openLoginModal}
+          onClick={isAuthenticated ? handleOpenAccount : openLoginModal}
           className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-300 ${
-            isLoggedIn 
+            isAuthenticated 
               ? "text-[#f8d36a] hover:bg-[#2a231c]/30" 
               : "text-[#a18d6f] hover:text-[#f8d36a] hover:bg-[#2a231c]/30"
           }`}
         >
           <div className="w-6 h-6 flex items-center justify-center mb-1">
-            {isLoggedIn ? (
+            {isAuthenticated ? (
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
               </svg>
             ) : (
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -188,7 +174,7 @@ export default function MobileBottomNav({ openLoginModal }: MobileBottomNavProps
             )}
           </div>
           <span className={`text-[10px] ${fontClass}`}>
-            {isLoggedIn ? t("sidebar.logout") : t("sidebar.nologin")}
+            {isAuthenticated ? t("sidebar.openAccount") : t("sidebar.nologin")}
           </span>
         </button>
       </div>

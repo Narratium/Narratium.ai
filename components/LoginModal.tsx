@@ -12,11 +12,12 @@ interface LoginModalProps {
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const { t, fontClass, titleFontClass, serifFontClass } = useLanguage();
-  const [mode, setMode] = useState<"login" | "register">("login"); // login or register mode
+  const [mode, setMode] = useState<"login" | "register" | "guest">("login"); // login, register or guest mode
   const [registerStep, setRegisterStep] = useState<1 | 2>(1); // registration step: 1 = email/password/code, 2 = username
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [guestName, setGuestName] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -55,6 +56,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     setEmail("");
     setPassword("");
     setVerificationCode("");
+    setGuestName("");
     setError("");
     setCodeSent(false);
     setEmailVerified(false);
@@ -62,7 +64,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     setTempToken("");
   };
 
-  const handleModeSwitch = (newMode: "login" | "register") => {
+  const handleModeSwitch = (newMode: "login" | "register" | "guest") => {
     setMode(newMode);
     resetForm();
   };
@@ -166,7 +168,34 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (mode === "login") {
+    if (mode === "guest") {
+      // Guest login mode - only requires a name
+      if (!guestName.trim()) {
+        setError(t("auth.nameRequired"));
+        return;
+      }
+
+      setIsLoading(true);
+      setError("");
+
+      try {
+        // Store guest data in localStorage
+        localStorage.setItem("username", guestName.trim());
+        localStorage.setItem("userId", `guest_${Date.now()}`);
+        localStorage.setItem("email", "");
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("loginMode", "guest");
+
+        onClose();
+        resetForm();
+        window.location.reload();
+      } catch (err) {
+        console.error("Guest login error:", err);
+        setError(t("auth.loginFailed"));
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (mode === "login") {
       // Login mode - only email and password
       if (!email.trim()) {
         setError(t("auth.emailRequired"));
@@ -251,7 +280,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   };
 
   const getTitle = () => {
-    if (mode === "login") {
+    if (mode === "guest") {
+      return t("auth.guestLogin");
+    } else if (mode === "login") {
       return t("auth.welcomeBack");
     } else {
       if (registerStep === 1) {
@@ -263,7 +294,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   };
 
   const getSubmitButtonText = () => {
-    if (mode === "login") {
+    if (mode === "guest") {
+      return isLoading ? t("auth.entering") : t("auth.enterAsGuest");
+    } else if (mode === "login") {
       return isLoading ? t("auth.loggingIn") : t("auth.login");
     } else {
       if (registerStep === 1) {
@@ -332,6 +365,20 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             )}
 
             <form onSubmit={handleSubmit} className="w-full space-y-4">
+              {mode === "guest" && (
+                <>
+                  {/* Guest: Name Input */}
+                  <div>
+                    {renderInput(
+                      "text",
+                      guestName,
+                      setGuestName,
+                      t("auth.guestNamePlaceholder"),
+                    )}
+                  </div>
+                </>
+              )}
+
               {mode === "login" && (
                 <>
                   {/* Login: Email Input */}
@@ -464,43 +511,65 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
               {/* Submit Button */}
               <div className="text-center mt-8">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={`group relative px-6 py-2.5 bg-transparent border border-[#c0a480] text-[#c0a480] rounded-full text-sm font-medium transition-all duration-500 hover:border-[#f9c86d] hover:text-[#f9c86d] hover:shadow-lg hover:shadow-[#c0a480]/20 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden ${serifFontClass}`}
-                >
-                  {/* Animated background */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#c0a480]/0 via-[#c0a480]/10 to-[#c0a480]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`group relative px-6 py-2.5 bg-transparent border border-[#c0a480] text-[#c0a480] rounded-full text-sm font-medium transition-all duration-500 hover:border-[#f9c86d] hover:text-[#f9c86d] hover:shadow-lg hover:shadow-[#c0a480]/20 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden ${serifFontClass}`}
+                  >
+                    {/* Animated background */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#c0a480]/0 via-[#c0a480]/10 to-[#c0a480]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                   
-                  {/* Subtle inner glow */}
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-[#f9c86d]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    {/* Subtle inner glow */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-[#f9c86d]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   
-                  {/* Button content */}
-                  <div className="relative z-10 flex items-center justify-center gap-2">
-                    {isLoading ? (
-                      <>
-                        <div className="animate-spin w-3.5 h-3.5 border border-[#c0a480] border-t-transparent rounded-full"></div>
-                        <span className="tracking-wide">{getSubmitButtonText()}</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="tracking-wide">{getSubmitButtonText()}</span>
-                        {/* Elegant arrow icon */}
-                        <svg 
-                          className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                        </svg>
-                      </>
-                    )}
-                  </div>
+                    {/* Button content */}
+                    <div className="relative z-10 flex items-center justify-center gap-2">
+                      {isLoading ? (
+                        <>
+                          <div className="animate-spin w-3.5 h-3.5 border border-[#c0a480] border-t-transparent rounded-full"></div>
+                          <span className="tracking-wide">{getSubmitButtonText()}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="tracking-wide">{getSubmitButtonText()}</span>
+                          {/* Elegant arrow icon */}
+                          <svg 
+                            className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          </svg>
+                        </>
+                      )}
+                    </div>
                   
-                  {/* Subtle border animation */}
-                  <div className="absolute inset-0 rounded-full border border-[#f9c86d]/20 scale-105 opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
-                </button>
+                    {/* Subtle border animation */}
+                    <div className="absolute inset-0 rounded-full border border-[#f9c86d]/20 scale-105 opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
+                  </button>
+
+                  {/* Guest Login Button - only show in login mode */}
+                  {mode === "login" && (
+                    <button
+                      type="button"
+                      onClick={() => handleModeSwitch("guest")}
+                      disabled={isLoading}
+                      className={`group relative p-2 bg-transparent border border-[#8a7660] text-[#8a7660] rounded-full text-xs transition-all duration-300 hover:border-[#c0a480] hover:text-[#c0a480] disabled:opacity-50 disabled:cursor-not-allowed ${fontClass}`}
+                      title={t("auth.guestLogin")}
+                    >
+                      <svg 
+                        className="w-3 h-3" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Mode Switch - only show on login or register step 1 */}
@@ -515,6 +584,35 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                     className="ml-2 text-[#c0a480] hover:text-[#f9c86d] transition-colors underline"
                   >
                     {mode === "login" ? t("auth.registerNow") : t("auth.loginNow")}
+                  </button>
+                </div>
+              )}
+
+              {/* Guest Login Info - only show on login mode */}
+              {mode === "login" && (
+                <div className={`text-center mt-3 text-xs text-[#a18d6f] ${fontClass}`}>
+                  <span>
+                    {t("auth.localDeployment")}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleModeSwitch("guest")}
+                    className="ml-2 text-[#c0a480] hover:text-[#f9c86d] transition-colors underline"
+                  >
+                    {t("auth.guestLogin")}
+                  </button>
+                </div>
+              )}
+
+              {/* Guest Mode Back Button */}
+              {mode === "guest" && (
+                <div className={`text-center mt-6 text-xs text-[#a18d6f] ${fontClass}`}>
+                  <button
+                    type="button"
+                    onClick={() => handleModeSwitch("login")}
+                    className="text-[#c0a480] hover:text-[#f9c86d] transition-colors underline"
+                  >
+                    {t("auth.backToLogin")}
                   </button>
                 </div>
               )}

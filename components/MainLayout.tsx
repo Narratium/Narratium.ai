@@ -27,6 +27,7 @@ import Sidebar from "@/components/Sidebar";
 import ModelSidebar from "@/components/ModelSidebar";
 import SettingsDropdown from "@/components/SettingsDropdown";
 import LoginModal from "@/components/LoginModal";
+import AccountModal from "@/components/AccountModal";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import "@/app/styles/fantasy-ui.css";
 
@@ -41,6 +42,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [modelSidebarOpen, setModelSidebarOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -94,12 +96,17 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         isOpen={isLoginModalOpen} 
         onClose={() => setIsLoginModalOpen(false)} 
       />
+      <AccountModal 
+        isOpen={isAccountModalOpen} 
+        onClose={() => setIsAccountModalOpen(false)} 
+      />
       {/* Sidebar - hidden on mobile, visible on desktop */}
       <div className="fixed left-0 top-0 h-full z-10 hidden md:block">
         <Sidebar 
           isOpen={sidebarOpen} 
           toggleSidebar={toggleSidebar} 
           openLoginModal={() => setIsLoginModalOpen(true)} 
+          openAccountModal={() => setIsAccountModalOpen(true)}
         />
       </div>
       <main
@@ -123,7 +130,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav openLoginModal={() => setIsLoginModalOpen(true)} />
+      <MobileBottomNav 
+        openLoginModal={() => setIsLoginModalOpen(true)} 
+        openAccountModal={() => setIsAccountModalOpen(true)}
+      />
     </div>
   );
 }
