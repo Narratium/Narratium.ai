@@ -514,6 +514,7 @@
     "importFailed": "导入失败。",
     "unknownAuthor": "未知",
     "allCharacters": "全部 ({count})",
+    "all": "全部",
     "tagFilter": "标签",
     "tags": {
       "Cultivation": "修仙",
@@ -530,7 +531,9 @@
     "viewNsfw": "查看",
     "by": "作者：",
     "importing": "导入中...",
-    "downloadAndImport": "下载并导入"
+    "downloadAndImport": "下载并导入",
+    "downloadShort": "下载",
+    "importingShort": "导入中..."
   },
   "creatorInput": {
     "title": "Creator Studio",

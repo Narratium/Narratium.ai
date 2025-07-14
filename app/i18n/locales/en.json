@@ -726,6 +726,7 @@
     "importFailed": "Import failed.",
     "unknownAuthor": "Unknown",
     "allCharacters": "All ({count})",
+    "all": "All",
     "tagFilter": "Tags",
     "tags": {
       "Cultivation": "Cultivation",
@@ -742,7 +743,9 @@
     "viewNsfw": "View",
     "by": "By",
     "importing": "Importing...",
-    "downloadAndImport": "Download & Import"
+    "downloadAndImport": "Download & Import",
+    "downloadShort": "Download",
+    "importingShort": "Importing..."
   },
   "creatorInput": {
     "title": "Creator Studio",
