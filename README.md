@@ -13,7 +13,7 @@
 
 <br>
 
-![Narratium.ai](https://raw.githubusercontent.com/Narratium/Narratium.ai/main/public/banner.png)
+![Narratium.ai](/public/banner.png)
 
 <p align="center">
   <em>An open-source AI character platform to build, customize, and chat with virtual personas</em>
@@ -67,17 +67,17 @@
 | Version Information |
 | :---------------- |
 
-- **main**: Stable version branch, regularly builds desktop versions through pake
-- **dev**: Development version branch, with multiple commits daily
+- **main**: Stable version branch, regularly builds desktop versions through pake.
+- **dev**: Development version branch, with multiple commits daily.
 
 | Quickly Start |
 | :---------- |
 
-For detailed installation and setup instructions, please refer to our [Getting Started Guide](./docs/GETTING_STARTED.md)
+For detailed installation and setup instructions, please refer to our [Getting Started Guide](./docs/GETTING_STARTED.md).
 
 For detailed Vercel deployment instructions, please refer to the [Vercel Deployment Guide](./docs/VERCEL_DEPLOYMENT.md).
 
-For Download Version: please refer to the [Download for Mac, Windows, Linux](https://github.com/Narratium/Narratium.ai/releases)
+For Download Version: please refer to the [Download for Mac, Windows, Linux](https://github.com/Narratium/Narratium.ai/releases).
 
 | Features |
 | :------- |
@@ -85,6 +85,15 @@ For Download Version: please refer to the [Download for Mac, Windows, Linux](htt
 - **Immersive Adventure Mode**: Create personalized worlds and make decisions that matter.
 - **Visual Memory Management**: React Flow-powered session tracing and branching.
 - **Character Cards & Lore**: Compatible with SillyTavern cards, manage everything in one place.
+
+| API Recommendations & Configuration |
+| :-------------- |
+
+**Recommended API Services**:
+- **OpenAI**: Directly supports models using the OpenAI API format.
+- **OpenRouter**: Recommended to use [OpenRouter](https://openrouter.ai/) for unified access to various models.
+- **Relay Service Deployment**: Recommended [new-api](https://github.com/QuantumNous/new-api).
+- **Local Deployment**: Supports local inference services like Ollama, LM Studio, etc.
 
 | Narratium vs. Other AI Roleplay Platforms |
 | :---------------------------------------- |
@@ -95,11 +104,13 @@ For Download Version: please refer to the [Download for Mac, Windows, Linux](htt
     <th align="center">Narratium.ai</th>
     <th align="center">SillyTavern</th>
     <th align="center">AI Dungeon</th>
+    <th align="center">fount</th>
   </tr>
   <tr>
     <td><strong>Open Source</strong></td>
     <td align="center">✅</td>
     <td align="center">✅</td>
+    <td align="center">❌</td>
     <td align="center">❌</td>
   </tr>
   <tr>
@@ -107,11 +118,13 @@ For Download Version: please refer to the [Download for Mac, Windows, Linux](htt
     <td align="center">✅</td>
     <td align="center">❌ (complex setup)</td>
     <td align="center">✅ (but limited flow)</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>Character Memory &amp; Tracking</strong></td>
     <td align="center">✅</td>
     <td align="center">⚠️ (plugin-based)</td>
+    <td align="center">❌</td>
     <td align="center">❌</td>
   </tr>
   <tr>
@@ -119,17 +132,20 @@ For Download Version: please refer to the [Download for Mac, Windows, Linux](htt
     <td align="center">✅</td>
     <td align="center">⚠️ (via extensions)</td>
     <td align="center">❌</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>Long-term Conversation Support</strong></td>
     <td align="center">✅</td>
     <td align="center">✅</td>
     <td align="center">❌ (limited context)</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>Offline / Local Deployment</strong></td>
     <td align="center">✅</td>
     <td align="center">✅</td>
+    <td align="center">❌</td>
     <td align="center">❌</td>
   </tr>
   <tr>
@@ -137,12 +153,14 @@ For Download Version: please refer to the [Download for Mac, Windows, Linux](htt
     <td align="center">✅</td>
     <td align="center">❌ (minimal)</td>
     <td align="center">✅</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>Infinite Branching Storylines</strong></td>
     <td align="center">✅</td>
     <td align="center">⚠️ (manual effort)</td>
     <td align="center">✅ (but unstable)</td>
+    <td align="center">❌</td>
   </tr>
 </table>
 
@@ -151,8 +169,9 @@ For Download Version: please refer to the [Download for Mac, Windows, Linux](htt
 
 This project consists of two distinct parts with independent licenses:
 
-- ✅ Code: MIT License — open for commercial and non-commercial use with attribution.
+- 🔐 Code: AGPL-3.0 License — copyleft license requiring source code disclosure for network services, with mandatory GitHub attribution.
 - 🔒 Content: CC BY-NC-SA 4.0 — non-commercial use only, with attribution and same-license sharing required.
+- 🌐 Web Deployment: Must display visible link to https://github.com/Narratium/Narratium.ai
 
 > For full license details, please refer to the [LICENSE](./LICENSE).
 

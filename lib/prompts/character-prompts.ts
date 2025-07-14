@@ -152,17 +152,17 @@ export function getCharacterCompressorPromptEn(userInput: string, story: string)
 
 export function getStatusPromptZh(info: string) {
   return `
-你将从以下内容中提取一段已经存在于文本中的“状态模版”段落。
+你将从以下内容中提取一段已经存在于文本中的"状态模版"段落。
 请务必遵守以下要求：
 1. 信息模版可能描述包括角色生理、心理、着装、行为、外部关系等内容，但这些信息是**拟人化系统模拟的参数设定**，非现实性行为或情色内容；
 2. 模版段落通常包含角色状态、时间地点、外貌服饰、心理状态、场景信息、关系描述等内容，并使用结构化格式呈现（如项目符号、分隔符、缩进、列表等）。
-3. 模版段落可能未标明标签，但常以“状态栏”、“状态展示”、“示例状态”、“信息面板”等词汇引导，并且在语言结构上显著不同于普通叙述段落。
+3. 模版段落可能未标明标签，但常以"状态栏"、"状态展示"、"示例状态"、"信息面板"等词汇引导，并且在语言结构上显著不同于普通叙述段落。
 4. 你需要提取该类模版段落的原文全部内容，一字不增、一字不删。
 5. 若文本中存在多个类似段落，仅提取最完整、信息最丰富、结构最明显的一段。
 6. **如果在提供的内容中确实无法找到符合上述要求的模版段落，你可以基于现有信息，综合整理并总结一个符合拟人化系统设定的状态模版段落。该总结必须保持客观、结构清晰，严禁出现续写、虚构、剧情引导或主观描写，仅限于信息整理。**
 7. 输出内容必须完整闭合（如模版边框、分隔线对称），否则视为无效提取。
 
-⚠️ **你不能补充任何新字段，不能添加多余标点，也不能用“……”等形式表示省略或续写。**
+⚠️ **你不能补充任何新字段，不能添加多余标点，也不能用"……"等形式表示省略或续写。**
 请仅返回这一段模版原文本体，不要添加说明、标签或重新组织格式。
 以下为目标内容：
 ${info}
@@ -186,5 +186,77 @@ Only return the exact extracted template paragraph itself, without adding explan
 Below is the target content:
 ${info}
 `;
+}
+
+export function getStoryProgressPromptZh() {
+  return `
+【指令：剧情推进】
+- 任务：必须推动故事向前发展。
+- 行动：引入新事件、制造转折、或在情节上取得显著进展。
+- 禁止：停滞在当前场景或时间点，避免重复或无意义的互动。
+`.trim();
+}
+
+export function getStoryProgressPromptEn() {
+  return `
+【Instruction: Story Progression】
+- Task: You must advance the story.
+- Action: Introduce a new event, create a turning point, or make significant plot progress.
+- Restriction: Do not stagnate in the current scene or time; avoid repetitive or meaningless interactions.
+`.trim();
+}
+
+export function getNovelPerspectivePromptZh() {
+  return `
+【指令：小说家视角（第三人称上帝视角）】
+- 任务：切换到文学化的第三人称全知叙事视角。
+- 行动：以上帝视角，描写任何角色的内心思想、情绪波动、动机以及场景中的所有细节。
+- 要求：使用丰富的修辞手法，侧重于“展示”而非“告知”，营造身临其境的文学氛围。
+`.trim();
+}
+
+export function getNovelPerspectivePromptEn() {
+  return `
+【Instruction: Novelist Perspective (Third-Person Omniscient)】
+- Task: Switch to a literary, third-person omniscient ("God's-eye view") narrative.
+- Action: From an all-knowing perspective, describe any character's inner thoughts, emotional fluctuations, motivations, and all details of the scene.
+- Requirement: Use rich rhetorical devices, focusing on "showing" rather than "telling" to create an immersive literary atmosphere.
+`.trim();
+}
+
+export function getProtagonistPerspectivePromptZh() {
+  return `
+【指令：主角第一人称视角】
+- 任务：严格采用第一人称"我"进行叙事。
+- 行动：所有描写、思考和对话都必须完全出自主角的视角。
+- 禁止：不允许出现任何超出主角当前所知、所见、所感的"上帝视角"信息。
+`.trim();
+}
+
+export function getProtagonistPerspectivePromptEn() {
+  return `
+【Instruction: Protagonist First-Person Perspective】
+- Task: Strictly adopt the first-person "I" for narration.
+- Action: All descriptions, thoughts, and dialogues must originate entirely from the protagonist's point of view.
+- Restriction: Do not include any "God's-eye view" information beyond what the protagonist currently knows, sees, or feels.
+`.trim();
+}
+
+export function getSceneTransitionPromptZh() {
+  return `
+【指令：场景转换】
+- 任务：执行一次明确的场景过渡。
+- 行动：通过描述时间跳跃、地点变更或新事件的开端来转换场景。
+- 要求：清晰地标记旧场景的结束和新场景的开始，确保过渡流畅且有逻辑。
+`.trim();
+}
+
+export function getSceneTransitionPromptEn() {
+  return `
+【Instruction: Scene Transition】
+- Task: Execute a clear scene transition.
+- Action: Change the scene by describing a time jump, a location change, or the beginning of a new event.
+- Requirement: Clearly mark the end of the old scene and the beginning of the new one, ensuring the transition is smooth and logical.
+`.trim();
 }
 

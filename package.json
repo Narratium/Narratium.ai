@@ -2,6 +2,7 @@
   "name": "Narratium",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0",
   "main": "electron/main.js",
   "scripts": {
     "dev": "next dev --turbopack",
@@ -14,6 +15,7 @@
     "pake-linux": "pake out/index.html --name narratium --use-local-file --icon ./public/icon.png"
   },
   "dependencies": {
+    "@fal-ai/client": "^1.5.0",
     "@langchain/core": "^0.3.61",
     "@langchain/langgraph": "^0.3.4",
     "@langchain/ollama": "^0.2.0",
@@ -42,6 +44,7 @@
     "react-markdown": "^10.1.0",
     "react-parallax-tilt": "^1.7.297",
     "reactflow": "^11.11.4",
+    "sharp": "^0.34.2",
     "uuid": "^11.1.0",
     "zod": "^3.25.67",
     "zustand": "^5.0.5"

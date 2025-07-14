@@ -35,6 +35,7 @@ import { getAllCharacters } from "@/function/character/list";
 import { deleteCharacter } from "@/function/character/delete";
 import { handleCharacterUpload } from "@/function/character/import";
 import { trackButtonClick } from "@/utils/google-analytics";
+import { moveToTop } from "@/function/character/move-to-top";
 
 /**
  * Interface defining the structure of a character object
@@ -181,6 +182,22 @@ export default function CharacterCards() {
       fetchCharacters();
     } catch (err) {
       console.error("Error deleting character:", err);
+      setIsLoading(false);
+    }
+  };
+
+  const handleMoveCharToTop = async (characterId: string) => {
+    setIsLoading(true);
+    try {
+      const response = await moveToTop(characterId);
+
+      if (!response.success) {
+        throw new Error(t("characterCardsPage.topFailed"));
+      }
+
+      fetchCharacters();
+    } catch (err) {
+      console.error("Error moving character to top:", err);
       setIsLoading(false);
     }
   };
@@ -443,6 +460,7 @@ export default function CharacterCards() {
                 characters={characters}
                 onEditClick={handleEditClick}
                 onDeleteClick={handleDeleteCharacter}
+                onMoveToTopClick={handleMoveCharToTop}
               />
             ) : (
               <CharacterCardCarousel

@@ -2,14 +2,14 @@ import {
   ToolType, 
   ExecutionContext, 
   ExecutionResult,
-} from "@/lib/models/agent-model";
-import { BaseSimpleTool, ToolParameter, DetailedToolInfo } from "@/lib/tools/base-tool";
+} from "../../models/agent-model";
+import { BaseTool, ToolParameter, DetailedToolInfo } from "../base-tool";
 
 /**
  * Complete Tool - Session Termination Unit
  * Validates completion status and signals when session should end
  */
-export class CompleteTool extends BaseSimpleTool {
+export class CompleteTool extends BaseTool {
   
   readonly toolType = ToolType.COMPLETE;
   readonly name = "COMPLETE";

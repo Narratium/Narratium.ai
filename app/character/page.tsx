@@ -1,6 +1,6 @@
 /**
  * Character Page Component
- * 
+ *
  * This is the main character interaction page that provides:
  * - Real-time chat interface with character
  * - World book editing capabilities
@@ -9,10 +9,10 @@
  * - Message history and regeneration
  * - Branch switching in conversations
  * - User tour functionality
- * 
+ *
  * The page handles all character interactions and provides a rich
  * set of features for managing character dialogues and settings.
- * 
+ *
  * Dependencies:
  * - CharacterSidebar: For character navigation
  * - CharacterChatPanel: For chat interface
@@ -62,7 +62,7 @@ interface Message {
 
 /**
  * Main character interaction page component
- * 
+ *
  * Manages all character interactions and provides a comprehensive interface for:
  * - Chat functionality with message history
  * - World book editing
@@ -70,14 +70,20 @@ interface Message {
  * - Preset configuration
  * - Message regeneration and branch switching
  * - User tour and onboarding
- * 
+ *
  * @returns {JSX.Element} The complete character interaction interface
  */
 export default function CharacterPage() {
   const searchParams = useSearchParams();
   const characterId = searchParams.get("id");
   const { t, fontClass, serifFontClass } = useLanguage();
-  const { isTourVisible, currentTourSteps, startCharacterTour, completeTour, skipTour } = useTour();
+  const {
+    isTourVisible,
+    currentTourSteps,
+    startCharacterTour,
+    completeTour,
+    skipTour,
+  } = useTour();
 
   const [character, setCharacter] = useState<Character | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -86,13 +92,15 @@ export default function CharacterPage() {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const [userInput, setUserInput] = useState("");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [suggestedInputs, setSuggestedInputs] = useState<string[]>([]);
   const initializationRef = useRef(false);
-  const [activeView, setActiveView] = useState<"chat" | "worldbook" | "regex" | "preset">("chat");
+  const [activeView, setActiveView] = useState<
+    "chat" | "worldbook" | "regex" | "preset"
+  >("chat");
   const [activeModes, setActiveModes] = useState<Record<string, any>>({
     "story-progress": false,
-    "perspective": {
+    perspective: {
       active: false,
       mode: "novel",
     },
@@ -101,12 +109,13 @@ export default function CharacterPage() {
 
   // Add loading phase tracking for better user feedback
   const [loadingPhase, setLoadingPhase] = useState<string>("");
-  
+
   // Add error toast state
   const [errorToast, setErrorToast] = useState({
     isVisible: false,
     message: "",
   });
+  const [isMobile, setIsMobile] = useState(false);
 
   const showErrorToast = useCallback((message: string) => {
     setErrorToast({
@@ -122,40 +131,53 @@ export default function CharacterPage() {
     });
   }, []);
 
-  const switchToView = (targetView: "chat" | "worldbook" | "regex" | "preset") => {
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const switchToView = (
+    targetView: "chat" | "worldbook" | "regex" | "preset",
+  ) => {
     setActiveView(targetView);
   };
 
   const toggleView = () => {
-    setActiveView(prev => prev === "chat" ? "worldbook" : "chat");
+    setActiveView((prev) => (prev === "chat" ? "worldbook" : "chat"));
   };
 
   const toggleRegexEditor = () => {
-    setActiveView(prev => prev === "regex" ? "chat" : "regex");
+    setActiveView((prev) => (prev === "regex" ? "chat" : "regex"));
   };
 
   const truncateMessagesAfter = async (nodeId: string) => {
     if (!characterId) return;
-    
+
     try {
-      const messageIndex = messages.findIndex(msg => msg.id == nodeId);
+      const messageIndex = messages.findIndex((msg) => msg.id == nodeId);
       if (messageIndex === -1) {
         console.warn(`Dialogue branch not found: ${nodeId}`);
         return;
       }
-  
+
       const response = await switchDialogueBranch({
         characterId,
         nodeId,
       });
-      
+
       if (!response.success) {
         console.error("Failed to truncate messages", response);
         return;
       }
-      
+
       const dialogue = response.dialogue;
-      
+
       if (dialogue) {
         setTimeout(() => {
           const formattedMessages = dialogue.messages.map((msg: any) => ({
@@ -166,7 +188,7 @@ export default function CharacterPage() {
           }));
 
           setMessages(formattedMessages);
-          
+
           const lastMessage = dialogue.messages[dialogue.messages.length - 1];
           if (lastMessage && lastMessage.parsedContent?.nextPrompts) {
             setSuggestedInputs(lastMessage.parsedContent.nextPrompts);
@@ -183,9 +205,11 @@ export default function CharacterPage() {
 
   const handleRegenerate = async (nodeId: string) => {
     if (!characterId) return;
-    
+
     try {
-      const messageIndex = messages.findIndex(msg => msg.id === nodeId && msg.role === "assistant");
+      const messageIndex = messages.findIndex(
+        (msg) => msg.id === nodeId && msg.role === "assistant",
+      );
       if (messageIndex === -1) {
         console.warn(`Message not found: ${nodeId}`);
         return;
@@ -217,9 +241,9 @@ export default function CharacterPage() {
         console.error("Failed to delete message", response);
         return;
       }
-      
+
       const dialogue = response.dialogue;
-      
+
       if (dialogue) {
         setTimeout(() => {
           const formattedMessages = dialogue.messages.map((msg: any) => ({
@@ -230,7 +254,7 @@ export default function CharacterPage() {
           }));
 
           setMessages(formattedMessages);
-          
+
           const lastMessage = dialogue.messages[dialogue.messages.length - 1];
           if (lastMessage && lastMessage.parsedContent?.nextPrompts) {
             setSuggestedInputs(lastMessage.parsedContent.nextPrompts);
@@ -243,7 +267,6 @@ export default function CharacterPage() {
       setTimeout(async () => {
         await handleSendMessage(userMessage.content);
       }, 300);
-
     } catch (error) {
       console.error("Error regenerating message:", error);
     }
@@ -255,11 +278,15 @@ export default function CharacterPage() {
     try {
       const username = localStorage.getItem("username") || undefined;
       const currentLanguage = localStorage.getItem("language") as "en" | "zh";
-      const response = await getCharacterDialogue(characterId, currentLanguage, username);
+      const response = await getCharacterDialogue(
+        characterId,
+        currentLanguage,
+        username,
+      );
       if (!response.success) {
         throw new Error(`Failed to load dialogue: ${response}`);
       }
-      
+
       const dialogue = response.dialogue;
 
       if (dialogue && dialogue.messages) {
@@ -270,14 +297,17 @@ export default function CharacterPage() {
           content: msg.content,
         }));
         setMessages(formattedMessages);
-        setSuggestedInputs(dialogue.messages[dialogue.messages.length - 1].parsedContent?.nextPrompts || []);
+        setSuggestedInputs(
+          dialogue.messages[dialogue.messages.length - 1].parsedContent
+            ?.nextPrompts || [],
+        );
       } else {
       }
     } catch (err) {
       console.error("Error refreshing dialogue:", err);
     }
   };
-  
+
   useEffect(() => {
     const loadCharacterAndDialogue = async () => {
       if (!characterId) {
@@ -285,30 +315,34 @@ export default function CharacterPage() {
         setIsLoading(false);
         return;
       }
-      
+
       // Start loading immediately when characterId changes
       setIsLoading(true);
       setIsInitializing(false);
       setError("");
       setLoadingPhase(t("characterChat.loading"));
-      
+
       // Reset initialization ref for new character
       initializationRef.current = false;
-      
+
       // Add minimum loading time to ensure user sees the loading animation
       const startTime = Date.now();
       const minLoadingTime = 500; // 500ms minimum loading time
-      
+
       try {
         const username = localStorage.getItem("username") || undefined;
         const currentLanguage = localStorage.getItem("language") as "en" | "zh";
-        
+
         setLoadingPhase(t("characterChat.loading"));
-        const response = await getCharacterDialogue(characterId, currentLanguage, username);
+        const response = await getCharacterDialogue(
+          characterId,
+          currentLanguage,
+          username,
+        );
         if (!response.success) {
           throw new Error(`Failed to load character: ${response}`);
         }
-        
+
         const dialogue = response.dialogue;
         const character = response.character;
 
@@ -318,7 +352,7 @@ export default function CharacterPage() {
           personality: character.data.personality,
           avatar_path: character.imagePath,
         };
-        
+
         // Set character data but keep loading if we need to initialize dialogue
         setCharacter(characterInfo);
 
@@ -331,26 +365,28 @@ export default function CharacterPage() {
             content: msg.content,
           }));
           setMessages(formattedMessages);
-          setSuggestedInputs(dialogue.messages[dialogue.messages.length - 1].parsedContent?.nextPrompts || []);
-          
+          setSuggestedInputs(
+            dialogue.messages[dialogue.messages.length - 1].parsedContent
+              ?.nextPrompts || [],
+          );
+
           // Ensure minimum loading time has passed
           const elapsedTime = Date.now() - startTime;
           const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
-          
+
           if (remainingTime > 0) {
-            await new Promise(resolve => setTimeout(resolve, remainingTime));
+            await new Promise((resolve) => setTimeout(resolve, remainingTime));
           }
-          
+
           // All data loaded successfully
           setIsLoading(false);
-        }
-        else if (!initializationRef.current) {
+        } else if (!initializationRef.current) {
           // Need to initialize new dialogue - keep loading state
           setLoadingPhase(t("characterChat.initializing"));
           setIsInitializing(true);
           initializationRef.current = true;
           await initializeNewDialogue(characterId);
-          
+
           // Initialization complete
           setIsInitializing(false);
           setIsLoading(false);
@@ -360,10 +396,25 @@ export default function CharacterPage() {
         }
       } catch (err) {
         console.error("Error loading character or dialogue:", err);
-        const errorMessage = typeof err === "object" && err !== null && "message" in err 
-          ? (err as Error).message 
-          : "Failed to load character";
-        setError(errorMessage);
+        const errorMessage =
+          typeof err === "object" && err !== null && "message" in err
+            ? (err as Error).message
+            : "Failed to load character";
+
+        // 检查是否是角色不存在的错误
+        if (
+          errorMessage.includes("Character not found") ||
+          errorMessage.includes("Character record is required")
+        ) {
+          setError("角色不存在或已被删除");
+          // 延迟重定向到角色卡片页面
+          setTimeout(() => {
+            window.location.href = "/character-cards";
+          }, 2000);
+        } else {
+          setError(errorMessage);
+        }
+
         setIsLoading(false);
         setIsInitializing(false);
       }
@@ -378,10 +429,17 @@ export default function CharacterPage() {
       const username = localStorage.getItem("username") || "";
       const language = localStorage.getItem("language") || "zh";
       const llmType = localStorage.getItem("llmType") || "openai";
-      const modelName = localStorage.getItem(llmType === "openai" ? "openaiModel" : "ollamaModel") || "";
-      const baseUrl = localStorage.getItem(llmType === "openai" ? "openaiBaseUrl" : "ollamaBaseUrl") || "";
-      const apiKey = llmType === "openai" ? (localStorage.getItem("openaiApiKey") || "") : "";
-      
+      const modelName =
+        localStorage.getItem(
+          llmType === "openai" ? "openaiModel" : "ollamaModel",
+        ) || "";
+      const baseUrl =
+        localStorage.getItem(
+          llmType === "openai" ? "openaiBaseUrl" : "ollamaBaseUrl",
+        ) || "";
+      const apiKey =
+        llmType === "openai" ? localStorage.getItem("openaiApiKey") || "" : "";
+
       const initData = await initCharacterDialogue({
         username,
         characterId: charId,
@@ -396,11 +454,13 @@ export default function CharacterPage() {
         throw new Error(`Failed to initialize dialogue: ${initData}`);
       }
       if (initData.firstMessage) {
-        setMessages([{
-          id: initData.nodeId,
-          role: "assistant",
-          content: initData.firstMessage,
-        }]);
+        setMessages([
+          {
+            id: initData.nodeId,
+            role: "assistant",
+            content: initData.firstMessage,
+          },
+        ]);
       }
     } catch (error) {
       console.error("Error initializing dialogue:", error);
@@ -414,21 +474,28 @@ export default function CharacterPage() {
     try {
       setIsSending(true);
       setError("");
-      
+
       setSuggestedInputs([]);
       const userMessage = {
         id: new Date().toISOString() + "-user",
         role: "user",
         thinkingContent: "",
         content: message,
-      }; 
+      };
       setMessages((prev) => [...prev, userMessage]);
 
       const language = localStorage.getItem("language") || "zh";
       const llmType = localStorage.getItem("llmType") || "openai";
-      const modelName = localStorage.getItem(llmType === "openai" ? "openaiModel" : "ollamaModel") || "";
-      const baseUrl = localStorage.getItem(llmType === "openai" ? "openaiBaseUrl" : "ollamaBaseUrl") || "";
-      const apiKey = llmType === "openai" ? (localStorage.getItem("openaiApiKey") || "") : "";
+      const modelName =
+        localStorage.getItem(
+          llmType === "openai" ? "openaiModel" : "ollamaModel",
+        ) || "";
+      const baseUrl =
+        localStorage.getItem(
+          llmType === "openai" ? "openaiBaseUrl" : "ollamaBaseUrl",
+        ) || "";
+      const apiKey =
+        llmType === "openai" ? localStorage.getItem("openaiApiKey") || "" : "";
       const storedNumber = localStorage.getItem("responseLength");
       const username = localStorage.getItem("username") || "";
       const responseLength = storedNumber ? parseInt(storedNumber) : 200;
@@ -455,7 +522,7 @@ export default function CharacterPage() {
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
         const assistantMessage = {
           id: nodeId,
@@ -463,8 +530,8 @@ export default function CharacterPage() {
           thinkingContent: result.thinkingContent ?? "",
           content: result.content || "",
         };
-        setMessages(prev => [...prev, assistantMessage]);
-        
+        setMessages((prev) => [...prev, assistantMessage]);
+
         if (result.parsedContent?.nextPrompts) {
           setSuggestedInputs(result.parsedContent.nextPrompts);
         }
@@ -481,7 +548,9 @@ export default function CharacterPage() {
 
   useEffect(() => {
     if (character && !isLoading && !isInitializing && !error) {
-      const hasSeenCharacterTour = localStorage.getItem("narratium_character_tour_completed");
+      const hasSeenCharacterTour = localStorage.getItem(
+        "narratium_character_tour_completed",
+      );
       if (!hasSeenCharacterTour) {
         setTimeout(() => {
           startCharacterTour();
@@ -503,11 +572,21 @@ export default function CharacterPage() {
         }
       }
     };
-    
+
+    // Handle closing character sidebar when model sidebar opens on mobile
+    const handleCloseCharacterSidebar = () => {
+      setSidebarCollapsed(true);
+    };
+
     window.addEventListener("switchToPresetView", handleSwitchToPresetView);
-    
+    window.addEventListener("closeCharacterSidebar", handleCloseCharacterSidebar);
+
     return () => {
-      window.removeEventListener("switchToPresetView", handleSwitchToPresetView);
+      window.removeEventListener(
+        "switchToPresetView",
+        handleSwitchToPresetView,
+      );
+      window.removeEventListener("closeCharacterSidebar", handleCloseCharacterSidebar);
     };
   }, []);
 
@@ -523,7 +602,9 @@ export default function CharacterPage() {
           {loadingPhase}
         </p>
         {isInitializing && (
-          <p className={`text-[#a18d6f] text-xs mt-4 max-w-xs text-center ${fontClass}`}>
+          <p
+            className={`text-[#a18d6f] text-xs mt-4 max-w-xs text-center ${fontClass}`}
+          >
             {t("characterChat.loadingTimeHint")}
           </p>
         )}
@@ -534,8 +615,12 @@ export default function CharacterPage() {
   if (error || !character) {
     return (
       <div className="flex flex-col items-center justify-center h-full fantasy-bg">
-        <h1 className="text-2xl text-[#f4e8c1] mb-4">{t("characterChat.error")}</h1>
-        <p className="text-[#c0a480] mb-6">{error || t("characterChat.characterNotFound")}</p>
+        <h1 className="text-2xl text-[#f4e8c1] mb-4">
+          {t("characterChat.error")}
+        </h1>
+        <p className="text-[#c0a480] mb-6">
+          {error || t("characterChat.characterNotFound")}
+        </p>
         <a
           href="/character-cards"
           className="bg-[#252220] hover:bg-[#342f25] text-[#f4e8c1] font-medium py-2 px-4 rounded border border-[#534741]"
@@ -549,15 +634,15 @@ export default function CharacterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userInput.trim() || isSending) return;
-  
+
     let message = userInput;
     let hints: string[] = [];
-  
+
     if (activeModes["story-progress"]) {
       const progressHint = t("characterChat.storyProgressHint");
       hints.push(progressHint);
     }
-  
+
     if (activeModes["perspective"].active) {
       if (activeModes["perspective"].mode === "novel") {
         const novelHint = t("characterChat.novelPerspectiveHint");
@@ -567,12 +652,12 @@ export default function CharacterPage() {
         hints.push(protagonistHint);
       }
     }
-  
+
     if (activeModes["scene-setting"]) {
       const sceneSettingHint = t("characterChat.sceneTransitionHint");
       hints.push(sceneSettingHint);
     }
-  
+
     if (hints.length > 0) {
       message = `
       <input_message>
@@ -589,13 +674,21 @@ export default function CharacterPage() {
       </input_message>
           `.trim();
     }
-  
+
     setUserInput("");
     await handleSendMessage(message);
   };
 
   const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
+    const newSidebarState = !sidebarCollapsed;
+    setSidebarCollapsed(newSidebarState);
+    
+    // On mobile, when opening CharacterSidebar, close ModelSidebar to prevent conflicts
+    if (isMobile && !newSidebarState) {
+      // Dispatch custom event to notify MainLayout to close ModelSidebar
+      const closeModelSidebarEvent = new CustomEvent("closeModelSidebar");
+      window.dispatchEvent(closeModelSidebarEvent);
+    }
   };
 
   const handleSuggestedInput = (input: string) => {
@@ -603,9 +696,12 @@ export default function CharacterPage() {
   };
 
   return (
-    <div className="flex h-full relative fantasy-bg overflow-hidden " style={{ 
-      left: "var(--app-sidebar-width, 0)", 
-    }}>
+    <div
+      className="flex h-full relative fantasy-bg overflow-hidden "
+      style={{
+        left: "var(--app-sidebar-width, 0)",
+      }}
+    >
       <CharacterSidebar
         character={character}
         isCollapsed={sidebarCollapsed}
@@ -620,7 +716,7 @@ export default function CharacterPage() {
       />
 
       <div
-        className={`${sidebarCollapsed ? "w-full" : "w-3/4 md:w-3/4"} fantasy-bg h-full transition-all duration-300 ease-in-out flex flex-col`}
+        className={`${sidebarCollapsed ? "w-full" : "hidden md:block md:w-3/4"} fantasy-bg h-full transition-all duration-300 ease-in-out flex flex-col`}
       >
         <CharacterChatHeader
           character={character}
@@ -683,10 +779,10 @@ export default function CharacterPage() {
           localStorage.setItem("narratium_character_tour_completed", "true");
         }}
       />
-      <ErrorToast 
-        message={errorToast.message} 
-        isVisible={errorToast.isVisible} 
-        onClose={hideErrorToast} 
+      <ErrorToast
+        message={errorToast.message}
+        isVisible={errorToast.isVisible}
+        onClose={hideErrorToast}
       />
     </div>
   );

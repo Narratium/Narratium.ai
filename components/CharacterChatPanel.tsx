@@ -1,6 +1,6 @@
 /**
  * Character Chat Panel Component
- * 
+ *
  * This component implements the main chat interface for character interactions, featuring:
  * - Real-time message display with HTML formatting
  * - Character avatar and name display
@@ -8,10 +8,10 @@
  * - Suggested input system
  * - Auto-scrolling chat history
  * - Fantasy-themed UI elements
- * 
+ *
  * The component handles both user and character messages, with special formatting
  * and interactive features for each message type.
- * 
+ *
  * Dependencies:
  * - ChatHtmlBubble: For rendering formatted chat messages
  * - CharacterAvatarBackground: For character avatar display
@@ -80,7 +80,7 @@ interface Props {
 
 /**
  * Main chat panel component that handles character interactions
- * 
+ *
  * @param {Props} props - Component properties including character data, messages, and callbacks
  * @returns {JSX.Element} The complete chat interface with message history and input controls
  */
@@ -103,7 +103,7 @@ export default function CharacterChatPanel({
 }: Props) {
   const [streamingTarget, setStreamingTarget] = useState<number>(-1);
   const scrollRef = useRef<HTMLDivElement>(null);
-  
+
   // API Configuration states
   const [configs, setConfigs] = useState<APIConfig[]>([]);
   const [activeConfigId, setActiveConfigId] = useState<string>("");
@@ -117,18 +117,25 @@ export default function CharacterChatPanel({
     if (savedStreaming !== null) {
       const isStreamingEnabled = savedStreaming === "true";
       if (isStreamingEnabled && messages.length > 0) {
-        setActiveModes(prev => ({
+        setActiveModes((prev) => ({
           ...prev,
           streaming: true,
         }));
         setStreamingTarget(messages.length);
       } else {
-        setActiveModes(prev => ({
+        setActiveModes((prev) => ({
           ...prev,
           streaming: false,
         }));
         setStreamingTarget(-1);
       }
+    } else {
+      // 默认开启流式传输
+      setActiveModes((prev) => ({
+        ...prev,
+        streaming: true,
+      }));
+      localStorage.setItem("streamingEnabled", "true");
     }
   }, []);
 
@@ -136,7 +143,7 @@ export default function CharacterChatPanel({
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  };  
+  };
 
   const maybeScrollToBottom = (threshold = 120) => {
     const el = scrollRef.current;
@@ -153,27 +160,27 @@ export default function CharacterChatPanel({
     if (isSending) return false;
     if (message.role !== "assistant") return false;
     if (index !== messages.length - 1) return false;
-    
+
     return true;
   };
 
   // API configuration helper functions
   const getCurrentConfig = () => {
-    return configs.find(c => c.id === activeConfigId);
+    return configs.find((c) => c.id === activeConfigId);
   };
 
   // Get icon based on configuration name (for first level)
   const getConfigIcon = (configName: string) => {
     const name = configName.toLowerCase();
-    
+
     if (name.includes("deepseek") || name.includes("deep-seek")) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/deepseek.svg" 
-            alt="DeepSeek" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/deepseek.svg"
+            alt="DeepSeek"
+            width={20}
+            height={20}
             className="object-cover w-full h-full"
           />
         </div>
@@ -181,11 +188,11 @@ export default function CharacterChatPanel({
     } else if (name.includes("claude") || name.includes("anthropic")) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/claude.svg" 
-            alt="Claude" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/claude.svg"
+            alt="Claude"
+            width={20}
+            height={20}
             className="object-cover w-full h-full"
           />
         </div>
@@ -193,49 +200,51 @@ export default function CharacterChatPanel({
     } else if (name.includes("gemini") || name.includes("google")) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/gemini.svg" 
-            alt="Gemini" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/gemini.svg"
+            alt="Gemini"
+            width={20}
+            height={20}
             className="object-cover w-full h-full"
           />
         </div>
       );
-    } 
-    else if (name.includes("gemma")) {
+    } else if (name.includes("gemma")) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/gemma.svg" 
-            alt="Gemma" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/gemma.svg"
+            alt="Gemma"
+            width={20}
+            height={20}
             className="object-cover w-full h-full"
           />
         </div>
       );
-    } 
-    else if (name.includes("ollama")) {
+    } else if (name.includes("ollama")) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/ollama.svg" 
-            alt="Ollama" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/ollama.svg"
+            alt="Ollama"
+            width={20}
+            height={20}
             className="object-cover w-full h-full"
           />
         </div>
       );
-    } else if (name.includes("qwen") || name.includes("qwq") || name.includes("tongyi")) {
+    } else if (
+      name.includes("qwen") ||
+      name.includes("qwq") ||
+      name.includes("tongyi")
+    ) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/qwen.svg" 
-            alt="Qwen" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/qwen.svg"
+            alt="Qwen"
+            width={20}
+            height={20}
             className="object-cover w-full h-full"
           />
         </div>
@@ -243,11 +252,11 @@ export default function CharacterChatPanel({
     } else if (name.includes("grok") || name.includes("xai")) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/grok.svg" 
-            alt="Grok" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/grok.svg"
+            alt="Grok"
+            width={20}
+            height={20}
             className="object-cover w-full h-full text-white"
           />
         </div>
@@ -255,11 +264,11 @@ export default function CharacterChatPanel({
     } else if (name.includes("kimi") || name.includes("moonshot")) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/kimi.svg" 
-            alt="Kimi" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/kimi.svg"
+            alt="Kimi"
+            width={20}
+            height={20}
             className="object-cover w-full h-full text-white"
           />
         </div>
@@ -268,11 +277,11 @@ export default function CharacterChatPanel({
       // Default OpenAI icon
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/openai.svg" 
-            alt="OpenAI" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/openai.svg"
+            alt="OpenAI"
+            width={20}
+            height={20}
             className="object-cover w-full h-full"
           />
         </div>
@@ -283,15 +292,15 @@ export default function CharacterChatPanel({
   // Get icon based on model name (for second level)
   const getModelIcon = (modelName: string) => {
     const name = modelName.toLowerCase();
-    
+
     if (name.includes("deepseek") || name.includes("deep-seek")) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/deepseek.svg" 
-            alt="DeepSeek" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/deepseek.svg"
+            alt="DeepSeek"
+            width={20}
+            height={20}
             className="object-cover w-full h-full"
           />
         </div>
@@ -299,11 +308,11 @@ export default function CharacterChatPanel({
     } else if (name.includes("claude") || name.includes("anthropic")) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/claude.svg" 
-            alt="Claude" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/claude.svg"
+            alt="Claude"
+            width={20}
+            height={20}
             className="object-cover w-full h-full"
           />
         </div>
@@ -311,11 +320,11 @@ export default function CharacterChatPanel({
     } else if (name.includes("gemini") || name.includes("google")) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/gemini.svg" 
-            alt="Gemini" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/gemini.svg"
+            alt="Gemini"
+            width={20}
+            height={20}
             className="object-cover w-full h-full"
           />
         </div>
@@ -323,35 +332,47 @@ export default function CharacterChatPanel({
     } else if (name.includes("gemma")) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/gemma.svg" 
-            alt="Gemma" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/gemma.svg"
+            alt="Gemma"
+            width={20}
+            height={20}
             className="object-cover w-full h-full"
           />
         </div>
       );
-    } else if (name.includes("ollama") || name.includes("llama") || name.includes("mistral") || name.includes("codellama") || name.includes("dolphin") || name.includes("vicuna") || name.includes("alpaca")) {
+    } else if (
+      name.includes("ollama") ||
+      name.includes("llama") ||
+      name.includes("mistral") ||
+      name.includes("codellama") ||
+      name.includes("dolphin") ||
+      name.includes("vicuna") ||
+      name.includes("alpaca")
+    ) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/ollama.svg" 
-            alt="Ollama" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/ollama.svg"
+            alt="Ollama"
+            width={20}
+            height={20}
             className="object-cover w-full h-full"
           />
         </div>
       );
-    } else if (name.includes("qwen") || name.includes("qwq") || name.includes("tongyi")) {
+    } else if (
+      name.includes("qwen") ||
+      name.includes("qwq") ||
+      name.includes("tongyi")
+    ) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/qwen.svg" 
-            alt="Qwen" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/qwen.svg"
+            alt="Qwen"
+            width={20}
+            height={20}
             className="object-cover w-full h-full"
           />
         </div>
@@ -359,11 +380,11 @@ export default function CharacterChatPanel({
     } else if (name.includes("grok") || name.includes("xai")) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/grok.svg" 
-            alt="Grok" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/grok.svg"
+            alt="Grok"
+            width={20}
+            height={20}
             className="object-cover w-full h-full text-white"
           />
         </div>
@@ -371,11 +392,11 @@ export default function CharacterChatPanel({
     } else if (name.includes("kimi") || name.includes("moonshot")) {
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/kimi.svg" 
-            alt="Kimi" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/kimi.svg"
+            alt="Kimi"
+            width={20}
+            height={20}
             className="object-cover w-full h-full text-white"
           />
         </div>
@@ -384,11 +405,11 @@ export default function CharacterChatPanel({
       // Default OpenAI icon for GPT models and others
       return (
         <div className="w-5 h-5 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-          <img 
-            src="/api-icons/openai.svg" 
-            alt="OpenAI" 
-            width={20} 
-            height={20} 
+          <img
+            src="/api-icons/openai.svg"
+            alt="OpenAI"
+            width={20}
+            height={20}
             className="object-cover w-full h-full"
           />
         </div>
@@ -402,7 +423,7 @@ export default function CharacterChatPanel({
       // For Ollama, return the configured model
       return [config.model || "default"];
     }
-    
+
     if (!config.baseUrl || !config.apiKey) {
       return ["default"];
     }
@@ -410,7 +431,7 @@ export default function CharacterChatPanel({
     try {
       const response = await fetch(`${config.baseUrl}/models`, {
         headers: {
-          "Authorization": `Bearer ${config.apiKey}`,
+          Authorization: `Bearer ${config.apiKey}`,
         },
       });
       const data = await response.json();
@@ -423,16 +444,16 @@ export default function CharacterChatPanel({
   };
 
   const handleConfigSelect = async (configId: string) => {
-    const selectedConfig = configs.find(c => c.id === configId);
+    const selectedConfig = configs.find((c) => c.id === configId);
     if (!selectedConfig) return;
 
     // If config doesn't have availableModels, fetch them
     if (!selectedConfig.availableModels) {
       const models = await fetchAvailableModels(selectedConfig);
       selectedConfig.availableModels = models;
-      
+
       // Update configs with available models
-      const updatedConfigs = configs.map(c => 
+      const updatedConfigs = configs.map((c) =>
         c.id === configId ? { ...c, availableModels: models } : c,
       );
       setConfigs(updatedConfigs);
@@ -452,8 +473,7 @@ export default function CharacterChatPanel({
   };
 
   const handleModelSwitch = (configId: string, modelName?: string) => {
-    
-    const selectedConfig = configs.find(c => c.id === configId);
+    const selectedConfig = configs.find((c) => c.id === configId);
     if (!selectedConfig) {
       console.error("CharacterChatPanel: Config not found for id", configId);
       return;
@@ -462,9 +482,10 @@ export default function CharacterChatPanel({
     // If modelName is provided, update the config's model
     // For "default", use the original configured model or "default" if none exists
     if (modelName && modelName !== selectedConfig.model) {
-      const actualModelName = modelName === "default" ? (selectedConfig.model || "default") : modelName;
+      const actualModelName =
+        modelName === "default" ? selectedConfig.model || "default" : modelName;
       selectedConfig.model = actualModelName;
-      const updatedConfigs = configs.map(c => 
+      const updatedConfigs = configs.map((c) =>
         c.id === configId ? { ...c, model: actualModelName } : c,
       );
       setConfigs(updatedConfigs);
@@ -474,30 +495,38 @@ export default function CharacterChatPanel({
     setActiveConfigId(configId);
     setCurrentModel(selectedConfig.model);
     localStorage.setItem("activeConfigId", configId);
-    
+
     // Load configuration values to localStorage
     localStorage.setItem("llmType", selectedConfig.type);
-    localStorage.setItem(selectedConfig.type === "openai" ? "openaiBaseUrl" : "ollamaBaseUrl", selectedConfig.baseUrl);
-    localStorage.setItem(selectedConfig.type === "openai" ? "openaiModel" : "ollamaModel", selectedConfig.model);
+    localStorage.setItem(
+      selectedConfig.type === "openai" ? "openaiBaseUrl" : "ollamaBaseUrl",
+      selectedConfig.baseUrl,
+    );
+    localStorage.setItem(
+      selectedConfig.type === "openai" ? "openaiModel" : "ollamaModel",
+      selectedConfig.model,
+    );
     localStorage.setItem("modelName", selectedConfig.model);
     localStorage.setItem("modelBaseUrl", selectedConfig.baseUrl);
-    
+
     // Store API key properly
     if (selectedConfig.type === "openai" && selectedConfig.apiKey) {
       localStorage.setItem("openaiApiKey", selectedConfig.apiKey);
       localStorage.setItem("apiKey", selectedConfig.apiKey);
     }
-    
+
     // Dispatch custom event to notify other components
-    window.dispatchEvent(new CustomEvent("modelChanged", { 
-      detail: { 
-        configId, 
-        config: selectedConfig, 
-        modelName: selectedConfig.model,
-        configName: selectedConfig.name,
-      }, 
-    }));
-    
+    window.dispatchEvent(
+      new CustomEvent("modelChanged", {
+        detail: {
+          configId,
+          config: selectedConfig,
+          modelName: selectedConfig.model,
+          configName: selectedConfig.name,
+        },
+      }),
+    );
+
     setShowApiDropdown(false);
     setShowModelDropdown(false);
     trackButtonClick("CharacterChat", "切换模型");
@@ -512,7 +541,17 @@ export default function CharacterChatPanel({
     // On mount, restore fastModel state from localStorage
     const fastModelEnabled = localStorage.getItem("fastModelEnabled");
     if (fastModelEnabled !== null) {
-      setActiveModes(prev => ({ ...prev, fastModel: fastModelEnabled === "true" }));
+      setActiveModes((prev) => ({
+        ...prev,
+        fastModel: fastModelEnabled === "true",
+      }));
+    } else {
+      // 默认开启快速回复
+      setActiveModes((prev) => ({
+        ...prev,
+        fastModel: true,
+      }));
+      localStorage.setItem("fastModelEnabled", "true");
     }
   }, []);
 
@@ -520,7 +559,10 @@ export default function CharacterChatPanel({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      if ((showApiDropdown || showModelDropdown) && !target.closest(".api-dropdown-container")) {
+      if (
+        (showApiDropdown || showModelDropdown) &&
+        !target.closest(".api-dropdown-container")
+      ) {
         setShowApiDropdown(false);
         setShowModelDropdown(false);
       }
@@ -551,15 +593,18 @@ export default function CharacterChatPanel({
       }
 
       const storedActiveId = localStorage.getItem("activeConfigId");
-      const activeIdCandidate = storedActiveId && loadedConfigs.some((c) => c.id === storedActiveId)
-        ? storedActiveId
-        : (loadedConfigs[0]?.id || "");
+      const activeIdCandidate =
+        storedActiveId && loadedConfigs.some((c) => c.id === storedActiveId)
+          ? storedActiveId
+          : loadedConfigs[0]?.id || "";
 
       setConfigs(loadedConfigs);
       setActiveConfigId(activeIdCandidate);
-      
+
       // Set current model
-      const activeConfig = loadedConfigs.find(c => c.id === activeIdCandidate);
+      const activeConfig = loadedConfigs.find(
+        (c) => c.id === activeIdCandidate,
+      );
       if (activeConfig) {
         setCurrentModel(activeConfig.model);
       }
@@ -579,18 +624,27 @@ export default function CharacterChatPanel({
       }
     };
 
-    window.addEventListener("modelChanged", handleModelChanged as EventListener);
+    window.addEventListener(
+      "modelChanged",
+      handleModelChanged as EventListener,
+    );
     window.addEventListener("storage", handleStorageChange);
 
     return () => {
-      window.removeEventListener("modelChanged", handleModelChanged as EventListener);
+      window.removeEventListener(
+        "modelChanged",
+        handleModelChanged as EventListener,
+      );
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
-  
+
   return (
     <div className="flex flex-col h-full max-h-screen">
-      <div className="flex-grow overflow-y-auto p-6 fantasy-scrollbar" ref={scrollRef}>
+      <div
+        className="flex-grow overflow-y-auto p-6 fantasy-scrollbar"
+        ref={scrollRef}
+      >
         <div className="max-w-4xl mx-auto">
           {messages.length === 0 ? (
             <div className="text-center py-12">
@@ -621,7 +675,9 @@ export default function CharacterChatPanel({
                         className={`${serifFontClass}`}
                         dangerouslySetInnerHTML={{
                           __html: (
-                            message.content.match(/<input_message>([\s\S]*?)<\/input_message>/)?.[1] || ""
+                            message.content.match(
+                              /<input_message>([\s\S]*?)<\/input_message>/,
+                            )?.[1] || ""
                           ).replace(
                             /^[\s\n\r]*((<[^>]+>\s*)*)?(玩家输入指令|Player Input)[:：]\s*/i,
                             "",
@@ -635,7 +691,9 @@ export default function CharacterChatPanel({
                     <div className="flex items-center mb-2">
                       <div className="w-8 h-8 rounded-full overflow-hidden mr-2">
                         {character.avatar_path ? (
-                          <CharacterAvatarBackground avatarPath={character.avatar_path} />
+                          <CharacterAvatarBackground
+                            avatarPath={character.avatar_path}
+                          />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-[#1a1816]">
                             <svg
@@ -656,10 +714,13 @@ export default function CharacterChatPanel({
                         )}
                       </div>
                       <div className="flex items-center">
-                        <span className={`text-sm font-medium text-[#f4e8c1] ${serifFontClass}`}>
+                        <span
+                          className={`text-sm font-medium text-[#f4e8c1] ${serifFontClass}`}
+                        >
                           {character.name}
                         </span>
-                        {message.role === "assistant" && shouldShowRegenerateButton(message, index) && (
+                        {message.role === "assistant" &&
+                          shouldShowRegenerateButton(message, index) && (
                           <>
                             {/* Two-Level API/Model Configuration Selector */}
                             <div className="relative mx-2 api-dropdown-container">
@@ -671,7 +732,9 @@ export default function CharacterChatPanel({
                                 className="p-1 rounded-md transition-all duration-300 group relative text-[#8a8a8a] hover:text-[#d1a35c] flex items-center"
                               >
                                 <div className="flex items-center">
-                                  {getCurrentConfig() ? getConfigIcon(getCurrentConfig()!.name) : getConfigIcon("openai")}
+                                  {getCurrentConfig()
+                                    ? getConfigIcon(getCurrentConfig()!.name)
+                                    : getConfigIcon("openai")}
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     className="h-2 w-2 ml-0.5"
@@ -680,14 +743,19 @@ export default function CharacterChatPanel({
                                     stroke="currentColor"
                                     strokeWidth={3}
                                   >
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M19 9l-7 7-7-7"
+                                    />
                                   </svg>
                                 </div>
                                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#2a261f] text-[#f4e8c1] text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap border border-[#534741] z-50">
-                                  {getCurrentConfig()?.name || t("modelSettings.noConfigs")}
+                                  {getCurrentConfig()?.name ||
+                                      t("modelSettings.noConfigs")}
                                 </div>
                               </button>
-                              
+
                               {/* First Level Dropdown - API Configurations */}
                               {showApiDropdown && !showModelDropdown && (
                                 <div className="absolute top-full left-0 mt-1 bg-[#2a261f] border border-[#534741] rounded-md shadow-lg z-50 min-w-[160px]">
@@ -695,15 +763,26 @@ export default function CharacterChatPanel({
                                     configs.map((config) => (
                                       <button
                                         key={config.id}
-                                        onClick={() => handleConfigSelect(config.id)}
+                                        onClick={() =>
+                                          handleConfigSelect(config.id)
+                                        }
                                         className={`w-full text-left px-2 py-1.5 text-xs hover:bg-[#3a3632] transition-colors flex items-center justify-between ${
-                                          activeConfigId === config.id ? "bg-[#3a3632] text-[#d1a35c]" : "text-[#f4e8c1]"
+                                          activeConfigId === config.id
+                                            ? "bg-[#3a3632] text-[#d1a35c]"
+                                            : "text-[#f4e8c1]"
                                         }`}
                                       >
                                         <div className="flex items-center">
-                                          <span className="mr-2.5">{getConfigIcon(config.name)}</span>
-                                          <span className="truncate" title={config.name}>
-                                            {config.name.length > 20 ? `${config.name.substring(0, 20)}...` : config.name}
+                                          <span className="mr-2.5">
+                                            {getConfigIcon(config.name)}
+                                          </span>
+                                          <span
+                                            className="truncate"
+                                            title={config.name}
+                                          >
+                                            {config.name.length > 20
+                                              ? `${config.name.substring(0, 20)}...`
+                                              : config.name}
                                           </span>
                                         </div>
                                         <svg
@@ -714,12 +793,18 @@ export default function CharacterChatPanel({
                                           stroke="currentColor"
                                           strokeWidth={2}
                                         >
-                                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M9 5l7 7-7 7"
+                                          />
                                         </svg>
                                       </button>
                                     ))
                                   ) : (
-                                    <div className="px-2 py-1.5 text-xs text-[#8a8a8a]">{t("common.noApisConfigured")}</div>
+                                    <div className="px-2 py-1.5 text-xs text-[#8a8a8a]">
+                                      {t("common.noApisConfigured")}
+                                    </div>
                                   )}
                                 </div>
                               )}
@@ -743,74 +828,139 @@ export default function CharacterChatPanel({
                                         stroke="currentColor"
                                         strokeWidth={2}
                                       >
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          d="M15 19l-7-7 7-7"
+                                        />
                                       </svg>
                                       {t("characterChat.back")}
                                     </button>
-                                    <span>{t("characterChat.selectModel")}</span>
+                                    <span>
+                                      {t("characterChat.selectModel")}
+                                    </span>
                                   </div>
                                   {(() => {
-                                    const selectedConfig = configs.find(c => c.id === selectedConfigId);
-                                    if (!selectedConfig || !selectedConfig.availableModels) {
+                                    const selectedConfig = configs.find(
+                                      (c) => c.id === selectedConfigId,
+                                    );
+                                    if (
+                                      !selectedConfig ||
+                                        !selectedConfig.availableModels
+                                    ) {
                                       return (
                                         <div className="px-2 py-1.5 text-xs text-[#8a8a8a] flex items-center">
-                                          <svg className="animate-spin h-3 w-3 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                          <svg
+                                            className="animate-spin h-3 w-3 mr-2"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <circle
+                                              className="opacity-25"
+                                              cx="12"
+                                              cy="12"
+                                              r="10"
+                                              stroke="currentColor"
+                                              strokeWidth="4"
+                                            ></circle>
+                                            <path
+                                              className="opacity-75"
+                                              fill="currentColor"
+                                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            ></path>
                                           </svg>
-                                          Loading models...
+                                            Loading models...
                                         </div>
                                       );
                                     }
-                                    
-                                    return selectedConfig.availableModels.map((modelName) => (
-                                      <button
-                                        key={modelName}
-                                        onClick={() => handleModelSwitch(selectedConfigId, modelName)}
-                                        className={`w-full text-left px-2 py-1.5 text-xs hover:bg-[#3a3632] transition-colors flex items-center ${
-                                          (selectedConfig.model === modelName || (modelName === "default" && selectedConfig.model === "default")) 
-                                            ? "bg-[#3a3632] text-[#d1a35c]" 
-                                            : "text-[#f4e8c1]"
-                                        }`}
-                                      >
-                                        <span className="mr-2.5">
-                                          {modelName === "default" 
-                                            ? getConfigIcon(selectedConfig.name) 
-                                            : getModelIcon(modelName)
+
+                                    return selectedConfig.availableModels.map(
+                                      (modelName) => (
+                                        <button
+                                          key={modelName}
+                                          onClick={() =>
+                                            handleModelSwitch(
+                                              selectedConfigId,
+                                              modelName,
+                                            )
                                           }
-                                        </span>
-                                        <span className="truncate" title={modelName === "default" ? t("characterChat.defaultModel") : modelName}>
-                                          {modelName === "default" 
-                                            ? t("characterChat.defaultModel") 
-                                            : (modelName.length > 25 ? `${modelName.substring(0, 25)}...` : modelName)
-                                          }
-                                        </span>
-                                      </button>
-                                    ));
+                                          className={`w-full text-left px-2 py-1.5 text-xs hover:bg-[#3a3632] transition-colors flex items-center ${
+                                            selectedConfig.model ===
+                                                modelName ||
+                                              (modelName === "default" &&
+                                                selectedConfig.model ===
+                                                  "default")
+                                              ? "bg-[#3a3632] text-[#d1a35c]"
+                                              : "text-[#f4e8c1]"
+                                          }`}
+                                        >
+                                          <span className="mr-2.5">
+                                            {modelName === "default"
+                                              ? getConfigIcon(
+                                                selectedConfig.name,
+                                              )
+                                              : getModelIcon(modelName)}
+                                          </span>
+                                          <span
+                                            className="truncate"
+                                            title={
+                                              modelName === "default"
+                                                ? t(
+                                                  "characterChat.defaultModel",
+                                                )
+                                                : modelName
+                                            }
+                                          >
+                                            {modelName === "default"
+                                              ? t(
+                                                "characterChat.defaultModel",
+                                              )
+                                              : modelName.length > 25
+                                                ? `${modelName.substring(0, 25)}...`
+                                                : modelName}
+                                          </span>
+                                        </button>
+                                      ),
+                                    );
                                   })()}
                                 </div>
                               )}
                             </div>
                             <button
                               onClick={() => {
-                                setActiveModes(prev => {
+                                setActiveModes((prev) => {
                                   const newStreaming = !prev.streaming;
                                   return { ...prev, streaming: newStreaming };
                                 });
                                 const newStreaming = !activeModes.streaming;
-                                setStreamingTarget(newStreaming ? messages.length : -1);
-                                localStorage.setItem("streamingEnabled", String(newStreaming));
-                                trackButtonClick("toggle_streaming", "流式输出切换");
+                                setStreamingTarget(
+                                  newStreaming ? messages.length : -1,
+                                );
+                                localStorage.setItem(
+                                  "streamingEnabled",
+                                  String(newStreaming),
+                                );
+                                trackButtonClick(
+                                  "toggle_streaming",
+                                  "流式输出切换",
+                                );
                               }}
                               className={`mx-1 w-6 h-6 flex items-center justify-center bg-[#1c1c1c] rounded-lg border shadow-inner transition-all duration-300 group relative ${
                                 activeModes.streaming
                                   ? "text-amber-400 hover:text-amber-300 border-amber-400/60 hover:border-amber-300/70 hover:shadow-[0_0_8px_rgba(252,211,77,0.4)]"
                                   : "text-[#a18d6f] hover:text-[#c0a480] border-[#333333] hover:border-[#444444]"
                               }`}
-                              data-tooltip={activeModes.streaming ? t("characterChat.disableStreaming") : t("characterChat.enableStreaming")}
+                              data-tooltip={
+                                activeModes.streaming
+                                  ? t("characterChat.disableStreaming")
+                                  : t("characterChat.enableStreaming")
+                              }
                             >
                               <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#2a261f] text-[#f4e8c1] text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap border border-[#534741]">
-                                {activeModes.streaming ? t("characterChat.disableStreaming") : t("characterChat.enableStreaming")}
+                                {activeModes.streaming
+                                  ? t("characterChat.disableStreaming")
+                                  : t("characterChat.enableStreaming")}
                               </div>
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -826,9 +976,15 @@ export default function CharacterChatPanel({
                                 {/* Stream/Flow icon - horizontal flowing lines */}
                                 <path
                                   d="M3 6h18M3 12h18M3 18h18"
-                                  stroke={activeModes.streaming ? "#FFC107" : "currentColor"}
+                                  stroke={
+                                    activeModes.streaming
+                                      ? "#FFC107"
+                                      : "currentColor"
+                                  }
                                   strokeLinecap="round"
-                                  strokeDasharray={activeModes.streaming ? "4,2" : "none"}
+                                  strokeDasharray={
+                                    activeModes.streaming ? "4,2" : "none"
+                                  }
                                 >
                                   {activeModes.streaming && (
                                     <animate
@@ -843,23 +999,35 @@ export default function CharacterChatPanel({
                             </button>
                             <button
                               onClick={() => {
-                                setActiveModes(prev => {
+                                setActiveModes((prev) => {
                                   const newFastModel = !prev.fastModel;
                                   // Store fastModel state in localStorage
-                                  localStorage.setItem("fastModelEnabled", String(newFastModel));
+                                  localStorage.setItem(
+                                    "fastModelEnabled",
+                                    String(newFastModel),
+                                  );
                                   return { ...prev, fastModel: newFastModel };
                                 });
-                                trackButtonClick("toggle_fastmodel", "快速模式切换");
+                                trackButtonClick(
+                                  "toggle_fastmodel",
+                                  "快速模式切换",
+                                );
                               }}
                               className={`mx-1 w-6 h-6 flex items-center justify-center bg-[#1c1c1c] rounded-lg border shadow-inner transition-all duration-300 group relative ${
                                 activeModes.fastModel
                                   ? "text-blue-500 hover:text-blue-400 border-blue-500/60 hover:border-blue-400/70 hover:shadow-[0_0_8px_rgba(59,130,246,0.4)]"
                                   : "text-[#a18d6f] hover:text-[#c0a480] border-[#333333] hover:border-[#444444]"
                               }`}
-                              data-tooltip={activeModes.fastModel ? t("characterChat.disableFastModel") : t("characterChat.enableFastModel")}
+                              data-tooltip={
+                                activeModes.fastModel
+                                  ? t("characterChat.disableFastModel")
+                                  : t("characterChat.enableFastModel")
+                              }
                             >
                               <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#2a261f] text-[#f4e8c1] text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap border border-[#534741]">
-                                {activeModes.fastModel ? t("characterChat.disableFastModel") : t("characterChat.enableFastModel")}
+                                {activeModes.fastModel
+                                  ? t("characterChat.disableFastModel")
+                                  : t("characterChat.enableFastModel")}
                               </div>
                               {/* Lightning bolt SVG for fastmodel, blue when active - mirrored */}
                               <svg
@@ -876,8 +1044,14 @@ export default function CharacterChatPanel({
                               >
                                 <path
                                   d="M7 2L17 14h-7v8l-8-12h7z"
-                                  fill={activeModes.fastModel ? "#3B82F6" : "none"}
-                                  stroke={activeModes.fastModel ? "#3B82F6" : "currentColor"}
+                                  fill={
+                                    activeModes.fastModel ? "#3B82F6" : "none"
+                                  }
+                                  stroke={
+                                    activeModes.fastModel
+                                      ? "#3B82F6"
+                                      : "currentColor"
+                                  }
                                 />
                               </svg>
                             </button>
@@ -917,7 +1091,9 @@ export default function CharacterChatPanel({
                             onRegenerate(message.id);
                           }}
                           className={`ml-1 w-6 h-6 flex items-center justify-center text-[#a18d6f] hover:text-orange-400 bg-[#1c1c1c] rounded-lg border border-[#333333] shadow-inner transition-all duration-300 hover:border-[#444444] hover:shadow-[0_0_8px_rgba(249,115,22,0.4)] group relative ${
-                            shouldShowRegenerateButton(message, index) ? "" : "hidden"
+                            shouldShowRegenerateButton(message, index)
+                              ? ""
+                              : "hidden"
                           }`}
                           data-tooltip={t("characterChat.regenerateMessage")}
                         >
@@ -943,7 +1119,7 @@ export default function CharacterChatPanel({
                         </button>
                       </div>
                     </div>
-                    
+
                     {/* Think Bubble - Show thinking content if available */}
                     <ThinkBubble
                       thinkingContent={message.thinkingContent || ""}
@@ -952,12 +1128,14 @@ export default function CharacterChatPanel({
                       serifFontClass={serifFontClass}
                       t={t}
                     />
-                    
+
                     <ChatHtmlBubble
                       key={message.id}
                       html={message.content}
                       isLoading={
-                        isSending && index === messages.length - 1 && message.content.trim() === ""
+                        isSending &&
+                        index === messages.length - 1 &&
+                        message.content.trim() === ""
                       }
                       enableStreaming={
                         activeModes.streaming &&
@@ -965,7 +1143,9 @@ export default function CharacterChatPanel({
                         index >= streamingTarget
                       }
                       onContentChange={
-                        index === messages.length - 1 ? () => maybeScrollToBottom() : undefined
+                        index === messages.length - 1
+                          ? () => maybeScrollToBottom()
+                          : undefined
                       }
                     />
                   </div>
@@ -979,7 +1159,8 @@ export default function CharacterChatPanel({
                     <div className="absolute inset-1 rounded-full border-2 border-t-[#a18d6f] border-r-[#f9c86d] border-b-[#c0a480] border-l-transparent animate-spin-slow"></div>
                   </div>
                   <span className={`text-sm ${serifFontClass}`}>
-                    {character.name} {t("characterChat.isTyping") || "is typing..."}
+                    {character.name}{" "}
+                    {t("characterChat.isTyping") || "is typing..."}
                   </span>
                 </div>
               )}
@@ -997,20 +1178,38 @@ export default function CharacterChatPanel({
               aria-label={suggestionsCollapsed ? "展开建议" : "收起建议"}
             >
               {suggestionsCollapsed ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               )}
             </button>
-            
-            <div  
+
+            <div
               className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                suggestionsCollapsed 
-                  ? "max-h-0 opacity-0 mb-0" 
+                suggestionsCollapsed
+                  ? "max-h-0 opacity-0 mb-0"
                   : "max-h-40 opacity-100 mb-6"
               }`}
             >
@@ -1041,16 +1240,18 @@ export default function CharacterChatPanel({
           }}
           className="max-w-4xl mx-auto"
         >
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <div className="flex-grow magical-input relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-400/20 via-amber-500/5 to-amber-400/10 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
               <input
                 type="text"
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
-                placeholder={t("characterChat.typeMessage") || "Type a message..."}
+                placeholder={
+                  t("characterChat.typeMessage") || "Type a message..."
+                }
                 data-tour="chat-input"
-                className="w-full bg-[#2a261f] border border-[#534741] rounded-lg py-2.5 px-4 text-[#f4e8c1] text-sm leading-tight focus:outline-none focus:border-[#c0a480] shadow-inner relative z-1 transition-all duration-300 group-hover:border-[#a18d6f]"
+                className="w-full bg-[#2a261f] border border-[#534741] rounded-lg py-2 sm:py-2.5 px-3 sm:px-4 text-[#f4e8c1] text-sm leading-tight focus:outline-none focus:border-[#c0a480] shadow-inner relative z-1 transition-all duration-300 group-hover:border-[#a18d6f]"
                 disabled={isSending}
               />
             </div>
@@ -1063,7 +1264,7 @@ export default function CharacterChatPanel({
               <button
                 type="submit"
                 disabled={!userInput.trim()}
-                className={`portal-button relative overflow-hidden bg-[#2a261f] hover:bg-[#342f25] text-[#c0a480] hover:text-[#f4e8c1] py-2 px-4 rounded-lg text-sm border border-[#534741] hover:border-[#a18d6f] shadow-md transition-all duration-300 ${
+                className={`portal-button relative overflow-hidden bg-[#2a261f] hover:bg-[#342f25] text-[#c0a480] hover:text-[#f4e8c1] py-2 px-3 sm:px-4 rounded-lg text-sm border border-[#534741] hover:border-[#a18d6f] shadow-md transition-all duration-300 ${
                   !userInput.trim() ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
@@ -1072,7 +1273,7 @@ export default function CharacterChatPanel({
             )}
           </div>
 
-          <div className="mt-5 flex justify-start gap-2 sm:gap-3 max-w-4xl mx-auto">
+          <div className="mt-3 sm:mt-5 flex justify-start gap-1.5 sm:gap-2 md:gap-3 max-w-4xl mx-auto">
             <button
               type="button"
               onClick={() => {
@@ -1082,7 +1283,7 @@ export default function CharacterChatPanel({
                   "story-progress": !prev["story-progress"],
                 }));
               }}
-              className={`px-2 py-1.5 sm:px-4 text-xs rounded-full border transition-all duration-300 ${
+              className={`px-1.5 sm:px-2 md:px-4 py-1.5 text-xs rounded-full border transition-all duration-300 ${
                 activeModes["story-progress"]
                   ? "bg-[#d1a35c] text-[#2a261f] border-[#d1a35c] shadow-[0_0_8px_rgba(209,163,92,0.5)]"
                   : "bg-[#2a261f] text-[#d1a35c] border-[#534741] hover:border-[#d1a35c] shadow-sm hover:shadow-md"
@@ -1104,7 +1305,9 @@ export default function CharacterChatPanel({
                   <path d="M5 12h14"></path>
                   <path d="m12 5 7 7-7 7"></path>
                 </svg>
-                <span className="hidden sm:inline">{t("characterChat.storyProgress") || "剧情推进"}</span>
+                <span className="text-[10px] sm:text-xs">
+                  {t("characterChat.storyProgress") || "剧情推进"}
+                </span>
               </span>
             </button>
 
@@ -1144,7 +1347,7 @@ export default function CharacterChatPanel({
                   };
                 });
               }}
-              className={`px-2 py-1.5 sm:px-4 text-xs rounded-full border transition-all duration-300 ${
+              className={`px-1.5 sm:px-2 md:px-4 py-1.5 text-xs rounded-full border transition-all duration-300 ${
                 !activeModes["perspective"].active
                   ? "bg-[#2a261f] text-[#56b3b4] border-[#534741] hover:border-[#56b3b4] shadow-sm hover:shadow-md"
                   : activeModes["perspective"].mode === "novel"
@@ -1169,7 +1372,7 @@ export default function CharacterChatPanel({
                   <line x1="2" y1="12" x2="22" y2="12"></line>
                   <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                 </svg>
-                <span className="hidden sm:inline">
+                <span className="text-[10px] sm:text-xs">
                   {!activeModes["perspective"].active
                     ? t("characterChat.perspective") || "视角设计"
                     : activeModes["perspective"].mode === "novel"
@@ -1188,7 +1391,7 @@ export default function CharacterChatPanel({
                   "scene-setting": !prev["scene-setting"],
                 }));
               }}
-              className={`px-2 py-1.5 sm:px-4 text-xs rounded-full border transition-all duration-300 ${
+              className={`px-1.5 sm:px-2 md:px-4 py-1.5 text-xs rounded-full border transition-all duration-300 ${
                 activeModes["scene-setting"]
                   ? "bg-[#c093ff] text-[#2a261f] border-[#c093ff] shadow-[0_0_8px_rgba(192,147,255,0.5)]"
                   : "bg-[#2a261f] text-[#c093ff] border-[#534741] hover:border-[#c093ff] shadow-sm hover:shadow-md"
@@ -1213,7 +1416,9 @@ export default function CharacterChatPanel({
                   <line x1="9" y1="3" x2="9" y2="21"></line>
                   <line x1="15" y1="3" x2="15" y2="21"></line>
                 </svg>
-                <span className="hidden sm:inline">{t("characterChat.sceneTransition")}</span>
+                <span className="text-[10px] sm:text-xs">
+                  {t("characterChat.sceneTransition")}
+                </span>
               </span>
             </button>
           </div>

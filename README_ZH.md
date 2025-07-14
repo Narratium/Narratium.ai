@@ -69,17 +69,17 @@
 
 项目采用双分支开发模式：
 
-- **main**: 稳定版本分支，定期通过 pake 构建桌面端版本
-- **dev**: 开发版本分支，每天会有多次提交
+- **main**: 稳定版本分支，定期通过 pake 构建桌面端版本。
+- **dev**: 开发版本分支，每天会有多次提交。
 
 | 快速开始 |
 | :---------- |
 
-如需详细的安装和设置说明，请参阅我们的[快速开始指南](./docs/GETTING_STARTED.md)
+如需详细的安装和设置说明，请参阅我们的[快速开始指南](./docs/GETTING_STARTED.md)。
 
 如需详细的 Vercel 部署说明，请参阅 [Vercel 部署指南](./docs/VERCEL_DEPLOYMENT.md)。
 
-如需客户端下载版本，请访问 [Mac、Windows、Linux 下载页面](https://github.com/Narratium/Narratium.ai/releases)
+如需客户端下载版本，请访问 [Mac、Windows、Linux 下载页面](https://github.com/Narratium/Narratium.ai/releases)。
 
 | 功能特性 |
 | :------- |
@@ -87,6 +87,15 @@
 - **沉浸式冒险模式**: 创建个性化世界并做出重要的决策。
 - **可视化记忆管理**: 基于React Flow的会话追踪和分支。
 - **角色卡片与背景**: 兼容SillyTavern卡片，在一处管理所有内容。
+
+| API 推荐与配置 |
+| :-------------- |
+
+**推荐API服务**:
+- **OpenAI**: 直接支持 OpenAI API 格式的模型。
+- **OpenRouter**: 推荐使用 [OpenRouter](https://openrouter.ai/) 统一访问多种模型。
+- **中转站部署**: 推荐 [new-api](https://github.com/QuantumNous/new-api)。
+- **本地部署**: 支持 Ollama、LM Studio 等本地推理服务。
 
 | Narratium与其他AI角色扮演平台对比 |
 | :---------------------------------------- |
@@ -97,11 +106,13 @@
     <th align="center">Narratium.ai</th>
     <th align="center">SillyTavern</th>
     <th align="center">AI Dungeon</th>
+    <th align="center">fount</th>
   </tr>
   <tr>
     <td><strong>开源</strong></td>
     <td align="center">✅</td>
     <td align="center">✅</td>
+    <td align="center">❌</td>
     <td align="center">❌</td>
   </tr>
   <tr>
@@ -109,11 +120,13 @@
     <td align="center">✅</td>
     <td align="center">❌ (复杂设置)</td>
     <td align="center">✅ (但流程有限)</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>角色记忆与追踪</strong></td>
     <td align="center">✅</td>
     <td align="center">⚠️ (基于插件)</td>
+    <td align="center">❌</td>
     <td align="center">❌</td>
   </tr>
   <tr>
@@ -121,17 +134,20 @@
     <td align="center">✅</td>
     <td align="center">⚠️ (通过扩展)</td>
     <td align="center">❌</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>长期对话支持</strong></td>
     <td align="center">✅</td>
     <td align="center">✅</td>
     <td align="center">❌ (上下文有限)</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>离线/本地部署</strong></td>
     <td align="center">✅</td>
     <td align="center">✅</td>
+    <td align="center">❌</td>
     <td align="center">❌</td>
   </tr>
   <tr>
@@ -139,12 +155,14 @@
     <td align="center">✅</td>
     <td align="center">❌ (极简)</td>
     <td align="center">✅</td>
+    <td align="center">❌</td>
   </tr>
   <tr>
     <td><strong>无限分支故事情节</strong></td>
     <td align="center">✅</td>
     <td align="center">⚠️ (需要手动努力)</td>
     <td align="center">✅ (但不稳定)</td>
+    <td align="center">❌</td>
   </tr>
 </table>
 
@@ -153,8 +171,9 @@
 
 本项目由两个具有独立许可证的不同部分组成：
 
-- ✅ 代码: MIT许可证 — 开放用于商业和非商业用途，需要署名。
+- 🔐 代码: AGPL-3.0许可证 — 左版权许可证，要求网络服务必须公开源代码，并强制显示GitHub归属。
 - 🔒 内容: CC BY-NC-SA 4.0 — 仅限非商业用途，需要署名和相同许可证共享。
+- 🌐 Web部署: 必须显示到 https://github.com/Narratium/Narratium.ai 的可见链接
 
 > 有关完整许可证详情，请参阅 [LICENSE](./LICENSE)。
 

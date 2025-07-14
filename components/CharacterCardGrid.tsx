@@ -48,6 +48,7 @@ interface CharacterCardGridProps {
   characters: Character[];
   onEditClick: (character: Character, e: React.MouseEvent) => void;
   onDeleteClick: (characterId: string) => void;
+  onMoveToTopClick: (characterId: string) => void;
 }
 
 /**
@@ -60,6 +61,7 @@ const CharacterCardGrid: React.FC<CharacterCardGridProps> = ({
   characters,
   onEditClick,
   onDeleteClick,
+  onMoveToTopClick,
 }) => {
   const { t, fontClass, serifFontClass } = useLanguage();
 
@@ -93,13 +95,37 @@ const CharacterCardGrid: React.FC<CharacterCardGridProps> = ({
             <div className="relative session-card h-full transition-all duration-300">
               {/* Action buttons for each card */}
               <div className="absolute top-1 right-1 sm:top-2 sm:right-2 flex space-x-0.5 sm:space-x-1 z-10">
+                <Link
+                  href={`/character?id=${character.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="p-2 sm:p-1.5 bg-[#252220] hover:bg-[#3a2a2a] rounded-full text-[#c0a480] hover:text-[#ffd475] transition-colors"
+                  title={t("characterCardsPage.chat")}
+                  aria-label={t("characterCardsPage.chat")}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#c0a480] hover:text-[#ffd475] transition-colors sm:w-3.5 sm:h-3.5">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                </Link>
+                {/* move character to top of the screen */}
+                <button
+                  onClick={(e) => {e.stopPropagation(); trackButtonClick("move_to_top_character_btn", "置顶角色"); onMoveToTopClick(character.id);}}
+                  className="p-2 sm:p-1.5 bg-[#252220] hover:bg-[#3a2a2a] rounded-full text-[#c0a480] hover:text-[#ffd475] transition-colors"
+                  title={t("characterCardsPage.move_to_top")}
+                  aria-label={t("characterCardsPage.move_to_top")}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sm:w-3.5 sm:h-3.5">
+                    <path d="M3 6h18"/>
+                    <path d="M12 18V8"/>
+                    <path d="M8 12l4-4 4 4"/>
+                  </svg>
+                </button>
                 <button
                   onClick={(e) => {trackButtonClick("edit_character_btn", "编辑角色"); onEditClick(character, e);}}
-                  className="p-1 sm:p-1.5 bg-[#252220] hover:bg-[#3a2a2a] rounded-full text-[#c0a480] hover:text-[#ffd475] transition-colors"
+                  className="p-2 sm:p-1.5 bg-[#252220] hover:bg-[#3a2a2a] rounded-full text-[#c0a480] hover:text-[#ffd475] transition-colors"
                   title={t("characterCardsPage.edit")}
                   aria-label={t("characterCardsPage.edit")}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sm:w-3.5 sm:h-3.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sm:w-3.5 sm:h-3.5">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                   </svg>
@@ -110,11 +136,11 @@ const CharacterCardGrid: React.FC<CharacterCardGridProps> = ({
                     e.stopPropagation();
                     onDeleteClick(character.id);
                   }}
-                  className="p-1 sm:p-1.5 bg-[#252220] hover:bg-[#3a2a2a] rounded-full text-[#c0a480] hover:text-[#ffd475] transition-colors"
+                  className="p-2 sm:p-1.5 bg-[#252220] hover:bg-[#3a2a2a] rounded-full text-[#c0a480] hover:text-[#ffd475] transition-colors"
                   title={t("characterCardsPage.delete")}
                   aria-label={t("characterCardsPage.delete")}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sm:w-3.5 sm:h-3.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sm:w-3.5 sm:h-3.5">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                   </svg>

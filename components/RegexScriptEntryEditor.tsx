@@ -35,7 +35,11 @@ export default function RegexScriptEntryEditor({
 
   useEffect(() => {
     if (editingScript) {
-      setLocalScript(editingScript);
+      setLocalScript({
+        ...editingScript,
+        // Ensure replaceString is always a string, even if undefined
+        replaceString: editingScript.replaceString || "",
+      });
     } else {
       setLocalScript({
         scriptName: "",
@@ -70,12 +74,18 @@ export default function RegexScriptEntryEditor({
   };
 
   const handleSave = async () => {
-    if (!localScript.scriptName || !localScript.findRegex || !localScript.replaceString) {
-      toast.error(t("regexScriptEditor.requiredFields") || "Please fill in all required fields");
+    // Only scriptName and findRegex are required, replaceString can be empty
+    if (!localScript.scriptName?.trim() || !localScript.findRegex?.trim()) {
+      toast.error(t("regexScriptEditor.requiredFields") || "Please fill in script name and find regex");
       return;
     }
     try {
-      await onSave(localScript);
+      // Ensure replaceString is always a string, even if empty
+      const scriptToSave = {
+        ...localScript,
+        replaceString: localScript.replaceString || "",
+      };
+      await onSave(scriptToSave);
       onClose();
     } catch (error) {
       console.error("Error saving script:", error);
@@ -114,7 +124,7 @@ export default function RegexScriptEntryEditor({
           <div className="space-y-4">
             <div>
               <label className={`block text-xs text-[#a18d6f] mb-1.5 font-medium ${fontClass}`}>
-                {t("regexScriptEditor.scriptName")}
+                {t("regexScriptEditor.scriptName")} <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -129,7 +139,7 @@ export default function RegexScriptEntryEditor({
 
             <div>
               <label className={`block text-xs text-[#a18d6f] mb-1.5 font-medium ${fontClass}`}>
-                {t("regexScriptEditor.findRegex")}
+                {t("regexScriptEditor.findRegex")} <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -144,7 +154,7 @@ export default function RegexScriptEntryEditor({
 
             <div>
               <label className={`block text-xs text-[#a18d6f] mb-1.5 font-medium ${fontClass}`}>
-                {t("regexScriptEditor.replaceString")}
+                {t("regexScriptEditor.replaceString")} <span className="text-[#a18d6f] text-[10px]">({t("regexScriptEditor.optional") || "optional"})</span>
               </label>
               <input
                 type="text"
@@ -153,8 +163,19 @@ export default function RegexScriptEntryEditor({
                 className="w-full px-3 py-2 bg-gradient-to-br from-[#1a1816] to-[#252220] border border-[#534741]/60 rounded-lg text-[#93c5fd] 
                   focus:border-amber-500/60 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all duration-300
                   placeholder-[#a18d6f]/70 hover:border-[#534741] font-mono text-sm"
-                placeholder={t("regexScriptEditor.replaceStringPlaceholder")}
+                placeholder={t("regexScriptEditor.replaceStringPlaceholder") || "Leave empty to remove matched text"}
               />
+              <div className={`mt-1 text-[10px] text-[#a18d6f]/80 ${fontClass}`}>
+                {(localScript.replaceString || "").length === 0 ? 
+                  <span className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {t("regexScriptEditor.emptyReplaceHint") || "Empty: Will remove matched text"}
+                  </span> : 
+                  `${(localScript.replaceString || "").length} characters`
+                }
+              </div>
             </div>
 
             <div className="flex items-end space-x-4">

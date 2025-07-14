@@ -19,8 +19,6 @@ export class ResearchSessionOperations {
    * Create a new agent conversation with simplified initial state
    */
   static async createSession(
-    title: string,
-    llmConfig: ResearchSession["llm_config"],
     initialUserRequest: string,
   ): Promise<ResearchSession> {
     const conversationId = uuidv4();
@@ -50,12 +48,11 @@ export class ResearchSessionOperations {
 
     const session: ResearchSession = {
       id: conversationId,
-      title,
+      title: initialUserRequest ,
       status: SessionStatus.IDLE,
       messages: [initialMessage],
       research_state: ResearchState,
       generation_output: GenerationOutput,
-      llm_config: llmConfig,
       execution_info: {
         current_iteration: 0,
         max_iterations: 50,
@@ -246,7 +243,7 @@ export class ResearchSessionOperations {
   /**
    * Record error
    */
-  static async recordError(sessionId: string, error: string): Promise<void> {
+  static async recinsert_orderror(sessionId: string, error: string): Promise<void> {
     const session = await this.getSessionById(sessionId);
     if (!session) {
       throw new Error(`Session not found: ${sessionId}`);
@@ -274,7 +271,7 @@ export class ResearchSessionOperations {
   }
 
   /**
-   * Get conversation summary for display
+   * Get session summary for UI display (similar to character dialogue info)
    */
   static async getSessionSummary(sessionId: string): Promise<{
     title: string;
@@ -288,16 +285,112 @@ export class ResearchSessionOperations {
     const session = await this.getSessionById(sessionId);
     if (!session) return null;
 
-    const averageCompletion = 0;
+    const hasCharacter = !!session.generation_output.character_data;
+    const hasWorldbook = !!(
+      session.generation_output.status_data ||
+      session.generation_output.user_setting_data ||
+      session.generation_output.world_view_data ||
+      (session.generation_output.supplement_data && session.generation_output.supplement_data.length > 0)
+    );
+
+    // Calculate completion percentage based on available data
+    let completedComponents = 0;
+    const totalComponents = 5; // character + 4 worldbook components
+    
+    if (session.generation_output.character_data) completedComponents++;
+    if (session.generation_output.status_data) completedComponents++;
+    if (session.generation_output.user_setting_data) completedComponents++;
+    if (session.generation_output.world_view_data) completedComponents++;
+    if (session.generation_output.supplement_data && session.generation_output.supplement_data.length >= 5) completedComponents++;
+
+    const completionPercentage = (completedComponents / totalComponents) * 100;
 
     return {
       title: session.title,
       status: session.status,
       messageCount: session.messages.length,
-      hasCharacter: !!session.generation_output.character_data,
-      hasWorldbook: !!session.generation_output.worldbook_data && session.generation_output.worldbook_data.length > 0,
-      completionPercentage: Math.round(averageCompletion),
+      hasCharacter,
+      hasWorldbook,
+      completionPercentage,
       knowledgeBaseSize: session.research_state.knowledge_base.length,
+    };
+  }
+
+  /**
+   * Get or create session for UI (similar to character dialogue loading)
+   */
+  static async getOrCreateSession(
+    sessionId?: string,
+    initialRequest?: string,
+  ): Promise<{ session: ResearchSession; isNew: boolean }> {
+    if (sessionId) {
+      const existingSession = await this.getSessionById(sessionId);
+      if (existingSession) {
+        return { session: existingSession, isNew: false };
+      }
+    }
+
+    if (!initialRequest) {
+      throw new Error("initial request required for new session");
+    }
+
+    const newSession = await this.createSession(initialRequest);
+    return { session: newSession, isNew: true };
+  }
+
+  /**
+   * Get session with formatted messages for UI display
+   */
+  static async getSessionForUI(sessionId: string): Promise<{
+    session: ResearchSession;
+    formattedMessages: Message[];
+    needsUserInput: boolean;
+    userInputQuestion?: string;
+    userInputOptions?: string[];
+  } | null> {
+    const session = await this.getSessionById(sessionId);
+    if (!session) return null;
+
+    const formattedMessages = session.messages.map(msg => ({
+      id: msg.id,
+      role: msg.role as "agent" | "user",
+      content: msg.content,
+      type: msg.type || "agent_action" as any,
+      timestamp: new Date(msg.timestamp || Date.now()),
+      metadata: msg.metadata,
+    }));
+
+    // Check if waiting for user input
+    const needsUserInput = session.status === SessionStatus.WAITING_USER;
+    let userInputQuestion: string | undefined;
+    let userInputOptions: string[] | undefined;
+
+    if (needsUserInput) {
+      const lastMessage = session.messages[session.messages.length - 1];
+      if (lastMessage && lastMessage.content.includes("INPUT REQUIRED:")) {
+        const lines = lastMessage.content.split("\n");
+        const questionLine = lines.find(line => line.includes("INPUT REQUIRED:"));
+        const optionsLine = lines.find(line => line.includes("Options:"));
+        
+        if (questionLine) {
+          userInputQuestion = questionLine.replace("INPUT REQUIRED:", "").trim();
+        }
+        if (optionsLine) {
+          userInputOptions = optionsLine
+            .replace("Options:", "")
+            .split(",")
+            .map(opt => opt.trim())
+            .filter(opt => opt.length > 0);
+        }
+      }
+    }
+
+    return {
+      session,
+      formattedMessages: formattedMessages as Message[],
+      needsUserInput,
+      userInputQuestion,
+      userInputOptions,
     };
   }
 
@@ -351,21 +444,40 @@ export class ResearchSessionOperations {
   }
 
   /**
-   * Append new worldbook entries to existing worldbook data efficiently
+   * Append new worldbook entries to existing specialized worldbook data efficiently
    */
   static async appendWorldbookData(
     sessionId: string,
-    newEntries: any[],
+    worldbookData: {
+      status_data?: any;
+      user_setting_data?: any;
+      world_view_data?: any;
+      supplement_data?: any[];
+    },
   ): Promise<void> {
     const session = await this.getSessionById(sessionId);
     if (!session) {
       throw new Error(`Session not found: ${sessionId}`);
     }
 
-    const currentWorldbookData = session.generation_output.worldbook_data || [];
-    const updatedWorldbookData = [...currentWorldbookData, ...newEntries];
+    // Update specialized worldbook data fields
+    if (worldbookData.status_data) {
+      session.generation_output.status_data = worldbookData.status_data;
+    }
     
-    session.generation_output.worldbook_data = updatedWorldbookData;
+    if (worldbookData.user_setting_data) {
+      session.generation_output.user_setting_data = worldbookData.user_setting_data;
+    }
+    
+    if (worldbookData.world_view_data) {
+      session.generation_output.world_view_data = worldbookData.world_view_data;
+    }
+    
+    if (worldbookData.supplement_data && worldbookData.supplement_data.length > 0) {
+      const currentSupplements = session.generation_output.supplement_data || [];
+      session.generation_output.supplement_data = [...currentSupplements, ...worldbookData.supplement_data];
+    }
+    
     await this.saveSession(session);
   }
 

@@ -55,7 +55,17 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     
     window.addEventListener("resize", checkIfMobile);
     
-    return () => window.removeEventListener("resize", checkIfMobile);
+    // Handle closing model sidebar when character sidebar opens on mobile
+    const handleCloseModelSidebar = () => {
+      setModelSidebarOpen(false);
+    };
+
+    window.addEventListener("closeModelSidebar", handleCloseModelSidebar);
+    
+    return () => {
+      window.removeEventListener("resize", checkIfMobile);
+      window.removeEventListener("closeModelSidebar", handleCloseModelSidebar);
+    };
   }, []);
 
   const toggleSidebar = () => {
@@ -63,7 +73,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   };
 
   const toggleModelSidebar = () => {
-    setModelSidebarOpen(!modelSidebarOpen);
+    const newModelSidebarState = !modelSidebarOpen;
+    setModelSidebarOpen(newModelSidebarState);
+    
+    // On mobile, when opening ModelSidebar, close CharacterSidebar to prevent conflicts
+    if (isMobile && newModelSidebarState) {
+      // Dispatch custom event to notify character page to close its sidebar
+      const closeCharacterSidebarEvent = new CustomEvent("closeCharacterSidebar");
+      window.dispatchEvent(closeCharacterSidebarEvent);
+    }
   };
 
   if (!mounted) {
@@ -92,7 +110,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           `}
       >
         <div className="h-full relative">
-          <div className="absolute top-4 right-4 z-[999]">
+          <div className={`absolute top-4 right-4 z-[999] ${isMobile && modelSidebarOpen ? "hidden" : ""}`}>
             <SettingsDropdown toggleModelSidebar={toggleModelSidebar} />
           </div>
 

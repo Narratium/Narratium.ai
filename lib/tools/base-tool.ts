@@ -3,7 +3,7 @@ import {
   ExecutionContext,
   ExecutionResult,
   KnowledgeEntry,
-} from "@/lib/models/agent-model";
+} from "../models/agent-model";
 import { v4 as uuidv4 } from "uuid";
 
 // ============================================================================
@@ -47,7 +47,7 @@ export interface SimpleTool {
  * Base Tool - Pure Execution Unit (Following DeepResearch Philosophy)
  * No LLM calls, no parameter generation, just direct execution
  */
-export abstract class BaseSimpleTool implements SimpleTool {
+export abstract class BaseTool implements SimpleTool {
   abstract readonly toolType: ToolType;
   abstract readonly name: string;
   abstract readonly description: string;
@@ -58,7 +58,6 @@ export abstract class BaseSimpleTool implements SimpleTool {
    */
   async execute(context: ExecutionContext, parameters: Record<string, any>): Promise<ExecutionResult> {
     try {
-      console.log(`🛠️ [${this.name}] Executing with parameters:`, parameters);
       
       // Direct execution with provided parameters
       const result = await this.doWork(parameters, context);

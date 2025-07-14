@@ -426,3 +426,286 @@
   animation: backgroundBreath 12s ease-in-out infinite;
   box-shadow: inset 0 0 26px rgba(180, 130, 70, 0.06), 0 0 14px rgba(140, 90, 40, 0.04);
 }
+
+/* Enhanced message card styling for better readability */
+.message-card {
+  background: linear-gradient(to bottom right,
+      rgba(244, 232, 193, 0.04),
+      rgba(244, 232, 193, 0.02));
+  border: 1px solid rgba(192, 164, 128, 0.15);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(2px);
+}
+
+.message-card:hover {
+  border-color: rgba(209, 163, 92, 0.25);
+  background: linear-gradient(to bottom right,
+      rgba(244, 232, 193, 0.06),
+      rgba(244, 232, 193, 0.03));
+}
+
+/* Enhanced status indicators with fantasy styling */
+.fantasy-status-indicator {
+  background: linear-gradient(to right,
+      rgba(192, 164, 128, 0.1),
+      rgba(192, 164, 128, 0.05));
+  border: 1px solid rgba(192, 164, 128, 0.2);
+  border-radius: 6px;
+  padding: 8px 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.fantasy-status-indicator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+      transparent, 
+      rgba(249, 200, 109, 0.1), 
+      transparent);
+  transition: left 0.5s ease;
+}
+
+.fantasy-status-indicator:hover::before {
+  left: 100%;
+}
+
+/* Improved progress ring with fantasy colors */
+.fantasy-progress-ring {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fantasy-progress-ring svg {
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 0 4px rgba(249, 200, 109, 0.3));
+}
+
+.fantasy-progress-ring .progress-circle {
+  stroke: #f9c86d;
+  stroke-dasharray: 0 351.86;
+  stroke-dashoffset: 0;
+  transition: stroke-dasharray 1s ease;
+}
+
+.fantasy-progress-ring .progress-background {
+  stroke: rgba(192, 164, 128, 0.2);
+}
+
+/* Enhanced typography for different message types */
+.message-thinking {
+  font-style: italic;
+  color: #d1a35c;
+  background: linear-gradient(to right,
+      rgba(209, 163, 92, 0.08),
+      rgba(209, 163, 92, 0.04));
+  border-left: 3px solid rgba(209, 163, 92, 0.3);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  margin: 8px 0;
+}
+
+.message-action {
+  color: #c0a480;
+  background: linear-gradient(to right,
+      rgba(123, 199, 226, 0.08),
+      rgba(123, 199, 226, 0.04));
+  border-left: 3px solid rgba(123, 199, 226, 0.3);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  margin: 8px 0;
+}
+
+.message-result {
+  color: #c0a480;
+  background: linear-gradient(to right,
+      rgba(177, 232, 255, 0.08),
+      rgba(177, 232, 255, 0.04));
+  border-left: 3px solid rgba(177, 232, 255, 0.3);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  margin: 8px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.message-error {
+  color: #f4a4a4;
+  background: linear-gradient(to right,
+      rgba(244, 164, 164, 0.08),
+      rgba(244, 164, 164, 0.04));
+  border-left: 3px solid rgba(244, 164, 164, 0.3);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  margin: 8px 0;
+}
+
+/* Enhanced code block styling */
+.fantasy-code-block {
+  background: linear-gradient(to bottom,
+      rgba(30, 28, 27, 0.8),
+      rgba(30, 28, 27, 0.6));
+  border: 1px solid rgba(83, 71, 65, 0.4);
+  border-radius: 6px;
+  padding: 16px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  color: #e0d0b0;
+  position: relative;
+  overflow-x: auto;
+}
+
+.fantasy-code-block::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right,
+      transparent,
+      rgba(249, 200, 109, 0.3),
+      transparent);
+}
+
+/* Enhanced list styling */
+.fantasy-list {
+  margin: 12px 0;
+  padding-left: 20px;
+}
+
+.fantasy-list li {
+  margin: 6px 0;
+  position: relative;
+  color: #c0a480;
+  line-height: 1.6;
+}
+
+.fantasy-list li::before {
+  content: '✦';
+  position: absolute;
+  left: -16px;
+  color: #d1a35c;
+  font-size: 0.8em;
+}
+
+/* Refined button styling */
+.fantasy-button {
+  background: linear-gradient(135deg, 
+      rgba(249, 200, 109, 0.8), 
+      rgba(209, 163, 92, 0.9));
+  border: 1px solid rgba(249, 200, 109, 0.4);
+  border-radius: 6px;
+  color: #1a1915;
+  font-weight: 600;
+  padding: 10px 20px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.fantasy-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+      transparent, 
+      rgba(255, 255, 255, 0.3), 
+      transparent);
+  transition: left 0.5s ease;
+}
+
+.fantasy-button:hover::before {
+  left: 100%;
+}
+
+.fantasy-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(249, 200, 109, 0.3);
+  border-color: rgba(249, 200, 109, 0.6);
+}
+
+.fantasy-button:active {
+  transform: translateY(0);
+}
+
+/* Enhanced input styling */
+.fantasy-input {
+  background: linear-gradient(to bottom,
+      rgba(30, 28, 27, 0.6),
+      rgba(30, 28, 27, 0.4));
+  border: 1px solid rgba(192, 164, 128, 0.2);
+  border-radius: 6px;
+  color: #c0a480;
+  padding: 10px 14px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.fantasy-input:focus {
+  outline: none;
+  border-color: rgba(249, 200, 109, 0.4);
+  box-shadow: 0 0 0 2px rgba(249, 200, 109, 0.1);
+  background: linear-gradient(to bottom,
+      rgba(30, 28, 27, 0.8),
+      rgba(30, 28, 27, 0.6));
+}
+
+.fantasy-input::placeholder {
+  color: rgba(192, 164, 128, 0.5);
+}
+
+/* Subtle animation improvements */
+@keyframes gentleGlow {
+  0%, 100% { 
+    box-shadow: 0 0 5px rgba(249, 200, 109, 0.2);
+  }
+  50% { 
+    box-shadow: 0 0 8px rgba(249, 200, 109, 0.3);
+  }
+}
+
+.fantasy-glow {
+  animation: gentleGlow 3s ease-in-out infinite;
+}
+
+/* Enhanced scrollbar to match fantasy theme */
+.fantasy-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.fantasy-scrollbar::-webkit-scrollbar-track {
+  background: rgba(30, 28, 27, 0.6);
+  border-radius: 5px;
+}
+
+.fantasy-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom,
+      rgba(83, 71, 65, 0.8),
+      rgba(209, 163, 92, 0.4),
+      rgba(83, 71, 65, 0.8));
+  border-radius: 5px;
+  border: 1px solid rgba(209, 163, 92, 0.2);
+}
+
+.fantasy-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom,
+      rgba(83, 71, 65, 0.9),
+      rgba(209, 163, 92, 0.5),
+      rgba(83, 71, 65, 0.9));
+  border-color: rgba(209, 163, 92, 0.3);
+}

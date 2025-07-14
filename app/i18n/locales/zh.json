@@ -40,7 +40,14 @@
     "expandCreator": "展开创作区",
     "goToUpdate": "前往更新",
     "newVersionAvailable": "发现新版本",
-    "currentVersion": "当前版本: v{version}"
+    "currentVersion": "当前版本: v{version}",
+    "creationHistory": "创作历史",
+    "confirmDelete": "您确定要删除这个会话吗？",
+    "deleteError": "删除会话失败。",
+    "deleteSession": "删除会话",
+    "collapseHistory": "折叠历史",
+    "expandHistory": "展开历史",
+    "noHistory": "暂无历史记录"
   },
   "modelSettings": {
     "title": "模型设置",
@@ -240,10 +247,15 @@
     "fetchError": "获取角色失败",
     "deleteFailed": "删除角色失败",
     "delete": "删除",
+    "move_to_top": "置顶",
     "edit": "编辑",
     "chat": "聊天",
     "recentlyCreated": "最近创建",
-    "downloadCharacter": "社区下载角色"
+    "downloadCharacter": "下载角色",
+    "createCharacter": "创建角色",
+    "startChat": "开始对话",
+    "confirmDelete": "您确定要删除此角色吗？",
+    "deleteSuccess": "角色删除成功"
   },
   "editCharacterModal": {
     "title": "编辑角色",
@@ -305,14 +317,10 @@
     "screen": "场景",
     "nextPrompt": "下一步",
     "storyProgress": "剧情推进",
-    "storyProgressHint": "（下一步根据全部有效信息推进故事发展）",
     "perspective": "视角设计",
     "novelPerspective": "小说视角",
     "protagonistPerspective": "主角视角",
-    "novelPerspectiveHint": "（下次以小说上帝视角回复，必须包含剧透姓名）",
-    "protagonistPerspectiveHint": "（下次以主角视角回复，必须使用我或者主角的实际名称）",
     "sceneTransition": "场景过渡",
-    "sceneTransitionHint": "（下一次进行自然的场景过渡，实现场景切换）",
     "screenPlaceholder": "描述场景或动作...",
     "speechPlaceholder": "角色说的话...",
     "innerThoughtPlaceholder": "角色心里想了什么...",
@@ -496,17 +504,33 @@
     "responsePlaceholder": "编辑回复内容...",
     "resetLayout": "重置布局",
     "manualPositions": "手动位置"
-  },  
+  },
   "downloadModal": {
-      "title": "从社区仓库下载角色",
-      "loading": "加载中…",
-      "fetchError": "无法获取角色列表",
-      "downloadFailed": "下载失败",
-      "importFailed": "导入失败",
-      "importing": "导入中…",
-      "downloadAndImport": "下载并导入",
-      "by": "作者：",
-      "unknownAuthor": "佚名"
+    "title": "角色市场",
+    "refresh": "刷新",
+    "refreshing": "刷新中...",
+    "fetchError": "从市场获取角色失败，请稍后再试。",
+    "downloadFailed": "下载失败。",
+    "importFailed": "导入失败。",
+    "unknownAuthor": "未知",
+    "allCharacters": "全部 ({count})",
+    "tagFilter": "标签",
+    "tags": {
+      "Cultivation": "修仙",
+      "Fantasy": "玄幻",
+      "NSFW": "NSFW",
+      "Fanfiction": "同人",
+      "Anime": "二次元",
+      "Other": "其它"
+    },
+    "noCharactersInTag": "该标签下没有找到角色。",
+    "loading": "正在从市场中召唤角色...",
+    "preloading": "预加载图片中...",
+    "preloadingDescription": "正在优化图片加载体验，请稍候...",
+    "viewNsfw": "查看",
+    "by": "作者：",
+    "importing": "导入中...",
+    "downloadAndImport": "下载并导入"
   },
   "creatorInput": {
     "title": "Creator Studio",
@@ -729,7 +753,40 @@
     "noGlobalRegexScripts": "暂无全局正则脚本",
     "createGlobalRegexScriptFirst": "请先创建全局正则脚本",
     "selectGlobalRegexScript": "选择全局正则脚本",
-    "willUseEachFileName": "将使用每个文件的名称作为脚本名称"
+    "willUseEachFileName": "将使用每个文件的名称作为脚本名称",
+    "emptyReplaceHint": "空：将删除匹配的文本",
+    "optional": "可选"
+  },
+  "agentProgress": {
+    "title": "创作进度",
+    "subtitle": "AI创作监控",
+    "idle": "空闲",
+    "thinking": "思考中",
+    "executing": "执行中",
+    "waitingUser": "等待输入",
+    "completed": "已完成",
+    "failed": "失败",
+    "unknown": "未知状态",
+    "statistics": "统计信息",
+    "results": "生成结果",
+    "iterations": "迭代次数",
+    "knowledgeBase": "知识库",
+    "characterCard": "角色卡",
+    "statusSystem": "状态系统",
+    "worldData": "世界数据"
+  },
+  "creatorAreaLoading": {
+    "title": "创作工坊",
+    "subtitle": "正在为您准备AI创作环境",
+    "analyzingNeeds": "智能体正在分析您的需求并设置创作流程...",
+    "stage": "创作阶段",
+    "initializing": "初始化中",
+    "stages": {
+      "analyze": "分析",
+      "plan": "规划",
+      "create": "创作",
+      "complete": "完成"
+    }
   },
   "tour": {
     "welcome": "欢迎使用 Narratium",

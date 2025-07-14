@@ -2,18 +2,18 @@ import {
   ToolType, 
   ExecutionContext, 
   ExecutionResult, 
-} from "@/lib/models/agent-model";
-import { BaseSimpleTool, ToolParameter } from "@/lib/tools/base-tool";
+} from "../../models/agent-model";
+import { BaseTool, ToolParameter } from "../base-tool";
 
 /**
  * Character Tool - Pure Execution Unit
  * Updates or adds one or more character fields to the character card data
  * Can be used incrementally to build up the character over multiple tool calls
  */
-export class CharacterTool extends BaseSimpleTool {
+export class CharacterTool extends BaseTool {
   readonly toolType = ToolType.CHARACTER;
   readonly name = "CHARACTER";
-  readonly description = "Generate or update character card data - one of the most frequently used tools. Build character incrementally by adding fields in REQUIRED logical order: name → description → personality → scenario → first_mes → mes_example → creator_notes → tags. ALL EIGHT CORE FIELDS ARE REQUIRED for a complete character card. Optional fields like alternate_greetings can be added to enhance player choice. Use multiple tool calls to build systematically, with each call adding one or more fields. CHARACTER generation with all required fields must be completed BEFORE starting worldbook creation, as worldbook entries should complement and enhance the established character.";
+  readonly description = "Generate or update character card data - one of the most frequently used tools. Build character incrementally by adding fields in REQUIRED logical insert_order: name → description → personality → scenario → first_mes → mes_example → creator_notes → tags. ALL EIGHT CORE FIELDS ARE REQUIRED for a complete character card. Optional fields like alternate_greetings can be added to enhance player choice. IMPORTANT: Generally generate ONE attribute at a time and make the content as rich and detailed as possible. Use multiple tool calls to build systematically, focusing on creating comprehensive, immersive content for each field. CHARACTER generation with all required fields must be completed BEFORE starting worldbook creation, as worldbook entries should complement and enhance the established character.";
   
   readonly parameters: ToolParameter[] = [
     {
@@ -49,7 +49,7 @@ export class CharacterTool extends BaseSimpleTool {
     {
       name: "mes_example",
       type: "string", 
-      description: "Comprehensive dialogue examples demonstrating the character's complex communication patterns, personality nuances, and behavioral consistency. Should include multiple conversation scenarios (typically 3-6 exchanges) showing: speech patterns and vocabulary choices, emotional range and reactions, decision-making style, relationship dynamics, cultural background influence, and situational adaptability. Include both casual and intense conversation examples to showcase character depth and versatility across different narrative contexts.",
+      description: "A comprehensive and immersive example of a message (mes) from the character. This should go beyond simple dialogue examples and act as a dynamic narrative segment, typically spanning multiple paragraphs (300-800 words). It MUST integrate:\n1. Detailed scene introduction and atmospheric setting.\n2. Deep internal monologue or character reflection, revealing thoughts, memories, and motivations.\n3. Dynamic display of real-time game information or context, explicitly using the <status> XML tag to encapsulate structured data (e.g., character status, environmental stats, interactive options). This part should be clearly separated from the narrative text.\n4. Engaging dialogue demonstrating character's communication style, emotional range, and interactions with other entities.\n5. Character's actions, reactions, and decision-making processes within the scene.\nThis example serves as a living demonstration of the character's in-world behavior and the interactive elements of the scenario.",
       required: false,
     },
     {
