@@ -441,7 +441,7 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
         animate={{ scale: 1, opacity: 1 }} 
         className={`bg-[#1a1714] rounded-lg shadow-2xl w-full border border-[#534741] relative z-10 ${
           isMobile 
-            ? "h-full max-h-[calc(100vh-8rem)] p-3 rounded-none pb-24" 
+            ? "h-full max-h-[calc(100vh-12rem)] p-3 rounded-none pb-28" 
             : "p-6 max-w-6xl max-h-[90vh] rounded-lg"
         }`}
       >
@@ -588,7 +588,7 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
           ) : (
             <div className={`${
               isMobile 
-                ? "grid grid-cols-1 gap-3 max-h-[calc(100vh-320px)] overflow-y-auto pr-1"
+                ? "grid grid-cols-1 gap-3 max-h-[calc(100vh-380px)] overflow-y-auto pr-1"
                 : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto pr-2"
             }`}>
               <AnimatePresence mode="wait">
