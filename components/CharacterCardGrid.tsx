@@ -93,17 +93,6 @@ const CharacterCardGrid: React.FC<CharacterCardGridProps> = ({
             <div className="relative session-card h-full transition-all duration-300">
               {/* Action buttons for each card */}
               <div className="absolute top-1 right-1 sm:top-2 sm:right-2 flex space-x-0.5 sm:space-x-1 z-10">
-                <Link
-                  href={`/character?id=${character.id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="p-1 sm:p-1.5 bg-[#252220] hover:bg-[#3a2a2a] rounded-full text-[#c0a480] hover:text-[#ffd475] transition-colors"
-                  title={t("characterCardsPage.chat")}
-                  aria-label={t("characterCardsPage.chat")}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#c0a480] hover:text-[#ffd475] transition-colors sm:w-3.5 sm:h-3.5">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                  </svg>
-                </Link>
                 <button
                   onClick={(e) => {trackButtonClick("edit_character_btn", "编辑角色"); onEditClick(character, e);}}
                   className="p-1 sm:p-1.5 bg-[#252220] hover:bg-[#3a2a2a] rounded-full text-[#c0a480] hover:text-[#ffd475] transition-colors"
