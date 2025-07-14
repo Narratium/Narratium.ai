@@ -7,6 +7,8 @@ import { deletePromptFromPreset, togglePromptEnabled } from "@/function/preset/e
 import { useLanguage } from "@/app/i18n";
 import ImportPresetModal from "@/components/ImportPresetModal";
 import CreatePresetModal from "@/components/CreatePresetModal";
+import EditPresetNameModal from "@/components/EditPresetNameModal";
+import CopyPresetModal from "@/components/CopyPresetModal";
 import "@/app/styles/fantasy-ui.css";
 import React from "react";
 import EditPromptModal from "@/components/EditPromptModal";
@@ -61,6 +63,10 @@ export default function PresetEditor({
   const [filterBy, setFilterBy] = useState<string>("all");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentEditingPrompt, setCurrentEditingPrompt] = useState<PresetPromptData | null>(null);
+  const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
+  const [currentEditingPreset, setCurrentEditingPreset] = useState<PresetData | null>(null);
+  const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
+  const [currentCopyingPreset, setCurrentCopyingPreset] = useState<PresetData | null>(null);
 
   const SORT_STORAGE_KEY = `preset_sort_${characterId || "global"}`;
   const FILTER_STORAGE_KEY = `preset_filter_${characterId || "global"}`;
@@ -358,6 +364,37 @@ export default function PresetEditor({
     if (selectedPreset) {
       await handleSelectPreset(selectedPreset.id);
     }
+  };
+
+  const handleEditPresetName = (preset: PresetData) => {
+    setCurrentEditingPreset(preset);
+    setIsEditNameModalOpen(true);
+  };
+
+  const handleCloseEditNameModal = () => {
+    setIsEditNameModalOpen(false);
+    setCurrentEditingPreset(null);
+  };
+
+  const handleSaveEditPresetName = async () => {
+    await loadPresetData();
+    if (selectedPreset && currentEditingPreset && selectedPreset.id === currentEditingPreset.id) {
+      await handleSelectPreset(selectedPreset.id);
+    }
+  };
+
+  const handleCopyPreset = (preset: PresetData) => {
+    setCurrentCopyingPreset(preset);
+    setIsCopyModalOpen(true);
+  };
+
+  const handleCloseCopyModal = () => {
+    setIsCopyModalOpen(false);
+    setCurrentCopyingPreset(null);
+  };
+
+  const handleSaveCopyPreset = async () => {
+    await loadPresetData();
   };
 
   const handleTogglePrompt = async (presetId: string, promptIdentifier: string, enableState: boolean) => {
@@ -789,11 +826,11 @@ export default function PresetEditor({
             <thead className="sticky top-0 bg-[#252220] border-b border-[#534741] z-10">
               <tr>
                 <th className={`w-12 sm:w-16 p-1.5 sm:p-3 text-left text-[10px] sm:text-xs font-medium text-[#a18d6f] uppercase tracking-wider whitespace-nowrap ${fontClass}`}>{t("preset.toggle")}</th>
-                <th className={`w-24 sm:w-32 p-1.5 sm:p-3 text-left text-[10px] sm:text-xs font-medium text-[#a18d6f] uppercase tracking-wider whitespace-nowrap ${fontClass}`}>{t("preset.status")}</th>
+                <th className={`w-24 sm:w-24 p-1.5 sm:p-3 text-left text-[10px] sm:text-xs font-medium text-[#a18d6f] uppercase tracking-wider whitespace-nowrap ${fontClass}`}>{t("preset.status")}</th>
                 <th className={`w-20 sm:w-24 p-1.5 sm:p-3 text-left text-[10px] sm:text-xs font-medium text-[#a18d6f] uppercase tracking-wider whitespace-nowrap ${fontClass}`}>{t("preset.name")}</th>
                 <th className={`w-20 sm:w-24 p-1.5 sm:p-3 text-left text-[10px] sm:text-xs font-medium text-[#a18d6f] uppercase tracking-wider whitespace-nowrap ${fontClass}`}>{t("preset.prompts")}</th>
-                <th className={`w-24 sm:w-32 p-1.5 sm:p-3 text-left text-[10px] sm:text-xs font-medium text-[#a18d6f] uppercase tracking-wider whitespace-nowrap ${fontClass}`}>{t("preset.updated")}</th>
-                <th className={`w-16 sm:w-12 p-1.5 sm:p-3 text-left text-[10px] sm:text-xs font-medium text-[#a18d6f] uppercase tracking-wider whitespace-nowrap ${fontClass}`}>{t("preset.actions")}</th>
+                <th className={`w-20 sm:w-20 p-1.5 sm:p-3 text-left text-[10px] sm:text-xs font-medium text-[#a18d6f] uppercase tracking-wider whitespace-nowrap ${fontClass}`}>{t("preset.updated")}</th>
+                <th className={`w-16 sm:w-20 p-1.5 sm:p-3 text-left text-[10px] sm:text-xs font-medium text-[#a18d6f] uppercase tracking-wider whitespace-nowrap ${fontClass}`}>{t("preset.actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -897,20 +934,27 @@ export default function PresetEditor({
                     <td className="p-1.5 sm:p-3">
                       <div className="flex items-center space-x-0.5 sm:space-x-1">
                         <button
-                          onClick={() => {
-                            toggleRowExpansion(preset.id);
-                            if (!expandedRows.has(preset.id)) {
-                              handleSelectPreset(preset.id);
-                            }
-                          }}
+                          onClick={() => handleEditPresetName(preset)}
                           className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-[#a18d6f] hover:text-[#eae6db] transition-colors duration-300 rounded hover:bg-[#333] group"
-                          title={t("preset.edit")}
+                          title={t("preset.editPresetName")}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:scale-110">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                           </svg>
                         </button>
+                        
+                        <button
+                          onClick={() => handleCopyPreset(preset)}
+                          className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-[#8db4e9] hover:text-[#aec7f6] transition-colors duration-300 rounded hover:bg-[#333] group"
+                          title={t("preset.copyPreset")}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:scale-110">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                          </svg>
+                        </button>
+                       
                         <button
                           onClick={() => handleDeletePreset(preset.id)}
                           className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-red-400 hover:text-red-300 transition-colors duration-300 rounded hover:bg-[#333] group"
@@ -1063,6 +1107,20 @@ export default function PresetEditor({
           setIsCreateModalOpen(false);
           loadPresetData();
         }}
+      />
+      <EditPresetNameModal
+        isOpen={isEditNameModalOpen}
+        onClose={handleCloseEditNameModal}
+        onSuccess={handleSaveEditPresetName}
+        presetId={currentEditingPreset?.id || ""}
+        currentName={currentEditingPreset?.name || ""}
+      />
+      <CopyPresetModal
+        isOpen={isCopyModalOpen}
+        onClose={handleCloseCopyModal}
+        onSuccess={handleSaveCopyPreset}
+        sourcePresetId={currentCopyingPreset?.id || ""}
+        sourcePresetName={currentCopyingPreset?.name || ""}
       />
       <EditPromptModal
         isOpen={isEditModalOpen}
