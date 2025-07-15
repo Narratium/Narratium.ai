@@ -49,6 +49,7 @@ export async function handleCharacterChatRequest(payload: {
         llmType: llmType as "openai" | "ollama",
         temperature: 0.7,
         streaming: false,
+        streamUsage: true, // 确保token usage追踪
         number,
         fastModel,  
         systemPresetType: getCurrentSystemPresetType(),

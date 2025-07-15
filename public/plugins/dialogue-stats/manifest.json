@@ -1,0 +1,19 @@
+{
+  "id": "dialogue-stats",
+  "name": "对话统计 (Dialogue Statistics)",
+  "version": "2.0.0",
+  "description": "专注于对话内容统计分析的插件。实时显示字数、Token用量、响应时间等统计信息。Focused on dialogue content statistics and analysis. Real-time display of character count, token usage, response time and other metrics.",
+  "author": "Narratium Team",
+  "main": "main.js",
+  "icon": "📊",
+  "category": "analytics",
+  "permissions": [
+    "modify_ui",
+    "local_storage"
+  ],
+  "dependencies": [],
+  "minVersion": "1.0.0",
+  "keywords": ["statistics", "analytics", "dialogue", "token", "character", "response"],
+  "license": "MIT",
+  "enabled": true
+} 

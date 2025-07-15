@@ -27,6 +27,8 @@ export class LLMNode extends NodeBase {
     const llmType = input.llmType || "openai";
     const temperature = input.temperature;
     const language = input.language || "zh";
+    const streaming = input.streaming || false;
+    const streamUsage = input.streamUsage ?? true; // 默认启用token usage追踪
 
     if (!systemMessage) {
       throw new Error("System message is required for LLMNode");
@@ -47,6 +49,8 @@ export class LLMNode extends NodeBase {
         llmType,
         temperature,
         language,
+        streaming,
+        streamUsage,
       },
     ) as string;
 

@@ -5,6 +5,17 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { RunnablePassthrough } from "@langchain/core/runnables";
 
+// 为window对象添加lastTokenUsage属性的类型声明
+declare global {
+  interface Window {
+    lastTokenUsage?: {
+      prompt_tokens: number;
+      completion_tokens: number;
+      total_tokens: number;
+    };
+  }
+}
+
 export interface LLMConfig {
   modelName: string;
   apiKey: string;
@@ -57,18 +68,68 @@ export class LLMNodeTools extends NodeTool {
   ): Promise<string> {
     try {
       console.log("invokeLLM");
-      const llm = this.createLLM(config);
-      const dialogueChain = this.createDialogueChain(llm);
-      const response = await dialogueChain.invoke({
-        system_message: systemMessage,
-        user_message: userMessage,
-      });
+      
+      // 为了获取真实的token usage，我们需要直接调用LLM而不是使用chain
+      if (config.llmType === "openai") {
+        const openaiLlm = this.createLLM(config) as ChatOpenAI;
+        
+        // 直接调用LLM获取完整的AIMessage响应
+        const aiMessage = await openaiLlm.invoke([
+          { role: "system", content: systemMessage },
+          { role: "user", content: userMessage },
+        ]);
+        
+        // 提取token usage信息
+        let tokenUsage = null;
+        if (aiMessage.usage_metadata) {
+          tokenUsage = {
+            prompt_tokens: aiMessage.usage_metadata.input_tokens,
+            completion_tokens: aiMessage.usage_metadata.output_tokens,
+            total_tokens: aiMessage.usage_metadata.total_tokens,
+          };
+        } else if (aiMessage.response_metadata?.tokenUsage) {
+          // 兼容旧版本格式
+          tokenUsage = aiMessage.response_metadata.tokenUsage;
+        } else if (aiMessage.response_metadata?.usage) {
+          // 兼容另一种格式
+          tokenUsage = aiMessage.response_metadata.usage;
+        }
+        
+        // 如果没有从响应中获取到token usage，尝试从流式响应中获取
+        if (!tokenUsage && config.streaming && config.streamUsage) {
+          console.log("📊 Token usage not found in response, this may be due to streaming mode");
+        }
+        
+        // 将token usage信息存储到全局变量供插件使用
+        if (tokenUsage) {
+          if (typeof window !== "undefined") {
+            window.lastTokenUsage = tokenUsage;
+            console.log("📊 Token usage stored for plugins:", tokenUsage);
+            
+            // 触发自定义事件通知插件
+            const event = new CustomEvent("llm-token-usage", {
+              detail: { tokenUsage },
+            });
+            window.dispatchEvent(event);
+          }
+        }
+        
+        return aiMessage.content as string;
+      } else {
+        // 对于其他LLM类型，使用原来的chain方式
+        const llm = this.createLLM(config);
+        const dialogueChain = this.createDialogueChain(llm);
+        const response = await dialogueChain.invoke({
+          system_message: systemMessage,
+          user_message: userMessage,
+        });
+        
+        if (!response || typeof response !== "string") {
+          throw new Error("Invalid response from LLM");
+        }
 
-      if (!response || typeof response !== "string") {
-        throw new Error("Invalid response from LLM");
+        return response;
       }
-
-      return response;
     } catch (error) {
       this.handleError(error as Error, "invokeLLM");
     }
@@ -87,7 +148,7 @@ export class LLMNodeTools extends NodeTool {
       topK: 40,
       repeatPenalty: 1.1,
       streaming: false,
-      streamUsage: false,
+      streamUsage: true, // 默认启用token usage追踪
     };
 
     if (config.llmType === "openai") {

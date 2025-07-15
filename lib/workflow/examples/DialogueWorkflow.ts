@@ -6,6 +6,8 @@ import { WorldBookNode } from "@/lib/nodeflow/WorldBookNode/WorldBookNode";
 import { PresetNode } from "@/lib/nodeflow/PresetNode/PresetNode";
 import { LLMNode } from "@/lib/nodeflow/LLMNode/LLMNode";
 import { RegexNode } from "@/lib/nodeflow/RegexNode/RegexNode";
+import { PluginNode } from "@/lib/nodeflow/PluginNode/PluginNode";
+import { PluginMessageNode } from "@/lib/nodeflow/PluginNode/PluginMessageNode";
 import { OutputNode } from "@/lib/nodeflow/OutputNode/OutputNode";
 
 export interface DialogueWorkflowParams {
@@ -38,6 +40,9 @@ export class DialogueWorkflow extends BaseWorkflow {
       "userInput": {
         nodeClass: UserInputNode,
       },
+      "pluginMessage": {
+        nodeClass: PluginMessageNode,
+      },
       "context": {
         nodeClass: ContextNode,
       },
@@ -52,6 +57,9 @@ export class DialogueWorkflow extends BaseWorkflow {
       },
       "regex": {
         nodeClass: RegexNode,
+      },
+      "plugin": {
+        nodeClass: PluginNode,
       },
       "output": {
         nodeClass: OutputNode,
@@ -68,10 +76,19 @@ export class DialogueWorkflow extends BaseWorkflow {
           id: "user-input-1",
           name: "userInput",
           category: NodeCategory.ENTRY,
-          next: ["preset-1"],
-          initParams: ["characterId", "userInput", "number", "language", "username", "modelName", "apiKey", "baseUrl", "llmType", "temperature", "fastModel", "systemPresetType"],
+          next: ["plugin-message-1"],
+          initParams: ["characterId", "userInput", "number", "language", "username", "modelName", "apiKey", "baseUrl", "llmType", "temperature", "fastModel", "systemPresetType", "streaming", "streamUsage"],
           inputFields: [],
-          outputFields: ["characterId", "userInput", "number", "language", "username", "modelName", "apiKey", "baseUrl", "llmType", "temperature", "fastModel", "systemPresetType"],
+          outputFields: ["characterId", "userInput", "number", "language", "username", "modelName", "apiKey", "baseUrl", "llmType", "temperature", "fastModel", "systemPresetType", "streaming", "streamUsage"],
+        },
+        {
+          id: "plugin-message-1",
+          name: "pluginMessage",
+          category: NodeCategory.MIDDLE,
+          next: ["preset-1"],
+          initParams: [],
+          inputFields: ["characterId", "userInput"],
+          outputFields: ["characterId", "userInput", "number", "language", "username", "modelName", "apiKey", "baseUrl", "llmType", "temperature", "fastModel", "systemPresetType", "streaming", "streamUsage"],
         },
         {
           id: "preset-1",
@@ -109,16 +126,25 @@ export class DialogueWorkflow extends BaseWorkflow {
           category: NodeCategory.MIDDLE,
           next: ["regex-1"],
           initParams: [],
-          inputFields: ["systemMessage", "userMessage", "modelName", "apiKey", "baseUrl", "llmType", "temperature", "language"],
+          inputFields: ["systemMessage", "userMessage", "modelName", "apiKey", "baseUrl", "llmType", "temperature", "language", "streaming", "streamUsage"],
           outputFields: ["llmResponse"],
         },
         {
           id: "regex-1",
           name: "regex",
           category: NodeCategory.MIDDLE,
-          next: ["output-1"],
+          next: ["plugin-1"],
           initParams: [],
           inputFields: ["llmResponse", "characterId"],
+          outputFields: ["thinkingContent", "screenContent", "fullResponse", "nextPrompts", "event"],
+        },
+        {
+          id: "plugin-1",
+          name: "plugin",
+          category: NodeCategory.MIDDLE,
+          next: ["output-1"],
+          initParams: [],
+          inputFields: ["thinkingContent", "screenContent", "fullResponse", "nextPrompts", "event", "characterId"],
           outputFields: ["thinkingContent", "screenContent", "fullResponse", "nextPrompts", "event"],
         },
         {

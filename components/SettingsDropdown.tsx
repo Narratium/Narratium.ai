@@ -6,6 +6,7 @@ import { useSoundContext } from "@/contexts/SoundContext";
 import { useTour } from "@/hooks/useTour";
 import { exportDataToFile, importDataFromFile, generateExportFilename, downloadFile } from "@/function/data/export-import";
 import { backupToGoogle, getFolderList, getGoogleCodeByUrl, getGoogleLoginUrl, getBackUpFile } from "@/function/data/google-control";
+import PluginManagerModal from "@/components/PluginManagerModal";
 
 interface SettingsDropdownProps {
   toggleModelSidebar: () => void;
@@ -13,6 +14,7 @@ interface SettingsDropdownProps {
 
 export default function SettingsDropdown({ toggleModelSidebar }: SettingsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isPluginManagerOpen, setIsPluginManagerOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { language, setLanguage, t } = useLanguage();
   const { soundEnabled, toggleSound } = useSoundContext();
@@ -39,6 +41,11 @@ export default function SettingsDropdown({ toggleModelSidebar }: SettingsDropdow
 
   const openModelSettings = () => {
     toggleModelSidebar();
+    setIsOpen(false);
+  };
+
+  const openPluginManager = () => {
+    setIsPluginManagerOpen(true);
     setIsOpen(false);
   };
 
@@ -167,6 +174,19 @@ export default function SettingsDropdown({ toggleModelSidebar }: SettingsDropdow
             </button>
             
             <button
+              onClick={openPluginManager}
+              className="flex items-center w-full px-4 py-2 text-sm text-[#f4e8c1] hover:bg-[#252525] transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                <rect width="7" height="9" x="3" y="3" rx="1"/>
+                <rect width="7" height="5" x="14" y="3" rx="1"/>
+                <rect width="7" height="9" x="14" y="12" rx="1"/>
+                <rect width="7" height="5" x="3" y="16" rx="1"/>
+              </svg>
+              插件管理
+            </button>
+            
+            <button
               onClick={toggleSound}
               className="flex items-center w-full px-4 py-2 text-sm text-[#f4e8c1] hover:bg-[#252525] transition-colors"
             >
@@ -256,7 +276,12 @@ export default function SettingsDropdown({ toggleModelSidebar }: SettingsDropdow
             </button>
           </div>
         </div>
-      )}      
+      )}
+  
+      <PluginManagerModal
+        isOpen={isPluginManagerOpen}
+        onClose={() => setIsPluginManagerOpen(false)}
+      />
     </div>
   );
 }

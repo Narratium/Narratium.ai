@@ -30,6 +30,9 @@ import LoginModal from "@/components/LoginModal";
 import AccountModal from "@/components/AccountModal";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import "@/app/styles/fantasy-ui.css";
+import { PluginRegistry } from "@/lib/plugins/plugin-registry";
+import { PluginDiscovery } from "@/lib/plugins/plugin-discovery";
+import { ToolRegistry } from "@/lib/tools/tool-registry";
 
 /**
  * Main layout wrapper component that manages the application's core structure
@@ -63,6 +66,28 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     };
 
     window.addEventListener("closeModelSidebar", handleCloseModelSidebar);
+    
+    // Initialize enhanced plugin system
+    const initializePlugins = async () => {
+      try {
+        const pluginRegistry = PluginRegistry.getInstance();
+        const pluginDiscovery = PluginDiscovery.getInstance();
+        
+        await pluginRegistry.initialize();
+        await pluginDiscovery.discoverPlugins();
+        
+        // Expose plugin system to global scope for testing and debugging
+        (window as any).pluginRegistry = pluginRegistry;
+        (window as any).pluginDiscovery = pluginDiscovery;
+        (window as any).toolRegistry = ToolRegistry;
+        
+        console.log("🔌 Enhanced plugin system initialized and exposed to window object");
+      } catch (error) {
+        console.error("❌ Failed to initialize enhanced plugin system:", error);
+      }
+    };
+
+    initializePlugins();
     
     return () => {
       window.removeEventListener("resize", checkIfMobile);
