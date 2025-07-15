@@ -188,7 +188,11 @@
     "guestMode": "游客模式",
     "guestAccount": "游客账户",
     "verifiedAccount": "认证账户",
-    "logout": "退出登录"
+    "logout": "退出登录",
+    "usernameRequired": "用户名不能为空",
+    "usernameLength": "用户名长度必须在3-30个字符之间",
+    "usernameUpdated": "用户名更新成功",
+    "updateFailed": "更新失败，请重试"
   },
   "storiesPage": {
     "title": "我的故事",

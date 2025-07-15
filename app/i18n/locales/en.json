@@ -188,7 +188,11 @@
     "guestMode": "Guest Mode",
     "guestAccount": "Guest Account",
     "verifiedAccount": "Verified Account",
-    "logout": "Sign Out"
+    "logout": "Sign Out",
+    "usernameRequired": "Username is required",
+    "usernameLength": "Username must be between 3 and 30 characters",
+    "usernameUpdated": "Username updated successfully",
+    "updateFailed": "Update failed, please try again"
   },
   "storiesPage": {
     "title": "My Story Collection",

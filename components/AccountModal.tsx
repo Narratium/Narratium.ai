@@ -13,13 +13,15 @@ interface AccountModalProps {
 
 export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
   const { t, fontClass, serifFontClass } = useLanguage();
-  const { user, logout, isAuthenticated, refreshAuth } = useAuth();
+  const { user, logout, isAuthenticated, refreshAuth, updateUsername } = useAuth();
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
   
   const [isEditing, setIsEditing] = useState(false);
   const [editedUsername, setEditedUsername] = useState(user?.username || "");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     if (user?.username) {
@@ -52,22 +54,37 @@ export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
   }, [isOpen, onClose]);
 
   const handleSaveUsername = async () => {
-    if (!editedUsername.trim()) return;
+    if (!editedUsername.trim()) {
+      setError(t("account.usernameRequired"));
+      return;
+    }
+    
+    if (editedUsername.trim().length < 3 || editedUsername.trim().length > 30) {
+      setError(t("account.usernameLength"));
+      return;
+    }
     
     setIsLoading(true);
+    setError("");
+    setSuccessMessage("");
+    
     try {
-      // Update localStorage for guest users
-      const loginMode = localStorage.getItem("loginMode");
-      if (loginMode === "guest") {
-        localStorage.setItem("username", editedUsername.trim());
-        window.location.reload();
+      const result = await updateUsername(editedUsername.trim());
+      
+      if (result.success) {
+        setSuccessMessage(t("account.usernameUpdated"));
+        setIsEditing(false);
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage("");
+        }, 3000);
       } else {
-        // TODO: Add API call for registered users
-        console.log("Update username for registered user:", editedUsername);
+        setError(result.message || t("account.updateFailed"));
       }
-      setIsEditing(false);
     } catch (error) {
       console.error("Failed to update username:", error);
+      setError(t("account.updateFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -156,30 +173,57 @@ export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
                       {t("account.username")}
                     </label>
                     {isEditing ? (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={editedUsername}
-                          onChange={(e) => setEditedUsername(e.target.value)}
-                          className="flex-1 bg-[#2a2a2a] border border-[#3a3a3a] rounded-lg px-3 py-2 text-[#f4e8c1] text-sm focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20"
-                          autoFocus
-                        />
-                        <button
-                          onClick={handleSaveUsername}
-                          disabled={isLoading || !editedUsername.trim()}
-                          className="px-3 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs rounded-lg transition-colors duration-200"
-                        >
-                          {isLoading ? "..." : "✓"}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setIsEditing(false);
-                            setEditedUsername(user.username);
-                          }}
-                          className="px-3 py-2 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-[#ccc] text-xs rounded-lg transition-colors duration-200"
-                        >
-                          ✕
-                        </button>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={editedUsername}
+                            onChange={(e) => setEditedUsername(e.target.value)}
+                            className="flex-1 bg-[#2a2a2a] border border-[#3a3a3a] rounded-lg px-3 py-2 text-[#f4e8c1] text-sm focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20"
+                            autoFocus
+                          />
+                          <button
+                            onClick={handleSaveUsername}
+                            disabled={isLoading || !editedUsername.trim()}
+                            className="px-3 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs rounded-lg transition-colors duration-200"
+                          >
+                            {isLoading ? "..." : "✓"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsEditing(false);
+                              setEditedUsername(user.username);
+                              setError("");
+                              setSuccessMessage("");
+                            }}
+                            className="px-3 py-2 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-[#ccc] text-xs rounded-lg transition-colors duration-200"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        
+                        {/* Error message */}
+                        {error && (
+                          <div className="mt-2 text-xs text-red-400 flex items-center gap-1">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10"></circle>
+                              <line x1="15" y1="9" x2="9" y2="15"></line>
+                              <line x1="9" y1="9" x2="15" y2="15"></line>
+                            </svg>
+                            <span>{error}</span>
+                          </div>
+                        )}
+                        
+                        {/* Success message */}
+                        {successMessage && (
+                          <div className="mt-2 text-xs text-green-400 flex items-center gap-1">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M9 12l2 2 4-4"></path>
+                              <circle cx="12" cy="12" r="10"></circle>
+                            </svg>
+                            <span>{successMessage}</span>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="flex items-center justify-between group">

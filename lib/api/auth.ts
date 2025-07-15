@@ -42,6 +42,15 @@ interface VerifyTokenResponse extends APIResponse {
   };
 }
 
+interface UpdateUsernameResponse extends APIResponse {
+  token?: string;
+  user?: {
+    id: string;
+    username: string;
+    email: string;
+  };
+}
+
 class AuthAPI {
   // Generic fetch wrapper with error handling
   private static async fetchAPI<T>(
@@ -110,6 +119,19 @@ class AuthAPI {
     return this.fetchAPI<LoginResponse>("/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
+    });
+  }
+
+  // Update username for registered users
+  static async updateUsername(newUsername: string): Promise<UpdateUsernameResponse> {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    return this.fetchAPI<UpdateUsernameResponse>("/update-username", {
+      method: "PUT",
+      body: JSON.stringify({ token, newUsername }),
     });
   }
 

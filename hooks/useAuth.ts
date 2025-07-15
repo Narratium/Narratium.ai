@@ -124,11 +124,62 @@ export const useAuth = () => {
     checkAuthStatus();
   };
 
+  // Update username for both registered and guest users
+  const updateUsername = async (newUsername: string) => {
+    try {
+      const loginMode = localStorage.getItem("loginMode");
+      
+      if (loginMode === "guest") {
+        // Update guest user locally
+        localStorage.setItem("username", newUsername.trim());
+        setAuthState(prev => ({
+          ...prev,
+          user: prev.user ? { ...prev.user, username: newUsername.trim() } : null,
+        }));
+        // For guest users, return success first, then refresh
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500); // Give time for success message to show
+        return { success: true };
+      } else {
+        // Update registered user via API
+        const response = await AuthAPI.updateUsername(newUsername.trim());
+        
+        if (response.success && response.token && response.user) {
+          // Update stored authentication data with new token and user info
+          localStorage.setItem("authToken", response.token);
+          localStorage.setItem("username", response.user.username);
+          localStorage.setItem("userId", response.user.id);
+          localStorage.setItem("email", response.user.email);
+          
+          // Update state
+          setAuthState(prev => ({
+            ...prev,
+            user: response.user || null,
+          }));
+          
+          // Refresh the page to ensure all components are properly updated
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500); // Give time for success message to show
+          
+          return { success: true };
+        } else {
+          return { success: false, message: response.message };
+        }
+      }
+    } catch (error) {
+      console.error("Update username failed:", error);
+      return { success: false, message: error instanceof Error ? error.message : "Failed to update username" };
+    }
+  };
+
   return {
     ...authState,
     login,
     logout,
     refreshAuth,
+    updateUsername,
   };
 }; 
  
