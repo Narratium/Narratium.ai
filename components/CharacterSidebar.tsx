@@ -790,7 +790,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                   <div
                     className="absolute left-0 top-0 h-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-200"
                     style={{
-                      width: `${((currentResponseLength - 100) / 2900) * 100}%`,
+                      width: `${((currentResponseLength - 100) / 5000) * 100}%`,
                       clipPath:
                         "polygon(0 100%, calc(100% - 5px) 100%, 100% 0, 5px 0, 0 100%)",
                     }}
@@ -798,7 +798,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                   <input
                     type="range"
                     min="100"
-                    max="3000"
+                    max="5000"
                     step="50"
                     value={currentResponseLength}
                     onChange={handleResponseLengthChange}
@@ -817,7 +817,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                     {currentResponseLength}
                   </span>
                   <span className="text-[10px] md:text-xs font-medium text-[#9ca3af] ml-1">
-                    / 3000
+                    / 5000
                   </span>
                 </div>
               </div>

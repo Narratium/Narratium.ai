@@ -140,11 +140,9 @@ export default function CharacterChatHeader({
                 />
               </circle>
             </svg>
-            {isMobile && (
-              <span className={`ml-2 text-xs ${fontClass} group-hover:text-amber-300 transition-colors duration-300`}>
-                {t("characterChat.expandSidebar")}
-              </span>
-            )}
+            <span className={`ml-2 text-xs ${fontClass} group-hover:text-amber-300 transition-colors duration-300`}>
+              {t("characterChat.expandSidebar")}
+            </span>
           </div>
 
           <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400 to-transparent group-hover:w-3/4 transition-all duration-500"></div>
