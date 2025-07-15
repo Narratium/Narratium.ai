@@ -85,6 +85,7 @@ For Download Version: please refer to the [Download for Mac, Windows, Linux](htt
 - **Immersive Adventure Mode**: Create personalized worlds and make decisions that matter.
 - **Visual Memory Management**: React Flow-powered session tracing and branching.
 - **Character Cards & Lore**: Compatible with SillyTavern cards, manage everything in one place.
+- **Powerful Plugin System**: Supports a rich plugin ecosystem, extensible features, and custom UI components. See [Plugin Development Guide](./public/plugins/HOW_TO_ADD_PLUGINS.md) for details.
 
 | API Recommendations & Configuration |
 | :-------------- |
