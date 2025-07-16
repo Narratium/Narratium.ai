@@ -232,9 +232,9 @@ export default function CharacterCards() {
 
       // Define specific preset character files to download
       const presetCharacterNames = [
-        "全球冰封，我重生了！还觉醒了无限物资系统和超强安全屋！.png",
-        "一代大侠 .png", 
-        "doro.png",
+        "《致炽焰以战歌》(二次元)(同人、二创).png",
+        "为美好的世界献上祝福恋爱角色扮演--纯爱，同人二创(同人、二创).png",
+        "在地下城寻求邂逅是否搞错了什么（拓展神明扮演）--纯爱，系统工具(玄幻、同人、二创).png",
       ];
 
       // Filter and find the specific preset characters
