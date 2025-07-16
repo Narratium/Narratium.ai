@@ -360,7 +360,7 @@ export default function LoadingTransition({
         ></div>
         <img 
           ref={logoRef}
-          src="/logo.png" 
+          src="/logo-narratium.png" 
           className="logo" 
           alt="Narratium Logo"
           style={{
