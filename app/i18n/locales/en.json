@@ -47,7 +47,8 @@
     "deleteSession": "Delete Session",
     "collapseHistory": "Collapse History",
     "expandHistory": "Expand History",
-    "noHistory": "No history found."
+    "noHistory": "No history found.",
+    "downloadApp": "Download App"
   },
   "profile": {
     "edit": "Edit Profile",
@@ -877,5 +878,24 @@
     "enhancedSystem": "Enhanced Plugin System",
     "error": "Error:",
     "items": "items"
+  },
+  "appDownload": {
+    "title": "Download Narratium",
+    "subtitle": "Choose your platform to download the Narratium app:",
+    "platforms": {
+      "ios": "iOS",
+      "android": "Android", 
+      "windows": "Windows",
+      "macos": "macOS"
+    },
+    "descriptions": {
+      "ios": "iPhone & iPad App",
+      "android": "Android APK",
+      "windows": "Windows Desktop App",
+      "macos": "Mac Desktop App"
+    },
+    "comingSoon": "download will be available soon!",
+    "tip": "💡 Tip: You can also install directly from your browser by clicking \"Install\" when prompted.",
+    "close": "Close"
   }
 }

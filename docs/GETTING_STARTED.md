@@ -62,6 +62,11 @@ For Windows:
 pnpm pake-win
 ```
 
+For Android & IOS
+```bash
+pnpm build:pwa
+```
+
 ### Troubleshooting
 
 #### macOS Installation Fix

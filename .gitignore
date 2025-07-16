@@ -18,10 +18,15 @@ show.html
 /out/
 /public/characters
 
+# PWA generated files
+/public/sw.js
+/public/workbox-*.js
+
 # production
 /build
 !/data
 /data/*
+pwa-dist/
 # misc
 .DS_Store
 *.pem

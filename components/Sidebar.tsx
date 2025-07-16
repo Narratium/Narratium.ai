@@ -11,6 +11,7 @@ import { History, Trash2, ChevronDown } from "lucide-react";
 import { listAgentSessions } from "@/function/agent/list";
 import { deleteAgentSession } from "@/function/agent/delete-session";
 import { useAuth } from "@/hooks/useAuth";
+import PWAInstallButton from "./PWAInstallButton";
 
 // Current app version from package.json
 const CURRENT_VERSION = "1.1.9";
@@ -20,9 +21,10 @@ interface SidebarProps {
   toggleSidebar: () => void;
   openLoginModal: () => void;
   openAccountModal?: () => void;
+  openDownloadModal: () => void;
 }
 
-export default function Sidebar({ isOpen, toggleSidebar, openLoginModal, openAccountModal }: SidebarProps) {
+export default function Sidebar({ isOpen, toggleSidebar, openLoginModal, openAccountModal, openDownloadModal }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuth();
@@ -523,6 +525,14 @@ export default function Sidebar({ isOpen, toggleSidebar, openLoginModal, openAcc
             </button>
           )}
         </div>
+
+        {/* PWA Install Button */}
+        <PWAInstallButton 
+          isOpen={isOpen} 
+          animationComplete={animationComplete} 
+          fontClass={fontClass}
+          onOpenDownloadModal={openDownloadModal}
+        />
 
         <div>
           <a 

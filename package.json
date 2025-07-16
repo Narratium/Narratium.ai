@@ -10,6 +10,7 @@
     "lint": "next lint",
     "preview": "serve -s out",
     "test": "vitest",
+    "build:pwa": "node scripts/build-pwa.js",
     "pake-mac": "pake out/index.html --name Narratium --use-local-file --icon ./public/icon.icns --multi-arch",
     "pake-win": "pake out/index.html --name Narratium --use-local-file --icon ./public/icon.ico",
     "pake-linux": "pake out/index.html --name narratium --use-local-file --icon ./public/icon.png"
@@ -34,6 +35,7 @@
     "lucide-react": "^0.514.0",
     "marked": "^15.0.12",
     "next": "15.2.4",
+    "next-pwa": "^5.6.0",
     "png-chunk-text": "^1.0.0",
     "png-chunks-encode": "^1.0.0",
     "png-chunks-extract": "^1.0.0",
@@ -54,6 +56,7 @@
     "@next/eslint-plugin-next": "^15.3.1",
     "@tailwindcss/postcss": "^4",
     "@types/better-sqlite3": "^7.6.13",
+    "@types/next-pwa": "^5.6.9",
     "@types/node": "^20",
     "@types/png-chunk-text": "^1.0.3",
     "@types/png-chunks-encode": "^1.0.2",

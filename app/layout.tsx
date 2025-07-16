@@ -13,6 +13,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  themeColor: "#000000",
 };
 
 export const metadata: Metadata = {
@@ -21,6 +22,7 @@ export const metadata: Metadata = {
   description: "Narratium is an innovative interactive storytelling platform that brings your stories to life. Create, share, and experience unique narratives in a fantasy-themed environment.",
   keywords: "interactive storytelling, narrative platform, fantasy stories, creative writing, story creation",
   authors: [{ name: "Narratium Team" }],
+  manifest: "/manifest.json",
   openGraph: {
     title: "Narratium - Interactive Storytelling Platform",
     description: "Create and experience unique interactive stories in a fantasy-themed environment",
@@ -57,19 +59,25 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/icon.ico", sizes: "any" },
+      { url: "/icon.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [
-      { url: "/icon.ico", sizes: "180x180" },
-      { url: "/icon.ico", sizes: "152x152" },
-      { url: "/icon.ico", sizes: "120x120" },
+      { url: "/icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/icon.png", sizes: "152x152", type: "image/png" },
+      { url: "/icon.png", sizes: "120x120", type: "image/png" },
     ],
     shortcut: { url: "/icon.ico" },
     other: [
       {
         rel: "mask-icon",
-        url: "/icon.ico",
+        url: "/icon.png",
       },
     ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Narratium",
   },
 };
 

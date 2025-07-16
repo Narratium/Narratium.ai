@@ -28,6 +28,7 @@ import ModelSidebar from "@/components/ModelSidebar";
 import SettingsDropdown from "@/components/SettingsDropdown";
 import LoginModal from "@/components/LoginModal";
 import AccountModal from "@/components/AccountModal";
+import DownloadModal from "@/components/DownloadModal";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import { PluginRegistry } from "@/lib/plugins/plugin-registry";
 import { PluginDiscovery } from "@/lib/plugins/plugin-discovery";
@@ -46,6 +47,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const [modelSidebarOpen, setModelSidebarOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -125,6 +127,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         isOpen={isAccountModalOpen} 
         onClose={() => setIsAccountModalOpen(false)} 
       />
+      <DownloadModal 
+        isOpen={isDownloadModalOpen} 
+        onClose={() => setIsDownloadModalOpen(false)} 
+      />
       {/* Sidebar - hidden on mobile, visible on desktop */}
       <div className="fixed left-0 top-0 h-full z-10 hidden md:block">
         <Sidebar 
@@ -132,6 +138,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           toggleSidebar={toggleSidebar} 
           openLoginModal={() => setIsLoginModalOpen(true)} 
           openAccountModal={() => setIsAccountModalOpen(true)}
+          openDownloadModal={() => setIsDownloadModalOpen(true)}
         />
       </div>
       <main

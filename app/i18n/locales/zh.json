@@ -47,7 +47,8 @@
     "deleteSession": "删除会话",
     "collapseHistory": "折叠历史",
     "expandHistory": "展开历史",
-    "noHistory": "暂无历史记录"
+    "noHistory": "暂无历史记录",
+    "downloadApp": "下载应用"
   },
   "profile": {
     "edit": "编辑资料",
@@ -881,5 +882,24 @@
     "enhancedSystem": "增强插件系统",
     "error": "错误:",
     "items": "项"
+  },
+  "appDownload": {
+    "title": "下载 Narratium",
+    "subtitle": "选择您的平台下载 Narratium 应用：",
+    "platforms": {
+      "ios": "iOS",
+      "android": "Android", 
+      "windows": "Windows",
+      "macos": "macOS"
+    },
+    "descriptions": {
+      "ios": "iPhone 和 iPad 应用",
+      "android": "Android 安装包",
+      "windows": "Windows 桌面应用",
+      "macos": "Mac 桌面应用"
+    },
+    "comingSoon": "下载即将推出！",
+    "tip": "💡 提示：您也可以直接从浏览器安装，点击出现的\"安装\"按钮即可。",
+    "close": "关闭"
   }
 }
