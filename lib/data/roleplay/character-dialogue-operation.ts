@@ -82,15 +82,10 @@ export class LocalCharacterDialogueOperations {
     }
     
     // 创建变量状态快照
-    const isImportantNode = userInput.includes("|初始化变量|") || 
-                           assistantResponse.includes("{{setvar::") ||
-                           (parentNodeId === "root");
-    
     const variableData = BranchVariableManager.createVariableSnapshot(
       nodeId,
       parentNodeId,
       parentSnapshot,
-      isImportantNode, // 重要节点强制创建快照
     );
     
     const newNode = new DialogueNode(
@@ -117,14 +112,10 @@ export class LocalCharacterDialogueOperations {
     
     await writeData(CHARACTER_DIALOGUES_FILE, dialogues);
     
-    if (variableData.variableMetadata.hasChanges || variableData.variableSnapshot) {
-      console.log(`[分支变量] 已为节点 ${nodeId} 保存变量状态`, {
-        hasSnapshot: !!variableData.variableSnapshot,
-        changesCount: variableData.variableChanges?.length || 0,
-        size: variableData.variableMetadata.size,
-        isImportantNode,
-      });
-    }
+    console.log(`[分支变量] 已为节点 ${nodeId} 保存变量状态`, {
+      hasSnapshot: !!variableData.variableSnapshot,
+      changesCount: variableData.variableChanges?.length || 0,
+    });
     
     return nodeId;
   }
@@ -190,36 +181,22 @@ export class LocalCharacterDialogueOperations {
     
     // 恢复目标节点的变量状态
     try {
-      const startTime = Date.now();
+      await BranchVariableManager.restoreVariableState(nodeId, node, pathToNode);
+      console.log(`[分支变量] 已切换到节点 ${nodeId} 并恢复变量状态`);
       
-      // 先验证变量状态完整性
+      // 验证变量状态完整性
       const validation = BranchVariableManager.validateVariableState(pathToNode);
       if (!validation.isValid) {
         console.warn("[分支变量] 检测到变量状态链问题，尝试修复...");
         const repaired = await BranchVariableManager.repairVariableStateChain(pathToNode);
-        if (!repaired) {
+        if (repaired) {
+          console.log("[分支变量] 变量状态链修复成功");
+        } else {
           console.error("[分支变量] 变量状态链修复失败");
-          // 继续尝试恢复，但可能不完整
         }
       }
-      
-      const restoredVariables = await BranchVariableManager.restoreVariableState(nodeId, node, pathToNode);
-      const timeElapsed = Date.now() - startTime;
-      
-      console.log(`[分支变量] 已切换到节点 ${nodeId} 并恢复变量状态 (耗时: ${timeElapsed}ms)`);
-      
-      // 获取存储统计
-      const stats = BranchVariableManager.getStorageStatistics(pathToNode);
-      console.log("[分支变量] 存储统计:", {
-        节点数: stats.totalNodes,
-        快照数: stats.snapshotCount,
-        变更集数: stats.changeSetCount,
-        压缩率: `${(stats.compressionRatio * 100).toFixed(1)}%`,
-      });
     } catch (error) {
       console.error("[分支变量] 恢复变量状态失败:", error);
-      // 尝试使用默认变量
-      console.warn("[分支变量] 尝试使用默认变量状态");
     }
     
     dialogueTree.current_nodeId = nodeId;
