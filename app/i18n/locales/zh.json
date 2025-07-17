@@ -89,7 +89,15 @@
     "testSuccess": "模型测试成功",
     "testError": "模型测试失败",
     "apiTestFailed": "API 测试失败",
-    "modelTestFailed": "模型测试失败"
+    "modelTestFailed": "模型测试失败",
+    "enableOfficialApi": "启用官方 API",
+    "officialApi": "【官方】官方 API",
+    "addingOfficialApi": "正在添加官方API...",
+    "officialApiAdded": "官方API已添加",
+    "officialApiAlreadyExists": "官方API已存在",
+    "officialApiError": "获取官方API失败",
+    "needLogin": "需要登录才能使用官方API",
+    "guestLoginNotSupported": "游客登录不支持官方API"
   },
   "llmSettings": {
     "title": "设置",

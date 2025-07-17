@@ -89,7 +89,15 @@
     "testSuccess": "Model test successful",
     "testError": "Model test failed",
     "apiTestFailed": "API test failed",
-    "modelTestFailed": "Model test failed"
+    "modelTestFailed": "Model test failed",
+    "enableOfficialApi": "Enable Official API",
+    "officialApi": "【Official】Official API",
+    "addingOfficialApi": "Adding Official API...",
+    "officialApiAdded": "Official API Added",
+    "officialApiAlreadyExists": "Official API Already Exists",
+    "officialApiError": "Failed to Get Official API",
+    "needLogin": "Login Required for Official API",
+    "guestLoginNotSupported": "Guest Login Not Supported for Official API"
   },
   "llmSettings": {
     "title": "Settings",

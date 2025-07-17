@@ -69,6 +69,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
     window.addEventListener("closeModelSidebar", handleCloseModelSidebar);
     
+    // Handle opening login modal from other components
+    const handleShowLoginModal = () => {
+      setIsLoginModalOpen(true);
+    };
+
+    window.addEventListener("showLoginModal", handleShowLoginModal);
+    
     // Initialize enhanced plugin system
     const initializePlugins = async () => {
       try {
@@ -94,6 +101,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     return () => {
       window.removeEventListener("resize", checkIfMobile);
       window.removeEventListener("closeModelSidebar", handleCloseModelSidebar);
+      window.removeEventListener("showLoginModal", handleShowLoginModal);
     };
   }, []);
 

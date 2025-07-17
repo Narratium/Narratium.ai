@@ -33,6 +33,8 @@ import { useLanguage } from "@/app/i18n";
 import { trackButtonClick } from "@/utils/google-analytics";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatOllama } from "@langchain/ollama";
+import AuthAPI from "@/lib/api/auth";
+import { useAuth } from "@/hooks/useAuth";
 
 /**
  * Props interface for the ModelSidebar component
@@ -75,6 +77,7 @@ const DEFAULT_API_URL = typeof process !== "undefined" ? process.env.NEXT_PUBLIC
 
 export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProps) {
   const { t, fontClass, serifFontClass } = useLanguage();
+  const { isAuthenticated, user } = useAuth();
   
   const [configs, setConfigs] = useState<APIConfig[]>([]);
   const [activeConfigId, setActiveConfigId] = useState<string>("");
@@ -99,6 +102,11 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
 
   const [modelListEmpty, setModelListEmpty] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Official API related states
+  const [isAddingOfficialApi, setIsAddingOfficialApi] = useState(false);
+  const [officialApiSuccess, setOfficialApiSuccess] = useState(false);
+  const [officialApiError, setOfficialApiError] = useState("");
 
   // Mobile detection
   useEffect(() => {
@@ -162,12 +170,12 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
   // Listen for model changes from other components
   useEffect(() => {
     const handleModelChanged = (event: CustomEvent) => {
-      const { configId, modelName, configName } = event.detail;
+      const { configId, modelName, configName, config } = event.detail; // Destructure config from detail
       if (configId && configId !== activeConfigId) {
-        const selectedConfig = configs.find(c => c.id === configId);
-        if (selectedConfig) {
+        // Use the config object directly from the event detail
+        if (config) {
           setActiveConfigId(configId);
-          loadConfigToForm(selectedConfig);
+          loadConfigToForm(config); // Use 'config' directly
         } else {
           console.error("ModelSidebar: Config not found for id", configId);
         }
@@ -184,7 +192,7 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
     return () => {
       window.removeEventListener("modelChanged", handleModelChanged as EventListener);
     };
-  }, [configs, activeConfigId, model, llmType]);
+  }, [activeConfigId, model, llmType]); // Removed 'configs' from dependencies
 
   /**
    * Loads a configuration into the form fields
@@ -218,6 +226,121 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
    * @returns {string} A unique identifier
    */
   const generateId = () => `api_${Date.now()}`;
+
+  /**
+   * Checks if user is properly authenticated (not guest)
+   * @returns {boolean} True if properly authenticated
+   */
+  const isProperlyAuthenticated = () => {
+    const loginMode = localStorage.getItem("loginMode");
+    const authToken = localStorage.getItem("authToken");
+    return isAuthenticated && authToken && loginMode !== "guest";
+  };
+
+  /**
+   * Handles adding official API configuration
+   */
+  const handleAddOfficialApi = async () => {
+    // Check authentication
+    if (!isProperlyAuthenticated()) {
+      // Check if it's guest login specifically
+      const loginMode = localStorage.getItem("loginMode");
+      if (loginMode === "guest") {
+        setOfficialApiError(t("modelSettings.guestLoginNotSupported"));
+        setTimeout(() => setOfficialApiError(""), 3000);
+        return;
+      }
+      
+      // If not authenticated at all, show login modal
+      if (!isAuthenticated) {
+        window.dispatchEvent(new CustomEvent("showLoginModal"));
+        return;
+      }
+      
+      // If authenticated but no token (shouldn't happen normally)
+      setOfficialApiError(t("modelSettings.needLogin"));
+      setTimeout(() => setOfficialApiError(""), 3000);
+      return;
+    }
+
+    setIsAddingOfficialApi(true);
+    setOfficialApiError("");
+
+    try {
+      const response = await AuthAPI.getApiKeyInfo();
+      
+      if (response.success && response.data) {
+        const { apiKey: officialApiKey, baseUrl: officialBaseUrl } = response.data;
+        
+        // Check for existing configuration
+        const existingConfig = configs.find(config => 
+          config.apiKey === officialApiKey && config.baseUrl === officialBaseUrl,
+        );
+        
+        if (existingConfig) {
+          // Switch to existing configuration instead of showing error
+          setActiveConfigId(existingConfig.id);
+          localStorage.setItem("activeConfigId", existingConfig.id);
+          loadConfigToForm(existingConfig);
+          
+          // Dispatch model change event
+          window.dispatchEvent(new CustomEvent("modelChanged", { 
+            detail: { 
+              configId: existingConfig.id, 
+              config: existingConfig,
+              modelName: existingConfig.model,
+              configName: existingConfig.name,
+            }, 
+          }));
+
+          setOfficialApiSuccess(true);
+          setTimeout(() => setOfficialApiSuccess(false), 2000);
+          return;
+        }
+
+        // Create new official API configuration
+        const newConfig: APIConfig = {
+          id: generateId(),
+          name: t("modelSettings.officialApi"),
+          type: "openai",
+          baseUrl: officialBaseUrl,
+          model: "",
+          apiKey: officialApiKey,
+        };
+
+        const updatedConfigs = [...configs, newConfig];
+        setConfigs(updatedConfigs);
+        setActiveConfigId(newConfig.id);
+        localStorage.setItem("apiConfigs", JSON.stringify(updatedConfigs));
+        localStorage.setItem("activeConfigId", newConfig.id);
+        
+        // Load the new config to form
+        loadConfigToForm(newConfig);
+        
+        // Dispatch model change event
+        window.dispatchEvent(new CustomEvent("modelChanged", { 
+          detail: { 
+            configId: newConfig.id, 
+            config: newConfig,
+            modelName: newConfig.model,
+            configName: newConfig.name,
+          }, 
+        }));
+
+        setOfficialApiSuccess(true);
+        setTimeout(() => setOfficialApiSuccess(false), 2000);
+      } else {
+        setOfficialApiError(response.message || t("modelSettings.officialApiError"));
+        setTimeout(() => setOfficialApiError(""), 3000);
+      }
+    } catch (error) {
+      console.error("Failed to get official API info:", error);
+      setOfficialApiError(t("modelSettings.officialApiError"));
+      setTimeout(() => setOfficialApiError(""), 3000);
+    } finally {
+      setIsAddingOfficialApi(false);
+    }
+  };
 
   /**
    * Initiates the creation of a new configuration
@@ -1081,6 +1204,67 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
                     </button>
                   </div>
                 ))}
+              </div>
+            )}
+            
+            {/* Official API Button */}
+            {!showNewConfigForm && (
+              <div className="relative">
+                <button
+                  onClick={(e) => {
+                    trackButtonClick("ModelSidebar", "启用官方API");
+                    e.stopPropagation();
+                    handleAddOfficialApi();
+                  }}
+                  disabled={isAddingOfficialApi}
+                  className={`w-full text-xs sm:text-xs text-[10px] text-[#d1a35c] hover:text-[#f4e8c1] transition-all duration-200 px-2 py-1.5 sm:px-2 sm:py-1.5 px-1.5 py-1 rounded border border-[#534741] hover:border-[#d1a35c] hover:shadow-[0_0_6px_rgba(209,163,92,0.2)] flex items-center justify-center gap-1 bg-transparent disabled:opacity-50 disabled:cursor-not-allowed ${fontClass}`}
+                >
+                  {isAddingOfficialApi ? (
+                    <>
+                      <div className="animate-spin w-2.5 h-2.5 sm:w-2.5 sm:h-2.5 w-2 h-2 border border-[#d1a35c] border-t-transparent rounded-full"></div>
+                      <span className="sm:block hidden">{t("modelSettings.addingOfficialApi")}</span>
+                      <span className="sm:hidden block">Adding...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sm:w-2.5 sm:h-2.5 w-2 h-2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                      </svg>
+                      <span className="sm:block hidden">{t("modelSettings.enableOfficialApi")}</span>
+                      <span className="sm:hidden block">Official API</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Success overlay */}
+                {officialApiSuccess && (
+                  <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-[#333333] bg-opacity-80 rounded transition-opacity backdrop-blur-sm">
+                    <div className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-3 sm:w-3 h-2.5 w-2.5 text-green-500 mr-1 sm:mr-1 mr-0.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      <span className={`text-white text-xs sm:text-xs text-[10px] ${fontClass}`}>
+                        {t("modelSettings.officialApiAdded")}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Error overlay */}
+                {officialApiError && (
+                  <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-[#333333] bg-opacity-80 rounded transition-opacity backdrop-blur-sm">
+                    <div className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-3 sm:w-3 h-2.5 w-2.5 text-red-500 mr-1 sm:mr-1 mr-0.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                      <span className={`text-white text-xs sm:text-xs text-[10px] ${fontClass}`}>
+                        {officialApiError}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

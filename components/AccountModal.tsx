@@ -331,3 +331,4 @@ export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
     </AnimatePresence>
   );
 } 
+ 
