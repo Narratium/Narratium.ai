@@ -26,6 +26,7 @@
     "@vercel/analytics": "^1.5.0",
     "better-sqlite3": "^11.9.1",
     "dotenv": "^16.5.0",
+    "ejs-browser": "^3.2.2",
     "elkjs": "^0.10.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "framer-motion": "^12.6.3",

@@ -21,7 +21,7 @@ export async function getAllCharacters(language: "en" | "zh", username?: string)
           updated_at: character.updated_at,
           avatar_path: character.imagePath,
         };
-        const processedData = adaptCharacterData(characterData, language, username);
+        const processedData = adaptCharacterData(characterData, language, username, undefined, undefined);
         
         return processedData;
       });

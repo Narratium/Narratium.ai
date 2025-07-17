@@ -1,6 +1,8 @@
 import { PresetPrompt } from "@/lib/models/preset-model";
 import { adaptText } from "@/lib/adapter/tagReplacer";
 import { PromptLibrary } from "@/lib/prompts/preset-prompts";
+import { DialogueMessage } from "@/lib/models/character-dialogue-model";
+import { WorldBookEntry } from "@/lib/models/world-book-model";
 
 export class PresetAssembler {
   static assemblePrompts(
@@ -9,10 +11,13 @@ export class PresetAssembler {
     fastModel: boolean,
     contextData: { username?: string; charName?: string; number?: number } = {},
     systemPresetType: "mirror_realm" | "novel_king" | "professional_heart" = "mirror_realm",
+    chatHistory?: DialogueMessage[],
+    worldBook?: WorldBookEntry[],
+    customData?: Record<string, any>,
   ): { systemMessage: string; userMessage: string } {
     if (prompts.length === 0 || fastModel) {
       console.group("PresetAssembler", prompts.length, fastModel);
-      return PresetAssembler._getDefaultFramework(language, contextData, systemPresetType);
+      return PresetAssembler._getDefaultFramework(language, contextData, systemPresetType, chatHistory, worldBook, customData);
     }
 
     const orderedSystemIdentifiers = [
@@ -47,7 +52,7 @@ export class PresetAssembler {
       const isSystemSection = orderedSystemIdentifiers.includes(prompt.identifier);
       const isUserSection = orderedUserIdentifiers.includes(prompt.identifier);
 
-      const formattedContent = PresetAssembler._formatPromptContent(prompt, language, contextData);
+      const formattedContent = PresetAssembler._formatPromptContent(prompt, language, contextData, chatHistory, worldBook, customData);
 
       if (isSystemSection) {
         currentSystemSection = prompt.identifier;
@@ -172,7 +177,14 @@ export class PresetAssembler {
     };
   }
 
-  private static _getDefaultFramework(language: "zh" | "en" = "zh", contextData: { username?: string; charName?: string; number?: number }, systemPresetType: "mirror_realm" | "novel_king" | "professional_heart" = "mirror_realm"): { systemMessage: string; userMessage: string } {
+  private static _getDefaultFramework(
+    language: "zh" | "en" = "zh", 
+    contextData: { username?: string; charName?: string; number?: number }, 
+    systemPresetType: "mirror_realm" | "novel_king" | "professional_heart" = "mirror_realm",
+    chatHistory?: DialogueMessage[],
+    worldBook?: WorldBookEntry[],
+    customData?: Record<string, any>,
+  ): { systemMessage: string; userMessage: string } {
     const orderedSystemIdentifiers = [
       "main",
       "worldInfoBefore",
@@ -292,6 +304,9 @@ export class PresetAssembler {
     prompt: PresetPrompt,
     language: "zh" | "en",
     contextData: { username?: string; charName?: string; number?: number },
+    chatHistory?: DialogueMessage[],
+    worldBook?: WorldBookEntry[],
+    customData?: Record<string, any>,
   ): string {
     let contentToAppend = "";
 
@@ -307,6 +322,9 @@ export class PresetAssembler {
         language,
         contextData.username,
         contextData.charName,
+        chatHistory,
+        worldBook,
+        customData,
       );
       if (prompt.name) {
         adaptedPromptContent = `【${prompt.name}】\n${adaptedPromptContent}`;

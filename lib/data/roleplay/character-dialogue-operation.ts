@@ -2,6 +2,7 @@ import { readData, writeData, CHARACTER_DIALOGUES_FILE } from "@/lib/data/local-
 import { DialogueNode, DialogueTree } from "@/lib/models/node-model";
 import { v4 as uuidv4 } from "uuid";
 import { ParsedResponse } from "@/lib/models/parsed-response";
+import { BranchVariableManager } from "@/lib/core/branch-variable-manager";
 
 export class LocalCharacterDialogueOperations {
   static async createDialogueTree(characterId: string): Promise<DialogueTree> {
@@ -32,15 +33,24 @@ export class LocalCharacterDialogueOperations {
     return new DialogueTree(
       dialogue.id,
       dialogue.character_id,
-      dialogue.nodes?.map((node: any) => new DialogueNode(
-        node.nodeId,
-        node.parentNodeId,
-        node.userInput,
-        node.assistantResponse,
-        node.fullResponse,
-        node.thinkingContent,
-        node.parsedContent,
-      )) || [],
+      dialogue.nodes?.map((node: any) => {
+        const dialogueNode = new DialogueNode(
+          node.nodeId,
+          node.parentNodeId,
+          node.userInput,
+          node.assistantResponse,
+          node.fullResponse,
+          node.thinkingContent,
+          node.parsedContent,
+        );
+        
+        // 加载变量状态相关数据
+        dialogueNode.variableSnapshot = node.variableSnapshot;
+        dialogueNode.variableChanges = node.variableChanges;
+        dialogueNode.variableMetadata = node.variableMetadata;
+        
+        return dialogueNode;
+      }) || [],
       dialogue.current_nodeId,
     );
   }
@@ -62,6 +72,22 @@ export class LocalCharacterDialogueOperations {
       nodeId = uuidv4();
     }
     
+    // 获取父节点的变量快照
+    let parentSnapshot: Record<string, any> | undefined;
+    if (parentNodeId && dialogues[index].nodes) {
+      const parentNode = dialogues[index].nodes.find((n: any) => n.nodeId === parentNodeId);
+      if (parentNode && parentNode.variableSnapshot) {
+        parentSnapshot = parentNode.variableSnapshot;
+      }
+    }
+    
+    // 创建变量状态快照
+    const variableData = BranchVariableManager.createVariableSnapshot(
+      nodeId,
+      parentNodeId,
+      parentSnapshot,
+    );
+    
     const newNode = new DialogueNode(
       nodeId,
       parentNodeId,
@@ -72,6 +98,11 @@ export class LocalCharacterDialogueOperations {
       parsedContent,
     );
     
+    // 添加变量状态数据
+    newNode.variableSnapshot = variableData.variableSnapshot;
+    newNode.variableChanges = variableData.variableChanges;
+    newNode.variableMetadata = variableData.variableMetadata;
+    
     if (!dialogues[index].nodes) {
       dialogues[index].nodes = [];
     }
@@ -80,6 +111,11 @@ export class LocalCharacterDialogueOperations {
     dialogues[index].current_nodeId = nodeId;
     
     await writeData(CHARACTER_DIALOGUES_FILE, dialogues);
+    
+    console.log(`[分支变量] 已为节点 ${nodeId} 保存变量状态`, {
+      hasSnapshot: !!variableData.variableSnapshot,
+      changesCount: variableData.variableChanges?.length || 0,
+    });
     
     return nodeId;
   }
@@ -138,6 +174,29 @@ export class LocalCharacterDialogueOperations {
     
     if (!node) {
       return null;
+    }
+    
+    // 获取到目标节点的完整路径
+    const pathToNode = await this.getDialoguePathToNode(dialogueId, nodeId);
+    
+    // 恢复目标节点的变量状态
+    try {
+      await BranchVariableManager.restoreVariableState(nodeId, node, pathToNode);
+      console.log(`[分支变量] 已切换到节点 ${nodeId} 并恢复变量状态`);
+      
+      // 验证变量状态完整性
+      const validation = BranchVariableManager.validateVariableState(pathToNode);
+      if (!validation.isValid) {
+        console.warn("[分支变量] 检测到变量状态链问题，尝试修复...");
+        const repaired = await BranchVariableManager.repairVariableStateChain(pathToNode);
+        if (repaired) {
+          console.log("[分支变量] 变量状态链修复成功");
+        } else {
+          console.error("[分支变量] 变量状态链修复失败");
+        }
+      }
+    } catch (error) {
+      console.error("[分支变量] 恢复变量状态失败:", error);
     }
     
     dialogueTree.current_nodeId = nodeId;
