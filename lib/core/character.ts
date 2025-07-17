@@ -71,12 +71,12 @@ export class Character {
     }
   }
     
-  getData(language: "en" | "zh" = "zh", username?: string, chatHistory?: any[], customData?: Record<string, any>): CharacterData {
-    return adaptCharacterData(this.characterData, language, username, chatHistory, customData);
+  getData(language: "en" | "zh" = "zh", username?: string): CharacterData {
+    return adaptCharacterData(this.characterData, language, username);
   }
   
-  getSystemPrompt(language: "en" | "zh" = "zh", username?: string, chatHistory?: any[], customData?: Record<string, any>): string {
-    const processedData = adaptCharacterData(this.characterData, language, username, chatHistory, customData);
+  getSystemPrompt(language: "en" | "zh" = "zh", username?: string): string {
+    const processedData = adaptCharacterData(this.characterData, language, username);
     let prompt = "";
     
     if (language === "zh") {

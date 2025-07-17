@@ -25,7 +25,6 @@ export class PromptAssembler {
     currentUserInput: string,
     username?: string,
     charName?: string,
-    customData?: Record<string, any>,
   ): { systemMessage: string; userMessage: string } {
     
     let finalSystemMessage = baseSystemMessage;
@@ -84,16 +83,16 @@ export class PromptAssembler {
     const position4Entries = matchingEntries.filter(entry => Number(entry.position || 0) === 4);
 
     if (hasSystemMarkers) {
-      const worldInfoBeforeContent = this.formatWorldBookEntries(position0_1Entries, username, charName, chatHistory, customData);
-      const worldInfoAfterContent = this.formatWorldBookEntries(position2Entries, username, charName, chatHistory, customData);
+      const worldInfoBeforeContent = this.formatWorldBookEntries(position0_1Entries, username, charName);
+      const worldInfoAfterContent = this.formatWorldBookEntries(position2Entries, username, charName);
 
       finalSystemMessage = finalSystemMessage.replace("{{worldInfoBefore}}", worldInfoBeforeContent);
       finalSystemMessage = finalSystemMessage.replace("{{worldInfoAfter}}", worldInfoAfterContent);
     }
 
     if (hasUserMarkers && (position3Entries.length > 0 || position4Entries.length > 0)) {
-      const position3Content = this.formatWorldBookEntries(position3Entries, username, charName, chatHistory, customData);
-      const position4Content = this.formatWorldBookEntries(position4Entries, username, charName, chatHistory, customData);
+      const position3Content = this.formatWorldBookEntries(position3Entries, username, charName);
+      const position4Content = this.formatWorldBookEntries(position4Entries, username, charName);
 
       if (position3Content && finalUserMessage.includes("<userInput>")) {
         const beforeUserInput = position3Content + "\n\n";
@@ -118,15 +117,13 @@ export class PromptAssembler {
     entries: WorldBookEntry[],
     username?: string,
     charName?: string,
-    chatHistory?: DialogueMessage[],
-    customData?: Record<string, any>,
   ): string {
     if (entries.length === 0) return "";
     
     return entries.map(entry => {
       const tagName = entry.comment || "worldbook_entry";
       let content = entry.content || "";
-      content = adaptText(content, this.language, username, charName, chatHistory, entries, customData);
+      content = adaptText(content, this.language, username, charName);
       
       return `
       <world information>

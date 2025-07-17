@@ -41,7 +41,6 @@ export class WorldBookNodeTools extends NodeTool {
     contextWindow: number = 5,
     username?: string,
     charName?: string,
-    customData?: Record<string, any>,
   ): Promise<{ systemMessage: string; userMessage: string }> {
     try {
       const characterRecord = await LocalCharacterRecordOperations.getCharacterById(characterId);
@@ -62,7 +61,6 @@ export class WorldBookNodeTools extends NodeTool {
         currentUserInput,
         username,
         charName,
-        customData,
       );
       return result;
     } catch (error) {
