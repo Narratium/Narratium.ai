@@ -6,15 +6,18 @@ import { adaptText } from "@/lib/adapter/tagReplacer";
 export interface PromptAssemblerOptions {
   language: "zh" | "en";
   contextWindow?: number;
+  enableVariableInjection?: boolean;
 }
 
 export class PromptAssembler {
   private language: "zh" | "en";
   private contextWindow: number;
+  private enableVariableInjection: boolean;
   
   constructor(options: PromptAssemblerOptions) {
     this.language = options.language || "zh";
     this.contextWindow = options.contextWindow || 5;
+    this.enableVariableInjection = options.enableVariableInjection ?? true;
   }
 
   assemblePrompt(
@@ -27,6 +30,11 @@ export class PromptAssembler {
     charName?: string,
     customData?: Record<string, any>,
   ): { systemMessage: string; userMessage: string } {
+    // 在组装prompt前先处理变量注入
+    if (this.enableVariableInjection && customData) {
+      baseSystemMessage = adaptText(baseSystemMessage, this.language, username, charName, chatHistory, [], customData);
+      userMessage = adaptText(userMessage, this.language, username, charName, chatHistory, [], customData);
+    }
     
     let finalSystemMessage = baseSystemMessage;
     let finalUserMessage = userMessage;
@@ -126,7 +134,11 @@ export class PromptAssembler {
     return entries.map(entry => {
       const tagName = entry.comment || "worldbook_entry";
       let content = entry.content || "";
-      content = adaptText(content, this.language, username, charName, chatHistory, entries, customData);
+      
+      // 在处理worldbook内容时也注入变量
+      if (this.enableVariableInjection) {
+        content = adaptText(content, this.language, username, charName, chatHistory, entries, customData);
+      }
       
       return `
       <world information>

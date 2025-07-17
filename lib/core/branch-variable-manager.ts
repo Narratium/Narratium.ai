@@ -40,12 +40,14 @@ export class BranchVariableManager {
    * @param nodeId 节点ID
    * @param parentNodeId 父节点ID
    * @param parentSnapshot 父节点的变量快照
+   * @param forceSnapshot 强制创建完整快照
    * @returns 节点变量状态数据
    */
   static createVariableSnapshot(
     nodeId: string,
     parentNodeId: string,
     parentSnapshot?: Record<string, any>,
+    forceSnapshot: boolean = false,
   ): {
     variableSnapshot?: Record<string, any>;
     variableChanges?: VariableChange[];
@@ -53,6 +55,7 @@ export class BranchVariableManager {
       timestamp: string;
       hasChanges: boolean;
       parentSnapshot: boolean;
+      size?: number;
     };
   } {
     const currentVariables = getAllVariables();
@@ -72,7 +75,7 @@ export class BranchVariableManager {
     }
 
     // 决定存储策略
-    const shouldCreateSnapshot = this.shouldCreateSnapshot(
+    const shouldCreateSnapshot = forceSnapshot || this.shouldCreateSnapshot(
       nodeId,
       parentNodeId,
       variableChanges.length,
@@ -89,9 +92,11 @@ export class BranchVariableManager {
     if (shouldCreateSnapshot) {
       // 保存完整快照
       result.variableSnapshot = this.createOptimizedSnapshot(currentVariables);
+      result.variableMetadata.size = JSON.stringify(result.variableSnapshot).length;
     } else if (this.config.enableDifferentialStorage && hasChanges) {
       // 只保存变化
       result.variableChanges = variableChanges;
+      result.variableMetadata.size = JSON.stringify(variableChanges).length;
     }
 
     return result;
@@ -102,13 +107,15 @@ export class BranchVariableManager {
    * @param nodeId 目标节点ID
    * @param nodeData 节点数据
    * @param pathToNode 从根节点到目标节点的路径
+   * @returns 恢复的变量状态
    */
   static async restoreVariableState(
     nodeId: string,
     nodeData: any,
     pathToNode: any[],
-  ): Promise<void> {
+  ): Promise<Record<string, any>> {
     let finalVariables: Record<string, any> = {};
+    const startTime = Date.now();
 
     // 构建变量状态：从路径中重建
     for (const node of pathToNode) {
@@ -131,8 +138,11 @@ export class BranchVariableManager {
         initializeCustomVariables(finalVariables.global);
       }
 
-      console.log(`[BranchVariableManager] 已恢复节点 ${nodeId} 的变量状态`);
+      const timeElapsed = Date.now() - startTime;
+      console.log(`[BranchVariableManager] 已恢复节点 ${nodeId} 的变量状态 (耗时: ${timeElapsed}ms)`);
     }
+    
+    return finalVariables;
   }
 
   /**
@@ -281,12 +291,15 @@ export class BranchVariableManager {
   }
 
   /**
-   * 深度克隆对象
+   * 深度克隆对象（优化版）
    */
   private static deepClone(obj: any): any {
     if (obj === null || typeof obj !== "object") return obj;
     if (obj instanceof Date) return new Date(obj);
     if (obj instanceof Array) return obj.map(item => this.deepClone(item));
+    if (obj instanceof RegExp) return new RegExp(obj);
+    if (obj instanceof Map) return new Map(Array.from(obj.entries()).map(([k, v]) => [k, this.deepClone(v)]));
+    if (obj instanceof Set) return new Set(Array.from(obj).map(v => this.deepClone(v)));
     if (typeof obj === "object") {
       const clonedObj: any = {};
       for (const key in obj) {
@@ -356,6 +369,51 @@ export class BranchVariableManager {
     };
     
     return JSON.stringify(exportData, null, 2);
+  }
+
+  /**
+   * 获取变量存储统计信息
+   */
+  static getStorageStatistics(pathToNode: any[]): {
+    totalNodes: number;
+    snapshotCount: number;
+    changeSetCount: number;
+    totalSize: number;
+    averageChangeSize: number;
+    compressionRatio: number;
+  } {
+    let snapshotCount = 0;
+    let changeSetCount = 0;
+    let totalSize = 0;
+    let changesSizes: number[] = [];
+    
+    for (const node of pathToNode) {
+      if (node.variableSnapshot) {
+        snapshotCount++;
+      }
+      if (node.variableChanges) {
+        changeSetCount++;
+        changesSizes.push(node.variableMetadata?.size || 0);
+      }
+      totalSize += node.variableMetadata?.size || 0;
+    }
+    
+    const averageChangeSize = changesSizes.length > 0 
+      ? changesSizes.reduce((a, b) => a + b, 0) / changesSizes.length 
+      : 0;
+    
+    const compressionRatio = snapshotCount > 0 
+      ? changeSetCount / (snapshotCount + changeSetCount) 
+      : 0;
+    
+    return {
+      totalNodes: pathToNode.length,
+      snapshotCount,
+      changeSetCount,
+      totalSize,
+      averageChangeSize,
+      compressionRatio,
+    };
   }
 
   /**
