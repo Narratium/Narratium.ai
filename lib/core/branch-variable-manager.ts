@@ -6,10 +6,12 @@
 import { VariableChange, BranchVariableConfig } from "@/lib/models/node-model";
 import { 
   getAllVariables, 
+  exportVariablesAsJSON, 
+  setSillyTavernContext,
   initializeCustomVariables,
+  getVariableChangeHistory,
   clearVariableHistory,
 } from "@/lib/adapter/sillyTavernFunctions";
-import { MagVarUpdateIntegration } from "@/lib/adapter/magVarUpdateIntegration";
 
 export class BranchVariableManager {
   private static config: BranchVariableConfig = {
@@ -58,6 +60,7 @@ export class BranchVariableManager {
   } {
     const currentVariables = getAllVariables();
     const timestamp = new Date().toISOString();
+    const recentChanges = getVariableChangeHistory();
 
     // 计算自父节点以来的变量变化
     let variableChanges: VariableChange[] = [];
@@ -108,7 +111,7 @@ export class BranchVariableManager {
    */
   static async restoreVariableState(
     nodeId: string,
-    _nodeData: any,
+    nodeData: any,
     pathToNode: any[],
   ): Promise<Record<string, any>> {
     let finalVariables: Record<string, any> = {};
@@ -133,11 +136,6 @@ export class BranchVariableManager {
       // 重新初始化变量
       if (finalVariables.global) {
         initializeCustomVariables(finalVariables.global);
-      }
-      
-      // 同步到 MagVarUpdate 系统
-      if (finalVariables.gameData) {
-        MagVarUpdateIntegration.restoreGameData(finalVariables.gameData);
       }
 
       const timeElapsed = Date.now() - startTime;
@@ -285,14 +283,11 @@ export class BranchVariableManager {
    * 创建优化的变量快照
    */
   private static createOptimizedSnapshot(variables: Record<string, any>): Record<string, any> {
-    // 保存全局变量和 MagVarUpdate 游戏数据
-    const snapshot = {
+    // 只保存全局变量，忽略临时变量
+    return {
       global: this.deepClone(variables.global || {}),
-      gameData: MagVarUpdateIntegration.getGameDataSnapshot(),
       timestamp: new Date().toISOString(),
     };
-    
-    return snapshot;
   }
 
   /**
@@ -452,11 +447,6 @@ export class BranchVariableManager {
       if (currentState.global) {
         clearVariableHistory();
         initializeCustomVariables(currentState.global);
-      }
-      
-      // 恢复 MagVarUpdate 数据
-      if (currentState.gameData) {
-        MagVarUpdateIntegration.restoreGameData(currentState.gameData);
       }
 
       console.log(`[BranchVariableManager] 已修复变量状态链，修复了 ${pathToNode.length - repairFromIndex} 个节点`);

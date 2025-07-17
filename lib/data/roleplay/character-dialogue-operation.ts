@@ -203,7 +203,7 @@ export class LocalCharacterDialogueOperations {
         }
       }
       
-      await BranchVariableManager.restoreVariableState(nodeId, node, pathToNode);
+      const restoredVariables = await BranchVariableManager.restoreVariableState(nodeId, node, pathToNode);
       const timeElapsed = Date.now() - startTime;
       
       console.log(`[分支变量] 已切换到节点 ${nodeId} 并恢复变量状态 (耗时: ${timeElapsed}ms)`);
@@ -282,6 +282,7 @@ export class LocalCharacterDialogueOperations {
     dialogueTree.nodes = dialogueTree.nodes.filter(node => !nodesToDelete.has(node.nodeId));
     if (nodesToDelete.has(dialogueTree.current_nodeId)) {
       dialogueTree.current_nodeId = nodeToDelete.parentNodeId;
+      const newCurrentNode = dialogueTree.nodes.find(node => node.nodeId === dialogueTree.current_nodeId);
     }
     
     await this.updateDialogueTree(dialogueId, dialogueTree);
