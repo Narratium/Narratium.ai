@@ -51,6 +51,9 @@ Narratium.ai项目集成了EJS模板引擎，用于处理动态文本生成和�
 <%_ setvar('变量.路径', '新值') _%>
 <%_ setvar('变量.路径', '新值', 'global') _%>
 
+<!-- MagVarUpdate方式 -->
+<%_ _.set('变量.路径', oldValue, newValue, '变更原因') _%>
+
 <!-- 传统SillyTavern方式（会自动转换为EJS） -->
 {{setvar::变量.路径::新值}}
 ```
@@ -291,6 +294,7 @@ const options = {
 @变量名=新值@ → {{setvar::变量名::新值}}
 @变量名=旧值⇒新值@ → {{setvar::变量名::新值}}
 _.set('变量名', 旧值, 新值) → {{setvar::变量名::新值}}
+_.set('变量名', 旧值, 新值, '原因') → {{setvar::变量名::新值}}
 ```
 
 ## 最佳实践
@@ -354,9 +358,233 @@ A: 使用调试指令如`[DEBUG:report]`或在EJS中调用`generateVariableRepor
 ### Q: 性能如何优化？
 A: 避免在循环中频繁调用`getvar()`，可以先缓存变量值。
 
+## MagVarUpdate 增强功能
+
+### _.set 语法支持
+
+Narrativium.ai 集成了 MagVarUpdate 的核心功能，提供更强大的变量管理能力。
+
+#### 基本语法
+```javascript
+// 基本格式
+_.set('变量路径', 期望的旧值, 新值, '变更原因');
+
+// 示例
+_.set('user.身份', '未知', '新来的牧师', '故事开始设定');
+_.set('理.好感度', 0, 15, '初始关系值');
+_.set('user.level', undefined, 1, '角色初始化');
+```
+
+#### 类型智能转换
+```javascript
+// 字符串和数字自动转换
+_.set('user.level', '1', 2, '等级提升');  // 自动处理类型转换
+
+// 数组操作
+_.set('user.inventory', [], ['sword', 'potion'], '获得初始装备');
+
+// 对象操作
+_.set('user.stats', {}, { hp: 100, mp: 50 }, '初始化属性');
+```
+
+#### 在EJS模板中使用
+```ejs
+<!-- 条件变量更新 -->
+<% if (getvar('user.exp', 0) >= 1000) { %>
+  <%_ _.set('user.level', getvar('user.level'), getvar('user.level') + 1, '经验满足升级') _%>
+  <%_ _.set('user.exp', getvar('user.exp'), 0, '升级后经验清零') _%>
+  
+  *你感到一股力量涌入体内，等级提升到了 <%= getvar('user.level') %> 级！*
+<% } %>
+
+<!-- 动态属性修改 -->
+<% const damage = randomInt(10, 20); %>
+<%_ _.set('enemy.hp', getvar('enemy.hp', 100), getvar('enemy.hp', 100) - damage, `受到${damage}点伤害`) _%>
+
+敌人受到了 <%= damage %> 点伤害，剩余生命值：<%= getvar('enemy.hp') %>
+```
+
+#### 角色卡中的初始化
+```ejs
+<!-- 角色属性初始化 -->
+<% if (!getvar('user.initialized')) { %>
+  <%_ _.set('user.initialized', false, true, '角色初始化标记') _%>
+  <%_ _.set('user.身份', undefined, '冒险者', '默认职业') _%>
+  <%_ _.set('user.level', undefined, 1, '初始等级') _%>
+  <%_ _.set('user.hp', undefined, 100, '初始生命值') _%>
+  <%_ _.set('user.maxHp', undefined, 100, '最大生命值') _%>
+  <%_ _.set('user.mp', undefined, 50, '初始魔法值') _%>
+  <%_ _.set('user.maxMp', undefined, 50, '最大魔法值') _%>
+  <%_ _.set('user.exp', undefined, 0, '初始经验值') _%>
+  <%_ _.set('user.inventory', undefined, [], '初始背包') _%>
+  
+  *系统已为你初始化角色属性*
+<% } %>
+
+你是一名<%=getvar('user.身份', '冒险者')%>，当前等级<%=getvar('user.level', 1)%>。
+
+当前状态：
+- 生命值：<%=getvar('user.hp', 100)%>/<%=getvar('user.maxHp', 100)%>
+- 魔法值：<%=getvar('user.mp', 50)%>/<%=getvar('user.maxMp', 50)%>
+- 经验值：<%=getvar('user.exp', 0)%>/1000
+```
+
+#### WorldBook中的动态事件
+```ejs
+<!-- 关键词：商店购买 -->
+<% const itemPrice = 50; %>
+<% const userGold = getvar('user.gold', 100); %>
+
+欢迎来到武器商店！
+
+<% if (userGold >= itemPrice) { %>
+  <%_ _.set('user.gold', userGold, userGold - itemPrice, '购买钢铁剑') _%>
+  <%_ 
+  const inventory = getvar('user.inventory', []);
+  inventory.push({ name: '钢铁剑', attack: 25, type: 'weapon' });
+  _.set('user.inventory', getvar('user.inventory', []), inventory, '获得钢铁剑');
+  _%>
+  
+  *你花费了 <%= itemPrice %> 金币购买了钢铁剑！*
+  *当前金币：<%= getvar('user.gold') %>*
+<% } else { %>
+  *你的金币不足，需要 <%= itemPrice %> 金币才能购买钢铁剑。*
+  *当前金币：<%= userGold %>*
+<% } %>
+```
+
+#### 高级功能：状态机管理
+```ejs
+<!-- 游戏状态管理 -->
+<%
+const gameState = getvar('game.state', 'start');
+const userLevel = getvar('user.level', 1);
+
+switch(gameState) {
+  case 'start':
+    if (userLevel >= 5) {
+%>
+      <%_ _.set('game.state', 'start', 'chapter1', '达到等级要求，进入第一章') _%>
+      <%_ _.set('user.title', getvar('user.title', '无名冒险者'), '初级冒险者', '获得新称号') _%>
+      
+      *随着实力的增长，你感受到了来自远方的神秘召唤...*
+      *你获得了新称号：初级冒险者*
+<%  } 
+    break;
+    
+  case 'chapter1':
+    if (getvar('story.dragon_defeated')) {
+%>
+      <%_ _.set('game.state', 'chapter1', 'chapter2', '击败巨龙，进入第二章') _%>
+      <%_ _.set('user.title', getvar('user.title'), '屠龙者', '获得屠龙者称号') _%>
+      
+      *你成功击败了巨龙，成为了传说中的屠龙者！*
+<%  }
+    break;
+}
+%>
+
+当前游戏状态：<%= gameState %>
+你的称号：<%= getvar('user.title', '无名冒险者') %>
+```
+
+#### 事件监听和回调
+```ejs
+<!-- 生命值监控 -->
+<%
+const currentHp = getvar('user.hp', 100);
+const maxHp = getvar('user.maxHp', 100);
+const hpPercentage = (currentHp / maxHp) * 100;
+
+if (hpPercentage <= 20 && !getvar('status.low_hp_warning')) {
+%>
+  <%_ _.set('status.low_hp_warning', false, true, '生命值过低警告') _%>
+  
+  *⚠️ 警告：你的生命力正在急速流失，需要立即治疗！*
+<% } else if (hpPercentage > 50 && getvar('status.low_hp_warning')) { %>
+  <%_ _.set('status.low_hp_warning', true, false, '生命值恢复正常') _%>
+  
+  *✅ 你的生命力已经恢复到安全水平。*
+<% } %>
+```
+
+### 游戏数据管理
+
+#### 获取完整游戏数据
+```ejs
+<!-- 查看所有游戏数据 -->
+当前游戏数据：
+<pre><%=JSON.stringify(getGameData(), null, 2)%></pre>
+
+<!-- 初始化默认值 -->
+<%_ initDefaults({
+  'user.hp': 100,
+  'user.maxHp': 100,
+  'user.level': 1,
+  'user.exp': 0,
+  'game.state': 'start'
+}) _%>
+```
+
+#### 调试和监控
+```ejs
+<!-- 变量搜索 -->
+查找包含"user"的变量：
+<pre><%=JSON.stringify(searchVariables('user'), null, 2)%></pre>
+
+<!-- 变量变化历史 -->
+最近的变量变化：
+<pre><%=JSON.stringify(getVariableChangeHistory(5), null, 2)%></pre>
+```
+
+### 分支管理增强
+
+MagVarUpdate 功能完全集成到分支管理系统中：
+
+- ✅ **自动保存**：_.set 操作会自动保存到当前对话节点
+- ✅ **分支恢复**：切换分支时自动恢复 MagVarUpdate 数据
+- ✅ **状态验证**：自动验证变量状态完整性
+- ✅ **事件追踪**：记录所有变量变化的详细历史
+
+### 最佳实践
+
+#### 1. 命名规范
+```javascript
+// 推荐：使用有意义的命名空间
+_.set('user.属性', oldValue, newValue, '变更原因');
+_.set('npc.角色名.好感度', oldValue, newValue, '交互影响');
+_.set('world.地点.状态', oldValue, newValue, '环境变化');
+_.set('game.系统变量', oldValue, newValue, '游戏逻辑');
+
+// 避免：扁平化命名
+_.set('用户等级', oldValue, newValue); // 不推荐
+```
+
+#### 2. 变更原因记录
+```javascript
+// 推荐：提供清晰的变更原因
+_.set('user.exp', currentExp, currentExp + 100, '击败哥布林获得经验');
+_.set('npc.艾莉娅.好感度', oldValue, newValue, '帮助完成任务');
+
+// 避免：没有原因或原因不明确
+_.set('user.exp', currentExp, newValue); // 没有原因
+_.set('user.exp', currentExp, newValue, '更新'); // 原因不明确
+```
+
+#### 3. 类型一致性
+```javascript
+// 推荐：保持类型一致
+_.set('user.level', 1, 2, '等级提升'); // 数字到数字
+_.set('user.name', 'old_name', 'new_name', '改名'); // 字符串到字符串
+
+// 注意：系统会自动处理类型转换，但最好保持一致
+_.set('user.level', '1', 2, '等级提升'); // 可以工作，但不推荐
+```
+
 ## 更新日志
 
 - **v1.0** - 基础EJS集成和SillyTavern兼容
 - **v1.1** - 增加智能变量初始化和调试功能
 - **v1.2** - 添加分支变量管理和性能优化
 - **v1.3** - 完善错误处理和安全配置
+- **v1.4** - 集成MagVarUpdate功能，添加_.set语法和事件系统

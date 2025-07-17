@@ -416,7 +416,7 @@ export class SillyTavernRegexProcessor {
    * @param varName 变量名
    * @returns 推断的默认值
    */
-  private static inferDefaultValue(varName: string): string | number {
+  static inferDefaultValue(varName: string): string | number {
     const lowerName = varName.toLowerCase();
     
     // 数值类型变量
@@ -497,7 +497,7 @@ export class SillyTavernRegexProcessor {
       processObject(variables);
     } else {
       // 如果没有提供变量，使用默认初始化
-      return this.getDefaultInitializationScript();
+      return "";
     }
     
     return initScripts.join("\n");

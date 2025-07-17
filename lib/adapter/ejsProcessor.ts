@@ -15,6 +15,7 @@ import {
   clearVariableHistory,
 } from "./sillyTavernFunctions";
 import { SillyTavernRegexProcessor } from "./sillyTavernRegexProcessor";
+import { MagVarUpdateIntegration } from "./magVarUpdateIntegration";
 
 export interface EjsContext {
   user: string;
@@ -67,6 +68,13 @@ export interface EjsContext {
   searchVariables: (keyword: string, caseSensitive?: boolean) => Array<{path: string, value: any}>;
   getVariableChangeHistory: (limit?: number) => Array<{timestamp: string, path: string, oldValue: any, newValue: any, operation: string}>;
   clearVariableHistory: () => void;
+  // MagVarUpdate 函数
+  _: {
+    set: (path: string, oldValue: any, newValue: any, reason?: string) => boolean;
+  };
+  // 游戏数据访问
+  getGameData: () => any;
+  initDefaults: (defaults: Record<string, any>) => void;
 }
 
 export class EjsProcessor {
@@ -85,6 +93,20 @@ export class EjsProcessor {
     }
     
     return existingVars;
+  }
+
+  /**
+   * 处理 MagVarUpdate 风格的 _.set 命令
+   * @param text 包含 _.set 命令的文本
+   * @returns 处理后的文本
+   */
+  private static handleMagVarUpdateCommands(text: string): string {
+    // 检查是否包含 _.set 命令
+    if (text.includes("_.set(")) {
+      console.log("[EJS] 检测到 MagVarUpdate 命令，开始处理...");
+      return MagVarUpdateIntegration.processSetCommands(text);
+    }
+    return text;
   }
 
   /**
@@ -195,6 +217,15 @@ export class EjsProcessor {
       searchVariables,
       getVariableChangeHistory,
       clearVariableHistory,
+      // MagVarUpdate 函数
+      _: {
+        set: (path: string, oldValue: any, newValue: any, reason?: string) => {
+          return MagVarUpdateIntegration.set(path, oldValue, newValue, reason);
+        },
+      },
+      // 游戏数据访问
+      getGameData: () => MagVarUpdateIntegration.getGameDataSnapshot(),
+      initDefaults: (defaults: Record<string, any>) => MagVarUpdateIntegration.initializeDefaults(defaults),
     };
   }
 
@@ -266,6 +297,9 @@ export class EjsProcessor {
     // 预处理：处理所有变量相关语法（包括智能初始化）
     let processedText = SillyTavernRegexProcessor.processAllVariableSyntax(text, customData, worldBook);
     
+    // 处理 MagVarUpdate 风格的 _.set 命令
+    processedText = this.handleMagVarUpdateCommands(processedText);
+    
     // 转换传统SillyTavern语法
     processedText = SillyTavernRegexProcessor.convertLegacySyntax(processedText);
     
@@ -330,6 +364,9 @@ export class EjsProcessor {
     // 预处理：处理所有变量相关语法（包括智能初始化）
     let processedText = SillyTavernRegexProcessor.processAllVariableSyntax(text, customData, worldBook);
     
+    // 处理 MagVarUpdate 风格的 _.set 命令
+    processedText = this.handleMagVarUpdateCommands(processedText);
+    
     // 转换传统SillyTavern语法
     processedText = SillyTavernRegexProcessor.convertLegacySyntax(processedText);
     
@@ -374,7 +411,7 @@ export class EjsProcessor {
       };
 
       // 使用ejs-browser的render方法支持异步
-      const result = await ejs.render(processedText, context, options);
+      const result = ejs.render(processedText, context, options);
       return result;
     } catch (error) {
       console.error("EJS template rendering error:", error);
