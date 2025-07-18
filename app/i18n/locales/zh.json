@@ -574,7 +574,6 @@
     "tags": {
       "Cultivation": "修仙",
       "Fantasy": "玄幻",
-      "NSFW": "NSFW",
       "Fanfiction": "同人",
       "Anime": "二次元",
       "Other": "其它"
@@ -583,12 +582,17 @@
     "loading": "正在从市场中召唤角色...",
     "preloading": "预加载图片中...",
     "preloadingDescription": "正在优化图片加载体验，请稍候...",
-    "viewNsfw": "查看",
     "by": "作者：",
     "importing": "导入中...",
     "downloadAndImport": "下载并导入",
     "downloadShort": "下载",
-    "importingShort": "导入中..."
+    "importingShort": "导入中...",
+    "regulatoryWarning": {
+      "title": "重要提示",
+      "message": "根据《生成式人工智能服务管理暂行办法》的要求，请勿对中国地区公众提供一切未经备案的生成式人工智能服务。",
+      "understand": "我已了解",
+      "doNotShowAgain": "不再显示"
+    }
   },
   "creatorInput": {
     "title": "Creator Studio",

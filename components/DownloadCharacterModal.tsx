@@ -41,6 +41,7 @@ const CACHE_KEY = "narratium_character_files";
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 1 day
 const IMAGE_CACHE_KEY = "narratium_character_images";
 const IMAGE_CACHE_DURATION = 24 * 60 * 60 * 1000; // 1 day
+const REGULATORY_WARNING_KEY = "narratium_regulatory_warning_shown";
 
 /**
  * Interface definitions for the component's props and data structures
@@ -78,14 +79,13 @@ interface ImageCacheData {
 
 // Hardcoded tag definitions for character categorization
 const TAGS = [
-  "Cultivation", "Fantasy", "NSFW", "Fanfiction", "Anime", "Other",
+  "Cultivation", "Fantasy", "Fanfiction", "Anime", "Other",
 ];
 
 // Tag detection keywords mapping
 const TAG_KEYWORDS: Record<string, string[]> = {
   "Cultivation": ["x", "cultivation", "仙侠", "immortal", "修仙"],
   "Fantasy": ["玄幻", "fantasy", "魔法", "magic", "奇幻"],
-  "NSFW": ["nsfw", "adult", "18+", "mature", "r18"],
   "Fanfiction": ["同人", "fanfiction", "fan", "二创", "doujin"],
   "Anime": ["二次元", "anime", "动漫", "萌", "waifu", "少女", "萝莉", "御姐"],
 };
@@ -115,8 +115,9 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
   const [imageLoadingStates, setImageLoadingStates] = useState<Record<string, boolean>>({});
   const [preloadingImages, setPreloadingImages] = useState(false);
   const [loadingStage, setLoadingStage] = useState<"fetching" | "preloading" | "complete">("fetching");
-  const [nsfwViewStates, setNsfwViewStates] = useState<Record<string, boolean>>({});
   const [isMobile, setIsMobile] = useState(false);
+  const [showRegulatoryWarning, setShowRegulatoryWarning] = useState(false);
+  const [hasShownWarning, setHasShownWarning] = useState(false);
 
   // Mobile detection
   useEffect(() => {
@@ -128,6 +129,17 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Check if regulatory warning should be shown
+  useEffect(() => {
+    if (isOpen && !hasShownWarning) {
+      const warningShown = localStorage.getItem(REGULATORY_WARNING_KEY);
+      if (!warningShown) {
+        setShowRegulatoryWarning(true);
+      }
+      setHasShownWarning(true);
+    }
+  }, [isOpen, hasShownWarning]);
 
   // Cache management functions
   const getCachedData = useCallback((): { data: GithubFile[], hashes: Record<string, string> } | null => {
@@ -388,22 +400,46 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
     return { displayName, tags };
   };
 
-  // Filter characters based on selected tag
+  // Filter characters based on selected tag and exclude NSFW content
   const filteredCharacters = useMemo(() => {
-    if (selectedTag === "all") return characterFiles;
+    // First filter out any NSFW content
+    const nonNsfwFiles = characterFiles.filter(file => {
+      const { tags } = extractCharacterInfo(file.name);
+      const hasNsfw = tags.some(tag => tag.toLowerCase() === "nsfw") || 
+                     file.name.toLowerCase().includes("nsfw") ||
+                     file.name.toLowerCase().includes("18+") ||
+                     file.name.toLowerCase().includes("adult") ||
+                     file.name.toLowerCase().includes("mature") ||
+                     file.name.toLowerCase().includes("r18");
+      return !hasNsfw;
+    });
     
-    return characterFiles.filter(file => {
+    if (selectedTag === "all") return nonNsfwFiles;
+    
+    return nonNsfwFiles.filter(file => {
       const { tags } = extractCharacterInfo(file.name);
       return tags.some(tag => tag.toLowerCase() === selectedTag.toLowerCase());
     });
   }, [characterFiles, selectedTag]);
 
-  // Get tag counts
+  // Get tag counts (excluding NSFW content)
   const tagCounts = useMemo(() => {
-    const counts: { [key: string]: number } = { all: characterFiles.length };
+    // Filter out NSFW content for counting
+    const nonNsfwFiles = characterFiles.filter(file => {
+      const { tags } = extractCharacterInfo(file.name);
+      const hasNsfw = tags.some(tag => tag.toLowerCase() === "nsfw") || 
+                     file.name.toLowerCase().includes("nsfw") ||
+                     file.name.toLowerCase().includes("18+") ||
+                     file.name.toLowerCase().includes("adult") ||
+                     file.name.toLowerCase().includes("mature") ||
+                     file.name.toLowerCase().includes("r18");
+      return !hasNsfw;
+    });
+    
+    const counts: { [key: string]: number } = { all: nonNsfwFiles.length };
     
     TAGS.forEach(tag => {
-      counts[tag] = characterFiles.filter(file => {
+      counts[tag] = nonNsfwFiles.filter(file => {
         const { tags } = extractCharacterInfo(file.name);
         return tags.some(t => t.toLowerCase() === tag.toLowerCase());
       }).length;
@@ -421,8 +457,11 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
     setImageLoadingStates(prev => ({ ...prev, [fileName]: false }));
   }, []);
 
-  const toggleNsfwView = useCallback((fileName: string) => {
-    setNsfwViewStates(prev => ({ ...prev, [fileName]: !prev[fileName] }));
+  const handleRegulatoryWarningClose = useCallback((doNotShowAgain: boolean = false) => {
+    if (doNotShowAgain) {
+      localStorage.setItem(REGULATORY_WARNING_KEY, "true");
+    }
+    setShowRegulatoryWarning(false);
   }, []);
 
   if (!isOpen) return null;
@@ -459,7 +498,6 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                 localStorage.removeItem(IMAGE_CACHE_KEY);
                 setCharacterFiles([]);
                 setImageLoadingStates({});
-                setNsfwViewStates({});
                 setError(null);
                 setLoading(true);
                 setLoadingStage("fetching");
@@ -595,8 +633,6 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                 {filteredCharacters.map((file, index) => {
                   const { displayName, tags } = extractCharacterInfo(file.name);
                   const isImageLoaded = imageLoadingStates[file.name];
-                  const isNsfw = tags.some(tag => tag.toLowerCase() === "nsfw");
-                  const isNsfwVisible = nsfwViewStates[file.name] || false;
                   
                   return (
                     <motion.div
@@ -630,58 +666,18 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                           alt={file.name} 
                           className={`object-cover transition-all duration-300 ${
                             isImageLoaded ? "opacity-100" : "opacity-0"
-                          } ${isNsfw && !isNsfwVisible ? "blur-lg" : ""} ${
-                            isMobile ? "w-full h-full" : "w-full h-56"
-                          }`}
+                          } ${isMobile ? "w-full h-full" : "w-full h-56"}`}
                           loading="lazy"
                           onLoad={() => handleImageLoad(file.name)}
                           onError={() => handleImageError(file.name)}
                         />
-                        
-                        {/* NSFW Overlay */}
-                        {isNsfw && !isNsfwVisible && (
-                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                            <button
-                              onClick={() => toggleNsfwView(file.name)}
-                              className={`bg-red-600/80 hover:bg-red-600 text-white rounded-lg transition-all backdrop-blur-sm border border-white/20 ${fontClass} ${
-                                isMobile ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-sm"
-                              }`}
-                            >
-                              <div className="flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" className={`${isMobile ? "h-3 w-3" : "h-4 w-4"}`} viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M12.5 10a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0"/>
-                                  <path d="M0 10s3-5.5 10-5.5S20 10 20 10s-3 5.5-10 5.5S0 10 0 10m10 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7"/>
-                                </svg>
-                                <span className="font-semibold">{isMobile ? t("downloadModal.viewNsfw") : t("downloadModal.viewNsfw")}</span>
-                              </div>
-                            </button>
-                          </div>
-                        )}
-                        
-                        {/* Hide button for NSFW content */}
-                        {isNsfw && isNsfwVisible && (
-                          <button
-                            onClick={() => toggleNsfwView(file.name)}
-                            className={`absolute bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors ${
-                              isMobile ? "top-1 right-1 p-1" : "top-2 right-2 p-1.5"
-                            }`}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className={`${isMobile ? "h-3 w-3" : "h-4 w-4"}`} viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
-                              <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.742L2.458 6.697C3.732 10.754 7.522 14 12 14a9.95 9.95 0 00.454-.029z" />
-                            </svg>
-                          </button>
-                        )}
-
                         {/* Tag Overlay */}
                         {tags.length > 0 && !isMobile && (
                           <div className="absolute top-2 left-2 flex flex-wrap gap-1">
                             {tags.slice(0, 2).map(tag => (
                               <span
                                 key={tag}
-                                className={`px-2 py-0.5 text-xs rounded-full bg-black/60 text-[#ffd475] ${fontClass} ${
-                                  tag.toLowerCase() === "nsfw" ? "bg-red-600/80 text-white" : ""
-                                }`}
+                                className={`px-2 py-0.5 text-xs rounded-full bg-black/60 text-[#ffd475] ${fontClass}`}
                               >
                                 {t(`downloadModal.tags.${tag}`)}
                               </span>
@@ -710,9 +706,7 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                               {tags.slice(0, 3).map(tag => (
                                 <span
                                   key={tag}
-                                  className={`px-1.5 py-0.5 text-xs rounded-full bg-[#534741] text-[#ffd475] ${fontClass} ${
-                                    tag.toLowerCase() === "nsfw" ? "bg-red-600/80 text-white" : ""
-                                  }`}
+                                  className={`px-1.5 py-0.5 text-xs rounded-full bg-[#534741] text-[#ffd475] ${fontClass}`}
                                 >
                                   {t(`downloadModal.tags.${tag}`)}
                                 </span>
@@ -764,6 +758,59 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
           )}
         </div>
       </motion.div>
+
+      {/* Regulatory Warning Modal */}
+      <AnimatePresence>
+        {showRegulatoryWarning && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 backdrop-blur-sm bg-black/70"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-[#1a1714] rounded-lg shadow-2xl border border-[#534741] relative z-10 max-w-md w-full mx-4 p-6"
+            >
+              <div className="text-center">
+                <div className="mb-4">
+                  <div className="w-12 h-12 mx-auto mb-3 bg-amber-100 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L4.316 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <h3 className={`text-lg font-semibold text-[#eae6db] mb-2 ${serifFontClass}`}>
+                    {t("downloadModal.regulatoryWarning.title")}
+                  </h3>
+                </div>
+                
+                <p className={`text-[#c0a480] text-sm mb-6 leading-relaxed ${fontClass}`}>
+                  {t("downloadModal.regulatoryWarning.message")}
+                </p>
+                
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => handleRegulatoryWarningClose(false)}
+                    className={`w-full bg-gradient-to-br from-[#e0cfa0] to-[#f9d77e] text-[#534741] font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-[#e0cfa0]/20 hover:from-[#f0e2b8] hover:to-[#f9d77e] ${fontClass}`}
+                  >
+                    {t("downloadModal.regulatoryWarning.understand")}
+                  </button>
+                  
+                  <button
+                    onClick={() => handleRegulatoryWarningClose(true)}
+                    className={`w-full text-[#a18d6f] hover:text-[#c0a480] py-2 px-4 rounded-lg transition-colors duration-200 text-sm ${fontClass}`}
+                  >
+                    {t("downloadModal.regulatoryWarning.doNotShowAgain")}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

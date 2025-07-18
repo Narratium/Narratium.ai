@@ -11,6 +11,12 @@
   </blockquote>
 </div>
 
+> [!IMPORTANT]
+> 
+> * 本项目仅供个人学习使用，不保证稳定性，且不提供任何技术支持。
+> * 使用者必须在遵循 OpenAI 的使用条款以及法律法规的情况下使用，不得用于非法用途。
+> * 根据《生成式人工智能服务管理暂行办法》的要求，请勿对中国地区公众提供一切未经备案的生成式人工智能服务。
+
 <br>
 
 ![Narratium.ai](https://raw.githubusercontent.com/Narratium/Narratium.ai/main/public/banner.png)

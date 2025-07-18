@@ -786,7 +786,6 @@
     "tags": {
       "Cultivation": "Cultivation",
       "Fantasy": "Fantasy",
-      "NSFW": "NSFW",
       "Fanfiction": "Fanfic",
       "Anime": "Anime",
       "Other": "Other"
@@ -795,12 +794,17 @@
     "loading": "Conjuring characters from the market...",
     "preloading": "Preloading images...",
     "preloadingDescription": "Optimizing image loading experience, please wait...",
-    "viewNsfw": "View",
     "by": "By",
     "importing": "Importing...",
     "downloadAndImport": "Download & Import",
     "downloadShort": "Download",
-    "importingShort": "Importing..."
+    "importingShort": "Importing...",
+    "regulatoryWarning": {
+      "title": "Important Notice",
+      "message": "According to the requirements of the 'Interim Measures for the Management of Generative Artificial Intelligence Services', please do not provide any unregistered generative artificial intelligence services to the public in China.",
+      "understand": "I Understand",
+      "doNotShowAgain": "Do Not Show Again"
+    }
   },
   "creatorInput": {
     "title": "Creator Studio",
