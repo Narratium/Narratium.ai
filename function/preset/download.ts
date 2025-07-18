@@ -54,6 +54,18 @@ const AVAILABLE_PRESETS: GithubPreset[] = [
     },
     filename: "system_preset",
   },
+  {
+    name: "magician",
+    displayName: {
+      zh: "魔术师",
+      en: "Magician",
+    },
+    description: {
+      zh: "魔术师织机之约，编织现实与幻想的边界",
+      en: "Magician's weaving of reality and fantasy",
+    },
+    filename: "system_preset",
+  },
 ];
 
 export function getAvailableGithubPresets(): GithubPreset[] {
@@ -238,13 +250,15 @@ function markPresetAsDownloaded(presetName: string): void {
   }
 }
 
-export function getCurrentSystemPresetType(): "mirror_realm" | "novel_king" | "professional_heart" {
+export function getCurrentSystemPresetType(): "mirror_realm" | "novel_king" | "professional_heart" | "magician" {
   try {
     const presetType = localStorage.getItem("system_preset_type");
     if (presetType === "novel_king") {
       return "novel_king";
     } else if (presetType === "professional_heart") {
       return "professional_heart";
+    } else if (presetType === "magician") {
+      return "magician";
     } else {
       return "mirror_realm";
     }

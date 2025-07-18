@@ -31,7 +31,7 @@ export interface DialogueWorkflowParams {
   streaming?: boolean;
   streamUsage?: boolean;
   fastModel?: boolean;
-  systemPresetType?: "mirror_realm" | "novel_king" | "professional_heart";
+  systemPresetType?: "mirror_realm" | "novel_king" | "professional_heart" | "magician";
 }
 
 export class DialogueWorkflow extends BaseWorkflow {

@@ -150,6 +150,8 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
         currentPresetName = "novel_king";
       } else if (currentPresetType === "professional_heart") {
         currentPresetName = "professional_heart";
+      } else if (currentPresetType === "magician") {
+        currentPresetName = "magician";
       } else {
         currentPresetName = "mirror_realm";
       }
@@ -652,7 +654,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
               </div>
 
               {showGithubPresetDropdown && (
-                <div className="absolute left-0 right-0 mt-1 mx-6 bg-[#1c1c1c] border border-[#333333] rounded-md shadow-lg z-10 overflow-hidden">
+                <div className="absolute left-0 right-0 mt-1 mx-6 bg-[#1c1c1c] border border-[#333333] rounded-md shadow-lg z-10 overflow-hidden max-h-[240px]">
                   {githubPresets.length === 0 ? (
                     <div className="p-3 text-center text-[#a18d6f]">
                       <span className={`text-[10px] md:text-xs ${fontClass}`}>
@@ -660,53 +662,59 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                       </span>
                     </div>
                   ) : (
-                    githubPresets.map((preset) => (
-                      <div
-                        key={preset.name}
-                        className="p-3 hover:bg-[#252525] cursor-pointer border-b border-[#333333] last:border-b-0"
-                        onClick={() => handleSelectPreset(preset.name)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span
-                              className={`text-xs md:text-sm text-[#f4e8c1] ${fontClass}`}
-                            >
-                              {getPresetDisplayName(
-                                preset.name,
-                                language as "zh" | "en",
-                              )}
-                            </span>
-                            <p
-                              className={`text-[10px] md:text-xs text-[#a18d6f] mt-1 ${fontClass}`}
-                            >
-                              {getPresetDescription(
-                                preset.name,
-                                language as "zh" | "en",
-                              )}
-                            </p>
-                          </div>
-                          <div>
-                            {downloadedPresets.includes(preset.name) ? (
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="#a78bfa"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
+                    <div className="overflow-y-auto max-h-[240px] scrollbar-thin scrollbar-track-[#2a2a2a] scrollbar-thumb-[#555555] hover:scrollbar-thumb-[#666666]">
+                      {githubPresets.map((preset, index) => (
+                        <div
+                          key={preset.name}
+                          className={`p-3 hover:bg-[#252525] cursor-pointer transition-colors duration-200 ${
+                            index !== githubPresets.length - 1 ? "border-b border-[#333333]" : ""
+                          }`}
+                          onClick={() => handleSelectPreset(preset.name)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <span
+                                className={`text-xs md:text-sm text-[#f4e8c1] ${fontClass} block truncate`}
                               >
-                                <path d="M20 6L9 17l-5-5"></path>
-                              </svg>
-                            ) : (
-                              <div className="w-4 h-4 border border-[#555555] rounded"></div>
-                            )}
+                                {getPresetDisplayName(
+                                  preset.name,
+                                  language as "zh" | "en",
+                                )}
+                              </span>
+                              <p
+                                className={`text-[10px] md:text-xs text-[#a18d6f] mt-1 ${fontClass} line-clamp-2`}
+                              >
+                                {getPresetDescription(
+                                  preset.name,
+                                  language as "zh" | "en",
+                                )}
+                              </p>
+                            </div>
+                            <div className="ml-2 flex-shrink-0">
+                              {downloadedPresets.includes(preset.name) ? (
+                                <div className="w-4 h-4 flex items-center justify-center">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="#a78bfa"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M20 6L9 17l-5-5"></path>
+                                  </svg>
+                                </div>
+                              ) : (
+                                <div className="w-4 h-4 border border-[#555555] rounded"></div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      ))}
+                    </div>
                   )}
                 </div>
               )}

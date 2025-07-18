@@ -38,7 +38,7 @@ export class PresetNodeTools extends NodeTool {
     charName?: string,
     number?: number,
     fastModel: boolean = false,
-    systemPresetType: "mirror_realm" | "novel_king" = "mirror_realm",
+    systemPresetType: "mirror_realm" | "novel_king" | "professional_heart" | "magician" = "mirror_realm",
   ): Promise<{ systemMessage: string; userMessage: string; presetId?: string }> {
     try {
       const characterRecord = await LocalCharacterRecordOperations.getCharacterById(characterId);
