@@ -15,8 +15,8 @@
 > 
 > * 本项目仅供个人学习使用，且不提供任何技术支持
 > * 商业化请参考 License 或进入[社区咨询作者](https://discord.gg/PP7EpSzDfU)
-> * 使用者必须在遵循 OpenAI 等模型服务商的使用条款以及法律法规的情况下使用，不得用于非法用途。
-> * 根据《生成式人工智能服务管理暂行办法》的要求，请勿对中国地区公众提供一切未经备案的生成式人工智能服务。
+> * 使用者必须在遵循 OpenAI 等模型服务商的使用条款以及法律法规的情况下使用，不得用于非法用途
+> * 根据《生成式人工智能服务管理暂行办法》的要求，请勿对中国地区公众提供一切未经备案的生成式人工智能服务
 
 <br>
 
@@ -43,6 +43,7 @@
 [![Twitter Follow](https://img.shields.io/twitter/follow/qian_crypto?style=social)](https://x.com/qian_crypto)
 ![GitHub stars](https://img.shields.io/github/stars/Narratium/Narratium.ai?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/Narratium/Narratium.ai?style=social)
+![GitHub closed PRs](https://img.shields.io/github/issues-pr-closed/Narratium/Narratium.ai)
 ![GitHub commits](https://img.shields.io/github/commit-activity/m/Narratium/Narratium.ai)
 ![GitHub Downloads](https://img.shields.io/github/downloads/Narratium/Narratium.ai/total)
 
