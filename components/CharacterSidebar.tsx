@@ -152,6 +152,8 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
         currentPresetName = "professional_heart";
       } else if (currentPresetType === "magician") {
         currentPresetName = "magician";
+      } else if (currentPresetType === "whisperer") {
+        currentPresetName = "whisperer";
       } else {
         currentPresetName = "mirror_realm";
       }

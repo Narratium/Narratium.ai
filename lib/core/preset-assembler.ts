@@ -1,6 +1,6 @@
 import { PresetPrompt } from "@/lib/models/preset-model";
 import { adaptText } from "@/lib/adapter/tagReplacer";
-import { PromptLibrary } from "@/lib/prompts/preset-prompts";
+import { PromptLibrary, PromptKey } from "@/lib/prompts/preset-prompts";
 
 export class PresetAssembler {
   static assemblePrompts(
@@ -8,7 +8,7 @@ export class PresetAssembler {
     language: "zh" | "en" = "zh",
     fastModel: boolean,
     contextData: { username?: string; charName?: string; number?: number } = {},
-    systemPresetType: "mirror_realm" | "novel_king" | "professional_heart" | "magician" = "mirror_realm",
+    systemPresetType: PromptKey = "mirror_realm",
   ): { systemMessage: string; userMessage: string } {
     if (prompts.length === 0 || fastModel) {
       console.group("PresetAssembler", prompts.length, fastModel);
@@ -172,7 +172,7 @@ export class PresetAssembler {
     };
   }
 
-  private static _getDefaultFramework(language: "zh" | "en" = "zh", contextData: { username?: string; charName?: string; number?: number }, systemPresetType: "mirror_realm" | "novel_king" | "professional_heart" | "magician" = "mirror_realm"): { systemMessage: string; userMessage: string } {
+  private static _getDefaultFramework(language: "zh" | "en" = "zh", contextData: { username?: string; charName?: string; number?: number }, systemPresetType: PromptKey = "mirror_realm"): { systemMessage: string; userMessage: string } {
     const orderedSystemIdentifiers = [
       "main",
       "worldInfoBefore",

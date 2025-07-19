@@ -9,6 +9,7 @@ import { RegexNode } from "@/lib/nodeflow/RegexNode/RegexNode";
 import { PluginNode } from "@/lib/nodeflow/PluginNode/PluginNode";
 import { PluginMessageNode } from "@/lib/nodeflow/PluginNode/PluginMessageNode";
 import { OutputNode } from "@/lib/nodeflow/OutputNode/OutputNode";
+import { PromptKey } from "@/lib/prompts/preset-prompts";
 
 export interface DialogueWorkflowParams {
   characterId: string;
@@ -31,7 +32,7 @@ export interface DialogueWorkflowParams {
   streaming?: boolean;
   streamUsage?: boolean;
   fastModel?: boolean;
-  systemPresetType?: "mirror_realm" | "novel_king" | "professional_heart" | "magician";
+  systemPresetType?: PromptKey;
 }
 
 export class DialogueWorkflow extends BaseWorkflow {

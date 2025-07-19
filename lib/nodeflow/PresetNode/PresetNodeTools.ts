@@ -3,6 +3,7 @@ import { PresetOperations } from "@/lib/data/roleplay/preset-operation";
 import { PresetAssembler } from "@/lib/core/preset-assembler";
 import { LocalCharacterRecordOperations } from "@/lib/data/roleplay/character-record-operation";
 import { Character } from "@/lib/core/character";
+import { PromptKey } from "@/lib/prompts/preset-prompts";
 
 export class PresetNodeTools extends NodeTool {
   protected static readonly toolType: string = "preset";
@@ -38,7 +39,7 @@ export class PresetNodeTools extends NodeTool {
     charName?: string,
     number?: number,
     fastModel: boolean = false,
-    systemPresetType: "mirror_realm" | "novel_king" | "professional_heart" | "magician" = "mirror_realm",
+    systemPresetType: PromptKey = "mirror_realm",
   ): Promise<{ systemMessage: string; userMessage: string; presetId?: string }> {
     try {
       const characterRecord = await LocalCharacterRecordOperations.getCharacterById(characterId);
