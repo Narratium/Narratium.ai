@@ -44,6 +44,7 @@ import { useTour } from "@/hooks/useTour";
 import ErrorToast from "@/components/ErrorToast";
 import LoginModal from "@/components/LoginModal";
 import { useAuth } from "@/hooks/useAuth";
+import { getDisplayUsername } from "@/utils/username-helper";
 
 /**
  * Interface definitions for the component's data structures
@@ -280,7 +281,7 @@ export default function CharacterPage() {
     if (!characterId) return;
 
     try {
-      const username = localStorage.getItem("username") || undefined;
+      const username = getDisplayUsername() || undefined;
       const currentLanguage = localStorage.getItem("language") as "en" | "zh";
       const response = await getCharacterDialogue(
         characterId,
@@ -334,7 +335,7 @@ export default function CharacterPage() {
       const minLoadingTime = 500; // 500ms minimum loading time
 
       try {
-        const username = localStorage.getItem("username") || undefined;
+        const username = getDisplayUsername() || undefined;
         const currentLanguage = localStorage.getItem("language") as "en" | "zh";
 
         setLoadingPhase(t("characterChat.loading"));
@@ -430,7 +431,7 @@ export default function CharacterPage() {
   const initializeNewDialogue = async (charId: string) => {
     try {
       setLoadingPhase(t("characterChat.extractingTemplate"));
-      const username = localStorage.getItem("username") || "";
+      const username = getDisplayUsername();
       const language = localStorage.getItem("language") || "zh";
       const llmType = localStorage.getItem("llmType") || "openai";
       const modelName =
@@ -501,7 +502,7 @@ export default function CharacterPage() {
       const apiKey =
         llmType === "openai" ? localStorage.getItem("openaiApiKey") || "" : "";
       const storedNumber = localStorage.getItem("responseLength");
-      const username = localStorage.getItem("username") || "";
+      const username = getDisplayUsername();
       const responseLength = storedNumber ? parseInt(storedNumber) : 200;
       const nodeId = uuidv4();
       const fastModel = localStorage.getItem("fastModelEnabled") === "true";
@@ -582,8 +583,17 @@ export default function CharacterPage() {
       setSidebarCollapsed(true);
     };
 
+    // Handle display username changes
+    const handleDisplayUsernameChanged = (event: any) => {
+      // Refresh dialogue to apply new username in character prompts
+      if (characterId) {
+        fetchLatestDialogue();
+      }
+    };
+
     window.addEventListener("switchToPresetView", handleSwitchToPresetView);
     window.addEventListener("closeCharacterSidebar", handleCloseCharacterSidebar);
+    window.addEventListener("displayUsernameChanged", handleDisplayUsernameChanged);
 
     return () => {
       window.removeEventListener(
@@ -591,8 +601,9 @@ export default function CharacterPage() {
         handleSwitchToPresetView,
       );
       window.removeEventListener("closeCharacterSidebar", handleCloseCharacterSidebar);
+      window.removeEventListener("displayUsernameChanged", handleDisplayUsernameChanged);
     };
-  }, []);
+  }, [characterId]);
 
   // Show loading animation during any loading phase
   if (isLoading || isInitializing) {

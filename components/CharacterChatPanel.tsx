@@ -24,6 +24,8 @@ import { useEffect, useRef, useState } from "react";
 import ChatHtmlBubble from "@/components/ChatHtmlBubble";
 import ThinkBubble from "@/components/ThinkBubble";
 import { CharacterAvatarBackground } from "@/components/CharacterAvatarBackground";
+import UserNameSettingModal from "@/components/UserNameSettingModal";
+import { getDisplayUsername, setDisplayUsername } from "@/utils/username-helper";
 import { trackButtonClick, trackFormSubmit } from "@/utils/google-analytics";
 
 /**
@@ -103,6 +105,10 @@ export default function CharacterChatPanel({
 }: Props) {
   const [streamingTarget, setStreamingTarget] = useState<number>(-1);
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Username setting states
+  const [showUserNameModal, setShowUserNameModal] = useState(false);
+  const [currentDisplayName, setCurrentDisplayName] = useState("");
 
   // API Configuration states
   const [configs, setConfigs] = useState<APIConfig[]>([]);
@@ -137,6 +143,9 @@ export default function CharacterChatPanel({
       }));
       localStorage.setItem("streamingEnabled", "true");
     }
+
+    // Load display username using helper function
+    setCurrentDisplayName(getDisplayUsername());
   }, []);
 
   const scrollToBottom = () => {
@@ -162,6 +171,13 @@ export default function CharacterChatPanel({
     if (index !== messages.length - 1) return false;
 
     return true;
+  };
+
+  // Username setting helper functions
+  const handleUserNameSave = (newDisplayName: string) => {
+    setCurrentDisplayName(newDisplayName);
+    // Use helper function to set username, which also triggers the event
+    setDisplayUsername(newDisplayName);
   };
 
   // API configuration helper functions
@@ -1421,9 +1437,47 @@ export default function CharacterChatPanel({
                 </span>
               </span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                trackButtonClick("page", "设置用户名称");
+                setShowUserNameModal(true);
+              }}
+              className={"px-1.5 sm:px-2 md:px-4 py-1.5 text-xs rounded-full border transition-all duration-300 bg-[#2a261f] text-[#f9c86d] border-[#534741] hover:border-[#f9c86d] shadow-sm hover:shadow-md"}
+            >
+              <span className="flex items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mr-1 sm:mr-1"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span className="text-[10px] sm:text-xs">
+                  {t("characterChat.userNameSetting")}
+                </span>
+              </span>
+            </button>
           </div>
         </form>
       </div>
+
+      {/* Username Setting Modal */}
+      <UserNameSettingModal
+        isOpen={showUserNameModal}
+        onClose={() => setShowUserNameModal(false)}
+        currentDisplayName={currentDisplayName}
+        onSave={handleUserNameSave}
+      />
     </div>
   );
 }

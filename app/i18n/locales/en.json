@@ -428,7 +428,9 @@
     "characters": "characters",
     "loadingDialogue": "Loading dialogue...",
     "requestFailed": "Request Failed",
-    "checkNetworkOrAPI": "Please check your network connection or API configuration"
+    "checkNetworkOrAPI": "Please check your network connection or API configuration",
+    "userNameSetting": "Username",
+    "openUserNameSetting": "Set Username"
   },
   "preset": {
     "title": "Preset Manager",
@@ -909,5 +911,19 @@
     "comingSoon": "download will be available soon!",
     "tip": "💡 Tip: You can also install directly from your browser by clicking \"Install\" when prompted.",
     "close": "Close"
+  },
+  "userNameSetting": {
+    "title": "Username Settings",
+    "description": "Set the username displayed in conversations, does not affect login name",
+    "loginUsername": "Login Username",
+    "displayUsername": "Display Username",
+    "displayNamePlaceholder": "Enter display username...",
+    "nameRequired": "Username cannot be empty",
+    "saveFailed": "Save failed, please try again",
+    "saving": "Saving...",
+    "save": "Save",
+    "reset": "Reset",
+    "helperText": "This name will replace {{user}} tags in character dialogues",
+    "notLoggedIn": "Not logged in"
   }
 }
