@@ -432,6 +432,56 @@
     "userNameSetting": "Username",
     "openUserNameSetting": "Set Username"
   },
+  "presetInfo": {
+    "modalTitle": "Preset Details",
+    "description": "Description",
+    "features": "Key Features",
+    "tip": "Choose a preset that matches your creative style. You can switch between presets anytime during character conversations.",
+    "mirrorRealm": {
+      "title": "Mirror Realm",
+      "description": "Multi-faceted soul character protocol focused on deep emotional interaction and psychological character portrayal. Creates authentic and touching dialogue experiences through multiple perspectives of complex inner worlds.",
+      "feature1": "Multi-layered personality exploration with deep inner character mining",
+      "feature2": "Emotional resonance mechanism enhancing interaction authenticity",
+      "feature3": "Dynamic psychological state tracking for natural character development",
+      "feature4": "Delicate emotional expression creating immersive experiences"
+    },
+    "novelKing": {
+      "title": "Novel King",
+      "description": "Epic narrative master skilled in building grand story architectures and advancing complex plot developments. Designed for long-form storytelling and world-building, infusing every dialogue with narrative tension.",
+      "feature1": "Epic-scale story architecture building grand worldviews",
+      "feature2": "Powerful plot progression maintaining story rhythm",
+      "feature3": "Precise conflict design enhancing dramatic tension",
+      "feature4": "Rich world-building with detailed layered construction"
+    },
+    "professionalHeart": {
+      "title": "This Killer Isn't So Cold",
+      "description": "Harsh reality contrast narrative expert, skilled at revealing warm hearts beneath cold exteriors. Creates unique charm through strong character contrasts, finding perfect balance between cruelty and tenderness.",
+      "feature1": "Strong contrast between cold exterior and warm heart",
+      "feature2": "Collision and fusion of professional spirit with human brilliance",
+      "feature3": "Light of hope in darkness with prominent redemption themes",
+      "feature4": "Deep contradictions between harsh reality and inner softness"
+    },
+    "magician": {
+      "title": "Magician",
+      "description": "Weaver of boundaries between reality and fantasy, skilled at building mysterious story atmospheres between truth and illusion. Creates magical dialogue experiences through clever settings and supernatural elements.",
+      "feature1": "Exquisite interweaving of reality and fantasy with blurred boundaries",
+      "feature2": "Mysterious atmosphere creation with rich supernatural elements",
+      "feature3": "Magic system construction with complete rule setting",
+      "feature4": "Dreamlike narrative style with unlimited imagination"
+    },
+    "whisperer": {
+      "title": "Whisperer",
+      "description": "Guardian of testimonies from the forgotten, focused on edge narratives and overlooked voices. Skilled at uncovering hidden stories and forgotten details, giving voice to silent characters.",
+      "feature1": "Edge perspective narratives focusing on overlooked voices",
+      "feature2": "Deep exploration of history and memory with rich details",
+      "feature3": "Hope in dim light with gentle spirit of resistance",
+      "feature4": "Stories of the forgotten with emotionally touching depth"
+    },
+    "unknown": {
+      "title": "Unknown Preset",
+      "description": "Information for this preset is currently unavailable."
+    }
+  },
   "preset": {
     "title": "Preset Manager",
     "createPreset": "Create Preset",

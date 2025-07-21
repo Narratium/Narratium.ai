@@ -37,6 +37,7 @@ import {
   getPresetDescription,
 } from "@/function/preset/download";
 import AdvancedSettingsEditor from "@/components/AdvancedSettingsEditor";
+import PresetInfoModal from "@/components/PresetInfoModal";
 
 /**
  * Interface definitions for the component's props
@@ -85,6 +86,8 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
     useState(false);
   const [downloadedPresets, setDownloadedPresets] = useState<string[]>([]);
   const [isAdvancedSettingsOpen, setIsAdvancedSettingsOpen] = useState(false);
+  const [showPresetInfoModal, setShowPresetInfoModal] = useState(false);
+  const [selectedPresetForInfo, setSelectedPresetForInfo] = useState<string>("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -175,6 +178,11 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const handleShowPresetInfo = (presetName: string) => {
+    setSelectedPresetForInfo(presetName);
+    setShowPresetInfoModal(true);
+  };
 
   return (
     <>
@@ -668,21 +676,50 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                       {githubPresets.map((preset, index) => (
                         <div
                           key={preset.name}
-                          className={`p-3 hover:bg-[#252525] cursor-pointer transition-colors duration-200 ${
+                          className={`p-3 hover:bg-[#252525] transition-colors duration-200 group ${
                             index !== githubPresets.length - 1 ? "border-b border-[#333333]" : ""
                           }`}
-                          onClick={() => handleSelectPreset(preset.name)}
                         >
                           <div className="flex items-center justify-between">
-                            <div className="flex-1 min-w-0">
-                              <span
-                                className={`text-xs md:text-sm text-[#f4e8c1] ${fontClass} block truncate`}
-                              >
-                                {getPresetDisplayName(
-                                  preset.name,
-                                  language as "zh" | "en",
-                                )}
-                              </span>
+                            <div 
+                              className="flex-1 min-w-0 cursor-pointer"
+                              onClick={() => handleSelectPreset(preset.name)}
+                            >
+                              <div className="flex items-center">
+                                <span
+                                  className={`text-xs md:text-sm text-[#f4e8c1] ${fontClass} block truncate`}
+                                >
+                                  {getPresetDisplayName(
+                                    preset.name,
+                                    language as "zh" | "en",
+                                  )}
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleShowPresetInfo(preset.name);
+                                  }}
+                                  className="ml-2 w-4 h-4 flex items-center justify-center text-[#a18d6f] hover:text-[#f9c86d] transition-all duration-300 rounded-full hover:bg-[#333]/50 group/info"
+                                  title={t("presetInfo.modalTitle")}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="transition-transform duration-300 group-hover/info:scale-110"
+                                  >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 16v-4" />
+                                    <path d="M12 8h.01" />
+                                  </svg>
+                                </button>
+                              </div>
                               <p
                                 className={`text-[10px] md:text-xs text-[#a18d6f] mt-1 ${fontClass} line-clamp-2`}
                               >
@@ -847,6 +884,12 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
         isOpen={isAdvancedSettingsOpen}
         onClose={() => setIsAdvancedSettingsOpen(false)}
         onViewSwitch={onViewSwitch}
+      />
+
+      <PresetInfoModal
+        isOpen={showPresetInfoModal}
+        onClose={() => setShowPresetInfoModal(false)}
+        presetName={selectedPresetForInfo}
       />
     </>
   );

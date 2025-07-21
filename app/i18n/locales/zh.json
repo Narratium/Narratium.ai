@@ -168,7 +168,7 @@
     "registerNow": "立即注册",
     "loginNow": "立即登录",
     "usernameRequired": "请输入您的名称",
-    "emailRequired": "请输入您的邮箱",
+    "emailRequired": "请输入您的邮箱...",
     "passwordRequired": "请输入您的密码",
     "codeRequired": "请输入验证码",
     "sendCodeFailed": "发送验证码失败",
@@ -433,6 +433,56 @@
     "checkNetworkOrAPI": "请检查网络连接或API配置",
     "userNameSetting": "用户名称",
     "openUserNameSetting": "设置用户名称"
+  },
+  "presetInfo": {
+    "modalTitle": "预设详细信息",
+    "description": "描述",
+    "features": "特色功能",
+    "tip": "选择适合你创作风格的预设，可以随时在角色对话中切换。",
+    "mirrorRealm": {
+      "title": "灵镜之境",
+      "description": "多面灵魂角色协议，专注于深层情感互动和角色心理刻画。通过多重视角展现角色的复杂内心世界，创造真实而动人的对话体验。",
+      "feature1": "多重人格层次展现，深度挖掘角色内心",
+      "feature2": "情感共鸣机制，增强互动的真实感",
+      "feature3": "动态心理状态追踪，角色发展更自然",
+      "feature4": "细腻的情感表达，营造沉浸式体验"
+    },
+    "novelKing": {
+      "title": "小说之王",
+      "description": "史诗织梦叙事大师，擅长构建宏大的故事架构和推进复杂的情节发展。专为长篇叙事和世界观构建而设计，让每一段对话都充满故事张力。",
+      "feature1": "史诗级故事架构，构建宏大世界观",
+      "feature2": "强劲的情节推进力，保持故事节奏",
+      "feature3": "精准的冲突设计，增强戏剧张力",
+      "feature4": "丰富的世界观构建，细节层次分明"
+    },
+    "professionalHeart": {
+      "title": "这个杀手不太冷",
+      "description": "严酷现实反差叙事专家，善于在冷酷外表下展现温暖内心。通过强烈的性格反差创造独特的魅力，在残酷与温柔之间找到完美平衡。",
+      "feature1": "冷酷外表与温暖内心的强烈反差",
+      "feature2": "专业精神与人性光辉的碰撞融合",
+      "feature3": "黑暗中的希望之光，救赎主题突出",
+      "feature4": "现实残酷与内心柔软的深层矛盾"
+    },
+    "magician": {
+      "title": "魔术师",
+      "description": "现实与幻想的边界编织者，擅长在真实与虚幻之间构建神秘的故事氛围。通过巧妙的设定和超自然元素，创造充满魔法的对话体验。",
+      "feature1": "现实与幻想的精妙交织，边界模糊",
+      "feature2": "神秘氛围营造，超自然元素丰富",
+      "feature3": "魔法系统构建，规则设定完善",
+      "feature4": "梦幻般的叙事风格，想象力无限"
+    },
+    "whisperer": {
+      "title": "低语者",
+      "description": "被遗忘者的证言守护者，专注于边缘叙事和被忽视的声音。善于发掘隐藏的故事和被遗忘的细节，为沉默的角色发声。",
+      "feature1": "边缘视角叙事，关注被忽视的声音",
+      "feature2": "历史与记忆的深度挖掘，细节丰富",
+      "feature3": "微光中的希望，温柔的抵抗精神",
+      "feature4": "被遗忘者的故事，情感深度触动"
+    },
+    "unknown": {
+      "title": "未知预设",
+      "description": "该预设信息暂不可用。"
+    }
   },
   "preset": {
     "title": "预设编辑器",
