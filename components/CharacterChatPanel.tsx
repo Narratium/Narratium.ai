@@ -109,6 +109,11 @@ export default function CharacterChatPanel({
   // Username setting states
   const [showUserNameModal, setShowUserNameModal] = useState(false);
   const [currentDisplayName, setCurrentDisplayName] = useState("");
+  
+  // Toggle buttons expansion state
+  const [isButtonsExpanded, setIsButtonsExpanded] = useState(false);
+  // Control panel expansion state
+  const [isControlPanelExpanded, setIsControlPanelExpanded] = useState(false);
 
   // API Configuration states
   const [configs, setConfigs] = useState<APIConfig[]>([]);
@@ -1289,184 +1294,238 @@ export default function CharacterChatPanel({
             )}
           </div>
 
-          <div className="mt-3 sm:mt-5 flex justify-start gap-1.5 sm:gap-2 md:gap-3 max-w-4xl mx-auto">
-            <button
-              type="button"
-              onClick={() => {
-                trackButtonClick("page", "切换故事进度");
-                setActiveModes((prev) => ({
-                  ...prev,
-                  "story-progress": !prev["story-progress"],
-                }));
-              }}
-              className={`px-1.5 sm:px-2 md:px-4 py-1.5 text-xs rounded-full border transition-all duration-300 ${
-                activeModes["story-progress"]
-                  ? "bg-[#d1a35c] text-[#2a261f] border-[#d1a35c] shadow-[0_0_8px_rgba(209,163,92,0.5)]"
-                  : "bg-[#2a261f] text-[#d1a35c] border-[#534741] hover:border-[#d1a35c] shadow-sm hover:shadow-md"
-              }`}
-            >
-              <span className="flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="mr-1 sm:mr-1"
-                >
-                  <path d="M5 12h14"></path>
-                  <path d="m12 5 7 7-7 7"></path>
-                </svg>
-                <span className="text-[10px] sm:text-xs">
-                  {t("characterChat.storyProgress") || "剧情推进"}
+          <div className="mt-3 sm:mt-5 flex justify-start gap-1.5 sm:gap-2 md:gap-3 max-w-4xl mx-auto relative">
+            {/* Expandable Control Panel */}
+            <div className="relative">
+              {/* Expanded Control Buttons */}
+              <div
+                className={`absolute bottom-full left-0 mb-2 z-50 transition-all duration-300 ease-in-out ${
+                  isControlPanelExpanded
+                    ? "opacity-100 translate-y-0 pointer-events-auto"
+                    : "opacity-0 translate-y-2 pointer-events-none"
+                }`}
+              >
+                <div className="flex flex-col gap-2 bg-[#1a1a1a]/95 backdrop-blur-sm rounded-lg p-2 border border-[#534741]/50 shadow-lg">
+                  {/* 剧情推进 */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      trackButtonClick("page", "切换故事进度");
+                      setActiveModes((prev) => ({
+                        ...prev,
+                        "story-progress": !prev["story-progress"],
+                      }));
+                    }}
+                    className={`px-1.5 sm:px-2 md:px-4 py-1.5 text-xs rounded-full border transition-all duration-300 whitespace-nowrap min-w-fit ${
+                      activeModes["story-progress"]
+                        ? "bg-[#d1a35c] text-[#2a261f] border-[#d1a35c] shadow-[0_0_8px_rgba(209,163,92,0.5)]"
+                        : "bg-[#2a261f] text-[#d1a35c] border-[#534741] hover:border-[#d1a35c] shadow-sm hover:shadow-md"
+                    }`}
+                  >
+                    <span className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="mr-1 sm:mr-1"
+                      >
+                        <path d="M5 12h14"></path>
+                        <path d="m12 5 7 7-7 7"></path>
+                      </svg>
+                      <span className="text-[10px] sm:text-xs">
+                        {t("characterChat.storyProgress") || "剧情推进"}
+                      </span>
+                    </span>
+                  </button>
+
+                  {/* 视角设计 */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      trackButtonClick("page", "切换视角");
+                      setActiveModes((prev) => {
+                        const perspective = prev["perspective"];
+
+                        if (!perspective.active) {
+                          return {
+                            ...prev,
+                            perspective: {
+                              active: true,
+                              mode: "novel",
+                            },
+                          };
+                        }
+
+                        if (perspective.mode === "novel") {
+                          return {
+                            ...prev,
+                            perspective: {
+                              active: true,
+                              mode: "protagonist",
+                            },
+                          };
+                        }
+
+                        return {
+                          ...prev,
+                          perspective: {
+                            active: false,
+                            mode: "novel",
+                          },
+                        };
+                      });
+                    }}
+                    className={`px-1.5 sm:px-2 md:px-4 py-1.5 text-xs rounded-full border transition-all duration-300 whitespace-nowrap min-w-fit ${
+                      !activeModes["perspective"].active
+                        ? "bg-[#2a261f] text-[#56b3b4] border-[#534741] hover:border-[#56b3b4] shadow-sm hover:shadow-md"
+                        : activeModes["perspective"].mode === "novel"
+                          ? "bg-[#56b3b4] text-[#2a261f] border-[#56b3b4] shadow-[0_0_8px_rgba(86,179,180,0.5)]"
+                          : "bg-[#378384] text-[#2a261f] border-[#378384] shadow-[0_0_8px_rgba(55,131,132,0.5)]"
+                    }`}
+                  >
+                    <span className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="mr-1 sm:mr-1"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                      </svg>
+                      <span className="text-[10px] sm:text-xs">
+                        {!activeModes["perspective"].active
+                          ? t("characterChat.perspective") || "视角设计"
+                          : activeModes["perspective"].mode === "novel"
+                            ? t("characterChat.novelPerspective") || "小说视角"
+                            : t("characterChat.protagonistPerspective") || "主角视角"}
+                      </span>
+                    </span>
+                  </button>
+
+                  {/* 场景过渡 */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      trackButtonClick("page", "切换场景设置");
+                      setActiveModes((prev) => ({
+                        ...prev,
+                        "scene-setting": !prev["scene-setting"],
+                      }));
+                    }}
+                    className={`px-1.5 sm:px-2 md:px-4 py-1.5 text-xs rounded-full border transition-all duration-300 whitespace-nowrap min-w-fit ${
+                      activeModes["scene-setting"]
+                        ? "bg-[#c093ff] text-[#2a261f] border-[#c093ff] shadow-[0_0_8px_rgba(192,147,255,0.5)]"
+                        : "bg-[#2a261f] text-[#c093ff] border-[#534741] hover:border-[#c093ff] shadow-sm hover:shadow-md"
+                    }`}
+                  >
+                    <span className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="mr-1 sm:mr-1"
+                      >
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                        <line x1="3" y1="15" x2="21" y2="15"></line>
+                        <line x1="9" y1="3" x2="9" y2="21"></line>
+                        <line x1="15" y1="3" x2="15" y2="21"></line>
+                      </svg>
+                      <span className="text-[10px] sm:text-xs">
+                        {t("characterChat.sceneTransition")}
+                      </span>
+                    </span>
+                  </button>
+
+                  {/* 用户名称 */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      trackButtonClick("page", "设置用户名称");
+                      setShowUserNameModal(true);
+                    }}
+                    className={"px-1.5 sm:px-2 md:px-4 py-1.5 text-xs rounded-full border transition-all duration-300 whitespace-nowrap min-w-fit bg-[#2a261f] text-[#f9c86d] border-[#534741] hover:border-[#f9c86d] shadow-sm hover:shadow-md"}
+                  >
+                    <span className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="mr-1 sm:mr-1"
+                      >
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
+                      <span className="text-[10px] sm:text-xs">
+                        {t("characterChat.userNameSetting")}
+                      </span>
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Main Control Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsControlPanelExpanded(!isControlPanelExpanded);
+                  trackButtonClick("page", "切换控制面板");
+                }}
+                className={`px-1.5 sm:px-2 md:px-4 py-1.5 text-xs rounded-full border transition-all duration-300 ${
+                  isControlPanelExpanded
+                    ? "bg-[#d1a35c] text-[#2a261f] border-[#d1a35c] shadow-[0_0_8px_rgba(209,163,92,0.5)]"
+                    : "bg-[#2a261f] text-[#d1a35c] border-[#534741] hover:border-[#d1a35c] shadow-sm hover:shadow-md"
+                }`}
+              >
+                <span className="flex items-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={`mr-1 sm:mr-1 transition-transform duration-300 ${
+                      isControlPanelExpanded ? "rotate-180" : ""
+                    }`}
+                  >
+                    <path d="M18 15l-6-6-6 6"></path>
+                  </svg>
+                  <span className="text-[10px] sm:text-xs">
+                    {isControlPanelExpanded ? "收起控制" : "展开控制"}
+                  </span>
                 </span>
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                trackButtonClick("page", "切换视角");
-                setActiveModes((prev) => {
-                  const perspective = prev["perspective"];
-
-                  if (!perspective.active) {
-                    return {
-                      ...prev,
-                      perspective: {
-                        active: true,
-                        mode: "novel",
-                      },
-                    };
-                  }
-
-                  if (perspective.mode === "novel") {
-                    return {
-                      ...prev,
-                      perspective: {
-                        active: true,
-                        mode: "protagonist",
-                      },
-                    };
-                  }
-
-                  return {
-                    ...prev,
-                    perspective: {
-                      active: false,
-                      mode: "novel",
-                    },
-                  };
-                });
-              }}
-              className={`px-1.5 sm:px-2 md:px-4 py-1.5 text-xs rounded-full border transition-all duration-300 ${
-                !activeModes["perspective"].active
-                  ? "bg-[#2a261f] text-[#56b3b4] border-[#534741] hover:border-[#56b3b4] shadow-sm hover:shadow-md"
-                  : activeModes["perspective"].mode === "novel"
-                    ? "bg-[#56b3b4] text-[#2a261f] border-[#56b3b4] shadow-[0_0_8px_rgba(86,179,180,0.5)]"
-                    : "bg-[#378384] text-[#2a261f] border-[#378384] shadow-[0_0_8px_rgba(55,131,132,0.5)]"
-              }`}
-            >
-              <span className="flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="mr-1 sm:mr-1"
-                >
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="2" y1="12" x2="22" y2="12"></line>
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                </svg>
-                <span className="text-[10px] sm:text-xs">
-                  {!activeModes["perspective"].active
-                    ? t("characterChat.perspective") || "视角设计"
-                    : activeModes["perspective"].mode === "novel"
-                      ? t("characterChat.novelPerspective") || "小说视角"
-                      : t("characterChat.protagonistPerspective") || "主角视角"}
-                </span>
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                trackButtonClick("page", "切换场景设置");
-                setActiveModes((prev) => ({
-                  ...prev,
-                  "scene-setting": !prev["scene-setting"],
-                }));
-              }}
-              className={`px-1.5 sm:px-2 md:px-4 py-1.5 text-xs rounded-full border transition-all duration-300 ${
-                activeModes["scene-setting"]
-                  ? "bg-[#c093ff] text-[#2a261f] border-[#c093ff] shadow-[0_0_8px_rgba(192,147,255,0.5)]"
-                  : "bg-[#2a261f] text-[#c093ff] border-[#534741] hover:border-[#c093ff] shadow-sm hover:shadow-md"
-              }`}
-            >
-              <span className="flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="mr-1 sm:mr-1"
-                >
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="3" y1="9" x2="21" y2="9"></line>
-                  <line x1="3" y1="15" x2="21" y2="15"></line>
-                  <line x1="9" y1="3" x2="9" y2="21"></line>
-                  <line x1="15" y1="3" x2="15" y2="21"></line>
-                </svg>
-                <span className="text-[10px] sm:text-xs">
-                  {t("characterChat.sceneTransition")}
-                </span>
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                trackButtonClick("page", "设置用户名称");
-                setShowUserNameModal(true);
-              }}
-              className={"px-1.5 sm:px-2 md:px-4 py-1.5 text-xs rounded-full border transition-all duration-300 bg-[#2a261f] text-[#f9c86d] border-[#534741] hover:border-[#f9c86d] shadow-sm hover:shadow-md"}
-            >
-              <span className="flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="mr-1 sm:mr-1"
-                >
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-                <span className="text-[10px] sm:text-xs">
-                  {t("characterChat.userNameSetting")}
-                </span>
-              </span>
-            </button>
+              </button>
+            </div>
           </div>
         </form>
       </div>
