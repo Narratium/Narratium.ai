@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Send, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "../i18n";
 import { initAgentSession } from "@/function/agent/session";
+import ErrorToast from "@/components/ErrorToast";
 
 export default function CreatorInputPage() {
   const router = useRouter();
@@ -14,7 +15,26 @@ export default function CreatorInputPage() {
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+
+  // Add ErrorToast state
+  const [errorToast, setErrorToast] = useState({
+    isVisible: false,
+    message: "",
+  });
+
+  const showErrorToast = useCallback((message: string) => {
+    setErrorToast({
+      isVisible: true,
+      message,
+    });
+  }, []);
+
+  const hideErrorToast = useCallback(() => {
+    setErrorToast({
+      isVisible: false,
+      message: "",
+    });
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -37,7 +57,6 @@ export default function CreatorInputPage() {
     if (!inputValue.trim() || isLoading) return;
     
     setIsLoading(true);
-    setError("");
     
     try {
       // Create new agent session
@@ -52,7 +71,7 @@ export default function CreatorInputPage() {
       
     } catch (error: any) {
       console.error("Error creating session:", error);
-      setError(error.message || "Failed to start creation process");
+      showErrorToast(error.message || "Failed to start creation process");
       setIsLoading(false);
     }
   };
@@ -114,12 +133,6 @@ export default function CreatorInputPage() {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="w-full max-w-2xl"
         >
-          {error && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="relative">
             <div className="relative bg-black/20 backdrop-blur-sm border border-amber-500/30 rounded-2xl p-1 shadow-[0_0_20px_rgba(251,146,60,0.3)] hover:shadow-[0_0_30px_rgba(251,146,60,0.4)] transition-all duration-300">
               <textarea
@@ -160,6 +173,13 @@ export default function CreatorInputPage() {
           </form>
         </motion.div>
       </div>
+      
+      {/* ErrorToast */}
+      <ErrorToast
+        isVisible={errorToast.isVisible}
+        message={errorToast.message}
+        onClose={hideErrorToast}
+      />
     </div>
   );
 }

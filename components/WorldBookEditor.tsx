@@ -10,6 +10,7 @@ import { getWorldBookSettings } from "@/function/worldbook/settings";
 import { useLanguage } from "@/app/i18n";
 import WorldBookEntryEditor from "@/components/WorldBookEntryEditor";
 import ImportWorldBookModal from "@/components/ImportWorldBookModal";
+import ErrorToast from "@/components/ErrorToast";
 import "@/app/styles/fantasy-ui.css";
 import React from "react";
 import { v4 as uuidv4 } from "uuid";
@@ -101,6 +102,26 @@ export default function WorldBookEditor({
     enabled: true,
     contextWindow: 5,
   });
+  
+  // ErrorToast state
+  const [errorToast, setErrorToast] = useState({
+    isVisible: false,
+    message: "",
+  });
+
+  const showErrorToast = (message: string) => {
+    setErrorToast({
+      isVisible: true,
+      message,
+    });
+  };
+
+  const hideErrorToast = () => {
+    setErrorToast({
+      isVisible: false,
+      message: "",
+    });
+  };
 
   const SORT_STORAGE_KEY = `worldbook_sort_${characterId}`;
   const FILTER_STORAGE_KEY = `worldbook_filter_${characterId}`;
@@ -118,6 +139,7 @@ export default function WorldBookEditor({
       }
     } catch (error) {
       console.error("Failed to load sort preferences:", error);
+      showErrorToast("Failed to load sort preferences");
       setSortBy("position");
       setSortOrder("asc");
     }
@@ -134,6 +156,7 @@ export default function WorldBookEditor({
       }
     } catch (error) {
       console.error("Failed to load filter preferences:", error);
+      showErrorToast("Failed to load filter preferences");
       setFilterBy("all");
     }
   };
@@ -243,7 +266,7 @@ export default function WorldBookEditor({
       }
     } catch (error) {
       console.error("Failed to load world book entries:", error);
-      toast.error(t("worldBook.loading"));
+      showErrorToast(t("worldBook.loadingFailed") || "Failed to load world book entries");
     } finally {
       setIsLoading(false);
     }
@@ -257,6 +280,7 @@ export default function WorldBookEditor({
       }
     } catch (error) {
       console.error("Failed to load settings:", error);
+      showErrorToast("Failed to load settings");
     }
   };
 
@@ -378,7 +402,7 @@ export default function WorldBookEditor({
     if (!editingEntry) return;
 
     if (!editingEntry.content.trim()) {
-      toast.error(t("worldBook.contentRequired"));
+      showErrorToast(t("worldBook.contentRequired") || "Content is required");
       return;
     }
 
@@ -444,7 +468,7 @@ export default function WorldBookEditor({
       }
     } catch (error) {
       console.error("Save failed:", error);
-      toast.error(t("worldBook.saveFailed"));
+      showErrorToast(t("worldBook.saveFailed") || "Failed to save entry");
     } finally {
       setIsSaving(false);
     }
@@ -473,7 +497,7 @@ export default function WorldBookEditor({
 
   const handleBulkToggleAll = async (enabled: boolean) => {
     if (filteredEntries.length === 0) {
-      toast.error(t("worldBook.noEntries"));
+      showErrorToast(t("worldBook.noEntries") || "No entries selected");
       return;
     }
 
@@ -506,7 +530,7 @@ export default function WorldBookEditor({
               : entry,
           ),
         );
-        toast.error(t("worldBook.bulkOperationFailed"));
+        showErrorToast(t("worldBook.bulkOperationFailed") || "Bulk operation failed");
       }
     } catch (error) {
       setEntries(prev =>
@@ -517,7 +541,7 @@ export default function WorldBookEditor({
         ),
       );
       console.error("Bulk toggle failed:", error);
-      toast.error(t("worldBook.bulkOperationFailed"));
+      showErrorToast(t("worldBook.bulkOperationFailed") || "Bulk operation failed");
     }
   };
 
@@ -537,7 +561,7 @@ export default function WorldBookEditor({
       }
     } catch (error) {
       console.error("Delete failed:", error);
-      toast.error(t("worldBook.deleteFailed"));
+      showErrorToast(t("worldBook.deleteFailed") || "Failed to delete entry");
     }
   };
 
@@ -568,7 +592,7 @@ export default function WorldBookEditor({
               : entry,
           ),
         );
-        toast.error(t("worldBook.toggleFailed"));
+        showErrorToast(t("worldBook.toggleFailed") || "Failed to toggle entry");
       }
     } catch (error) {
       setEntries(prev =>
@@ -579,7 +603,7 @@ export default function WorldBookEditor({
         ),
       );
       console.error("Toggle failed:", error);
-      toast.error(t("worldBook.toggleFailed"));
+      showErrorToast(t("worldBook.toggleFailed") || "Failed to toggle entry");
     }
   };
 
@@ -1107,6 +1131,12 @@ export default function WorldBookEditor({
           setIsImportModalOpen(false);
           loadWorldBookData();
         }}
+      />
+      
+      <ErrorToast
+        isVisible={errorToast.isVisible}
+        message={errorToast.message}
+        onClose={hideErrorToast}
       />
     </div>
   );

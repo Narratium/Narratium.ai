@@ -32,6 +32,7 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { handleCharacterUpload } from "@/function/character/import";
 import { useLanguage } from "@/app/i18n";
+import ErrorToast from "@/components/ErrorToast";
 
 const GITHUB_API_URL = "https://api.github.com/repos/Narratium/Character-Card/contents";
 const RAW_BASE_URL = "https://raw.githubusercontent.com/Narratium/Character-Card/main/";
@@ -118,6 +119,26 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
   const [isMobile, setIsMobile] = useState(false);
   const [showRegulatoryWarning, setShowRegulatoryWarning] = useState(false);
   const [hasShownWarning, setHasShownWarning] = useState(false);
+  
+  // ErrorToast state
+  const [errorToast, setErrorToast] = useState({
+    isVisible: false,
+    message: "",
+  });
+
+  const showErrorToast = (message: string) => {
+    setErrorToast({
+      isVisible: true,
+      message,
+    });
+  };
+
+  const hideErrorToast = () => {
+    setErrorToast({
+      isVisible: false,
+      message: "",
+    });
+  };
 
   // Mobile detection
   useEffect(() => {
@@ -344,6 +365,7 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
         }
       } catch (err) {
         console.error("Failed to fetch characters:", err);
+        showErrorToast(t("downloadModal.fetchError") || "Failed to fetch characters");
         setError(t("downloadModal.fetchError"));
         setLoading(false);
         setLoadingStage("complete");
@@ -365,7 +387,9 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
       onImport();
       onClose();
     } catch (e: any) {
-      setError(e.message || t("downloadModal.importFailed"));
+      const errorMessage = e.message || t("downloadModal.importFailed");
+      showErrorToast(errorMessage);
+      setError(errorMessage);
     } finally {
       setImporting(null);
     }
@@ -515,6 +539,7 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
                   }
                 } catch (err) {
                   console.error("Failed to fetch characters:", err);
+                  showErrorToast(t("downloadModal.fetchError") || "Failed to fetch characters");
                   setError(t("downloadModal.fetchError"));
                   setLoading(false);
                   setLoadingStage("complete");
@@ -811,6 +836,12 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
           </div>
         )}
       </AnimatePresence>
+      
+      <ErrorToast
+        isVisible={errorToast.isVisible}
+        message={errorToast.message}
+        onClose={hideErrorToast}
+      />
     </div>
   );
 }

@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/app/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import ErrorToast from "@/components/ErrorToast";
 
 interface AccountModalProps {
   isOpen: boolean;
@@ -20,8 +21,27 @@ export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedUsername, setEditedUsername] = useState(user?.username || "");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  // Add ErrorToast state
+  const [errorToast, setErrorToast] = useState({
+    isVisible: false,
+    message: "",
+  });
+
+  const showErrorToast = useCallback((message: string) => {
+    setErrorToast({
+      isVisible: true,
+      message,
+    });
+  }, []);
+
+  const hideErrorToast = useCallback(() => {
+    setErrorToast({
+      isVisible: false,
+      message: "",
+    });
+  }, []);
 
   useEffect(() => {
     if (user?.username) {
@@ -55,18 +75,16 @@ export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
 
   const handleSaveUsername = async () => {
     if (!editedUsername.trim()) {
-      setError(t("account.usernameRequired"));
+      showErrorToast(t("account.usernameRequired"));
       return;
     }
     
     if (editedUsername.trim().length < 3 || editedUsername.trim().length > 30) {
-      setError(t("account.usernameLength"));
+      showErrorToast(t("account.usernameLength"));
       return;
     }
     
     setIsLoading(true);
-    setError("");
-    setSuccessMessage("");
     
     try {
       const result = await updateUsername(editedUsername.trim());
@@ -80,11 +98,11 @@ export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
           setSuccessMessage("");
         }, 3000);
       } else {
-        setError(result.message || t("account.updateFailed"));
+        showErrorToast(result.message || t("account.updateFailed"));
       }
     } catch (error) {
       console.error("Failed to update username:", error);
-      setError(t("account.updateFailed"));
+      showErrorToast(t("account.updateFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -193,8 +211,6 @@ export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
                             onClick={() => {
                               setIsEditing(false);
                               setEditedUsername(user.username);
-                              setError("");
-                              setSuccessMessage("");
                             }}
                             className="px-3 py-2 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-[#ccc] text-xs rounded-lg transition-colors duration-200"
                           >
@@ -202,17 +218,7 @@ export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
                           </button>
                         </div>
                         
-                        {/* Error message */}
-                        {error && (
-                          <div className="mt-2 text-xs text-red-400 flex items-center gap-1">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <circle cx="12" cy="12" r="10"></circle>
-                              <line x1="15" y1="9" x2="9" y2="15"></line>
-                              <line x1="9" y1="9" x2="15" y2="15"></line>
-                            </svg>
-                            <span>{error}</span>
-                          </div>
-                        )}
+                        {/* Error message removed - now using ErrorToast */}
                         
                         {/* Success message */}
                         {successMessage && (
@@ -328,6 +334,13 @@ export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
           </motion.div>
         </div>
       )}
+      
+      {/* ErrorToast */}
+      <ErrorToast
+        message={errorToast.message}
+        isVisible={errorToast.isVisible}
+        onClose={hideErrorToast}
+      />
     </AnimatePresence>
   );
 } 

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/app/i18n";
 import AuthAPI from "@/lib/api/auth";
+import ErrorToast from "@/components/ErrorToast";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -20,10 +21,29 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [guestName, setGuestName] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false); // Track if email verification passed
   const [tempToken, setTempToken] = useState(""); // Store temporary token for registration
+
+  // Add ErrorToast state
+  const [errorToast, setErrorToast] = useState({
+    isVisible: false,
+    message: "",
+  });
+
+  const showErrorToast = useCallback((message: string) => {
+    setErrorToast({
+      isVisible: true,
+      message,
+    });
+  }, []);
+
+  const hideErrorToast = useCallback(() => {
+    setErrorToast({
+      isVisible: false,
+      message: "",
+    });
+  }, []);
 
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -57,7 +77,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     setPassword("");
     setVerificationCode("");
     setGuestName("");
-    setError("");
+    setErrorToast({ isVisible: false, message: "" } ); // Clear error toast
     setCodeSent(false);
     setEmailVerified(false);
     setRegisterStep(1);
@@ -108,7 +128,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   const handleSendVerificationCode = async () => {
     if (!email.trim()) {
-      setError(t("auth.emailRequired"));
+      showErrorToast(t("auth.emailRequired"));
       return;
     }
     
@@ -118,13 +138,13 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       
       if (response.success) {
         setCodeSent(true);
-        setError("");
+        setErrorToast({ isVisible: false, message: "" }); // Clear error toast
       } else {
-        setError(response.message || t("auth.sendCodeFailed"));
+        showErrorToast(response.message || t("auth.sendCodeFailed"));
       }
     } catch (err) {
       console.error("Send verification code error:", err);
-      setError(t("auth.sendCodeFailed"));
+      showErrorToast(t("auth.sendCodeFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -132,20 +152,20 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   const handleEmailVerification = async () => {
     if (!email.trim()) {
-      setError(t("auth.emailRequired"));
+      showErrorToast(t("auth.emailRequired"));
       return;
     }
     if (!password.trim()) {
-      setError(t("auth.passwordRequired"));
+      showErrorToast(t("auth.passwordRequired"));
       return;
     }
     if (!verificationCode.trim()) {
-      setError(t("auth.codeRequired"));
+      showErrorToast(t("auth.codeRequired"));
       return;
     }
 
     setIsLoading(true);
-    setError("");
+    setErrorToast({ isVisible: false, message: "" }); // Clear error toast
 
     try {
       const response = await AuthAPI.verifyEmail(email, verificationCode, password);
@@ -155,11 +175,11 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         setTempToken(response.tempToken);
         setRegisterStep(2);
       } else {
-        setError(response.message || t("auth.verificationFailed"));
+        showErrorToast(response.message || t("auth.verificationFailed"));
       }
     } catch (err) {
       console.error("Email verification error:", err);
-      setError(t("auth.verificationFailed"));
+      showErrorToast(t("auth.verificationFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -171,12 +191,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     if (mode === "guest") {
       // Guest login mode - only requires a name
       if (!guestName.trim()) {
-        setError(t("auth.nameRequired"));
+        showErrorToast(t("auth.nameRequired"));
         return;
       }
 
       setIsLoading(true);
-      setError("");
+      setErrorToast({ isVisible: false, message: "" }); // Clear error toast
 
       try {
         // Store guest data in localStorage
@@ -191,23 +211,23 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         window.location.reload();
       } catch (err) {
         console.error("Guest login error:", err);
-        setError(t("auth.loginFailed"));
+        showErrorToast(t("auth.loginFailed"));
       } finally {
         setIsLoading(false);
       }
     } else if (mode === "login") {
       // Login mode - only email and password
       if (!email.trim()) {
-        setError(t("auth.emailRequired"));
+        showErrorToast(t("auth.emailRequired"));
         return;
       }
       if (!password.trim()) {
-        setError(t("auth.passwordRequired"));
+        showErrorToast(t("auth.passwordRequired"));
         return;
       }
 
       setIsLoading(true);
-      setError("");
+      setErrorToast({ isVisible: false, message: "" }); // Clear error toast
 
       try {
         // Call login API with email and password
@@ -224,11 +244,11 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           resetForm();
           window.location.reload();
         } else {
-          setError(response.message || t("auth.loginFailed"));
+          showErrorToast(response.message || t("auth.loginFailed"));
         }
       } catch (err) {
         console.error("Login error:", err);
-        setError(t("auth.loginFailed"));
+        showErrorToast(t("auth.loginFailed"));
       } finally {
         setIsLoading(false);
       }
@@ -240,12 +260,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       } else {
         // Second step: username input and final registration
         if (!username.trim()) {
-          setError(t("auth.usernameRequired"));
+          showErrorToast(t("auth.usernameRequired"));
           return;
         }
 
         setIsLoading(true);
-        setError("");
+        setErrorToast({ isVisible: false, message: "" }); // Clear error toast
 
         try {
           const response = await AuthAPI.register(username, tempToken);
@@ -262,11 +282,11 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             resetForm();
             window.location.reload();
           } else {
-            setError(response.message || t("auth.registerFailed"));
+            showErrorToast(response.message || t("auth.registerFailed"));
           }
         } catch (err) {
           console.error("Registration error:", err);
-          setError(t("auth.registerFailed"));
+          showErrorToast(t("auth.registerFailed"));
         } finally {
           setIsLoading(false);
         }
@@ -276,7 +296,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   const handleBackToStep1 = () => {
     setRegisterStep(1);
-    setError("");
+    setErrorToast({ isVisible: false, message: "" }); // Clear error toast
   };
 
   const getTitle = () => {
@@ -354,15 +374,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               )}
             </div>
 
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-red-400 text-xs sm:text-sm text-center mb-4 p-2 bg-red-900/20 rounded border border-red-500/20"
-              >
-                {error}
-              </motion.div>
-            )}
+            {/* Error Toast */}
+            <ErrorToast
+              isVisible={errorToast.isVisible}
+              message={errorToast.message}
+              onClose={hideErrorToast}
+            />
 
             <form onSubmit={handleSubmit} className="w-full space-y-4">
               {mode === "guest" && (
@@ -632,6 +649,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           </motion.div>
         </div>
       )}
+      <ErrorToast
+        isVisible={errorToast.isVisible}
+        message={errorToast.message}
+        onClose={hideErrorToast}
+      />
     </AnimatePresence>
+
   );
 }
