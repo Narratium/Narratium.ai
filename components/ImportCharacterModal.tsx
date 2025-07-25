@@ -30,7 +30,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/app/i18n";
 import { trackButtonClick } from "@/utils/google-analytics";
 import { handleCharacterUpload } from "@/function/character/import";
-import ErrorToast from "@/components/ErrorToast";
+import { Toast } from "@/components/Toast";
 
 /**
  * Interface definitions for the component's props
@@ -261,10 +261,11 @@ export default function ImportCharacterModal({ isOpen, onClose, onImport }: Impo
           </motion.div>
         </div>
       )}
-      <ErrorToast
+      <Toast
         isVisible={errorToast.isVisible}
         message={errorToast.message}
         onClose={hideErrorToast}
+        type="error"
       />
     </AnimatePresence>
   );

@@ -32,7 +32,7 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { handleCharacterUpload } from "@/function/character/import";
 import { useLanguage } from "@/app/i18n";
-import ErrorToast from "@/components/ErrorToast";
+import { Toast } from "@/components/Toast";
 
 const GITHUB_API_URL = "https://api.github.com/repos/Narratium/Character-Card/contents";
 const RAW_BASE_URL = "https://raw.githubusercontent.com/Narratium/Character-Card/main/";
@@ -837,10 +837,11 @@ export default function DownloadCharacterModal({ isOpen, onClose, onImport }: Do
         )}
       </AnimatePresence>
       
-      <ErrorToast
+      <Toast
         isVisible={errorToast.isVisible}
         message={errorToast.message}
         onClose={hideErrorToast}
+        type="error"
       />
     </div>
   );

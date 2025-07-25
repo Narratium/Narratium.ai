@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/app/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import ErrorToast from "@/components/ErrorToast";
+import { Toast } from "@/components/Toast";
 
 interface AccountModalProps {
   isOpen: boolean;
@@ -218,8 +218,6 @@ export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
                           </button>
                         </div>
                         
-                        {/* Error message removed - now using ErrorToast */}
-                        
                         {/* Success message */}
                         {successMessage && (
                           <div className="mt-2 text-xs text-green-400 flex items-center gap-1">
@@ -335,11 +333,11 @@ export default function AccountModal({ isOpen, onClose }: AccountModalProps) {
         </div>
       )}
       
-      {/* ErrorToast */}
-      <ErrorToast
+      <Toast
         message={errorToast.message}
         isVisible={errorToast.isVisible}
         onClose={hideErrorToast}
+        type="error"
       />
     </AnimatePresence>
   );

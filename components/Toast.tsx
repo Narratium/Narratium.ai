@@ -122,9 +122,4 @@ export function Toast({
     </div>
   );
 }
-
-// Backward compatibility: keep the original ErrorToast component
-export default function ErrorToast({ message, isVisible, onClose }: ErrorToastProps) {
-  return <Toast message={message} isVisible={isVisible} onClose={onClose} type="error" />;
-} 
  

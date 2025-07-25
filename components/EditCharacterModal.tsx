@@ -31,7 +31,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { trackButtonClick } from "@/utils/google-analytics";
 import { updateCharacter } from "@/function/dialogue/update";
 import { CharacterAvatarBackground } from "@/components/CharacterAvatarBackground";
-import ErrorToast from "@/components/ErrorToast";
+import { Toast } from "@/components/Toast";
 
 /**
  * Interface definitions for the component's props
@@ -308,11 +308,11 @@ const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
         </div>
       )}
       
-      {/* ErrorToast */}
-      <ErrorToast
+      <Toast
         isVisible={errorToast.isVisible}
         message={errorToast.message}
         onClose={hideErrorToast}
+        type="error"
       />
     </AnimatePresence>
   );

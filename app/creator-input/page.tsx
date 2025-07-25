@@ -6,7 +6,7 @@ import { Send, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "../i18n";
 import { initAgentSession } from "@/function/agent/session";
-import ErrorToast from "@/components/ErrorToast";
+import { Toast } from "@/components/Toast";
 
 export default function CreatorInputPage() {
   const router = useRouter();
@@ -174,11 +174,11 @@ export default function CreatorInputPage() {
         </motion.div>
       </div>
       
-      {/* ErrorToast */}
-      <ErrorToast
+      <Toast
         isVisible={errorToast.isVisible}
         message={errorToast.message}
         onClose={hideErrorToast}
+        type="error"
       />
     </div>
   );

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/app/i18n";
-import ErrorToast from "@/components/ErrorToast";
+import { Toast } from "@/components/Toast";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -179,10 +179,11 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             </div>
 
             {/* Error Toast */}
-            <ErrorToast
+            <Toast
               isVisible={errorToast.isVisible}
               message={errorToast.message}
               onClose={hideErrorToast}
+              type="error"
             />
 
             <form onSubmit={handleSubmit} className="w-full space-y-4">

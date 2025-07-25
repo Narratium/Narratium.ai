@@ -10,7 +10,7 @@ import { getWorldBookSettings } from "@/function/worldbook/settings";
 import { useLanguage } from "@/app/i18n";
 import WorldBookEntryEditor from "@/components/WorldBookEntryEditor";
 import ImportWorldBookModal from "@/components/ImportWorldBookModal";
-import ErrorToast from "@/components/ErrorToast";
+import { Toast } from "@/components/Toast";
 import "@/app/styles/fantasy-ui.css";
 import React from "react";
 import { v4 as uuidv4 } from "uuid";
@@ -1133,10 +1133,11 @@ export default function WorldBookEditor({
         }}
       />
       
-      <ErrorToast
+      <Toast
         isVisible={errorToast.isVisible}
         message={errorToast.message}
         onClose={hideErrorToast}
+        type="error"
       />
     </div>
   );

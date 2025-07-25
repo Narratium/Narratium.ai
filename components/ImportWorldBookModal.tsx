@@ -32,7 +32,7 @@ import { toast } from "react-hot-toast";
 import { useLanguage } from "@/app/i18n";
 import { importWorldBookFromJson } from "@/function/worldbook/import";
 import { listGlobalWorldBooks, importFromGlobalWorldBook, GlobalWorldBook, deleteGlobalWorldBook } from "@/function/worldbook/global";
-import ErrorToast from "@/components/ErrorToast";
+import { Toast } from "@/components/Toast";
 
 /**
  * Interface definitions for the component's props
@@ -593,11 +593,11 @@ export default function ImportWorldBookModal({
         </div>
       </div>
       
-      {/* ErrorToast */}
-      <ErrorToast
+      <Toast
         isVisible={errorToast.isVisible}
         message={errorToast.message}
         onClose={hideErrorToast}
+        type="error"
       />
     </div>
   );

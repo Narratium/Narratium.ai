@@ -12,7 +12,7 @@ import CopyPresetModal from "@/components/CopyPresetModal";
 import "@/app/styles/fantasy-ui.css";
 import React from "react";
 import EditPromptModal from "@/components/EditPromptModal";
-import ErrorToast from "@/components/ErrorToast";
+import { Toast } from "@/components/Toast";
 
 interface PresetEditorProps {
   onClose: () => void;
@@ -1151,10 +1151,11 @@ export default function PresetEditor({
         onSave={handleSaveEditPrompt}
       />
       
-      <ErrorToast
+      <Toast
         isVisible={errorToast.isVisible}
         message={errorToast.message}
         onClose={hideErrorToast}
+        type="error"
       />
     </div>
   );

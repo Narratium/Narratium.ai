@@ -36,7 +36,7 @@ import { deleteCharacter } from "@/function/character/delete";
 import { handleCharacterUpload } from "@/function/character/import";
 import { trackButtonClick } from "@/utils/google-analytics";
 import { moveToTop } from "@/function/character/move-to-top";
-import ErrorToast from "@/components/ErrorToast";
+import { Toast } from "@/components/Toast";
 
 /**
  * Interface defining the structure of a character object
@@ -526,10 +526,11 @@ export default function CharacterCards() {
             />
           )}
           
-          <ErrorToast
+          <Toast
             isVisible={errorToast.isVisible}
             message={errorToast.message}
             onClose={hideErrorToast}
+            type="error"
           />
         </div>
       </div>
