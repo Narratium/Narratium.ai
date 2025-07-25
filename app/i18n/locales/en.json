@@ -897,5 +897,10 @@
     "comingSoon": "download will be available soon!",
     "tip": "💡 Tip: You can also install directly from your browser by clicking \"Install\" when prompted.",
     "close": "Close"
+  },
+  "toast": {
+    "success": "Success",
+    "warning": "Warning",
+    "error": "Error"
   }
 }

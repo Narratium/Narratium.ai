@@ -32,7 +32,7 @@ import { executeAgentSession, respondToResearchSession } from "@/function/agent/
 import { getResearchSessionStatus } from "@/function/agent/status";
 import MessageStream from "@/components/MessageStream";
 import InlineUserInput from "@/components/InlineUserInput";
-import ErrorToast from "@/components/ErrorToast";
+import { Toast } from "@/components/Toast";
 import CreatorAreaBanner from "@/components/CreatorAreaBanner";
 import { ArrowLeft, Sparkles, BrainCircuit } from "lucide-react";
 import { Message, ResearchSession, GenerationOutput } from "@/lib/models/agent-model";
@@ -568,7 +568,8 @@ export default function CreatorAreaPage() {
       </div>
 
       {/* Fantasy Error Toast */}
-      <ErrorToast
+      <Toast
+        type="error"
         isVisible={errorToast.isVisible}
         message={errorToast.message}
         onClose={hideErrorToast}
