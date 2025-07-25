@@ -1,5 +1,6 @@
 import { importPresetFromJson } from "@/function/preset/import";
 import { PresetOperations } from "@/lib/data/roleplay/preset-operation";
+import { PromptKey } from "@/lib/prompts/preset-prompts";
 
 interface GithubPreset {
   name: string;
@@ -51,6 +52,30 @@ const AVAILABLE_PRESETS: GithubPreset[] = [
     description: {
       zh: "严酷现实反差叙事，外冷内热情感专家",
       en: "Harsh reality contrast narrative, cold exterior warm heart expert",
+    },
+    filename: "system_preset",
+  },
+  {
+    name: "magician",
+    displayName: {
+      zh: "魔术师",
+      en: "Magician",
+    },
+    description: {
+      zh: "魔术师织机之约，编织现实与幻想的边界",
+      en: "Magician's weaving of reality and fantasy",
+    },
+    filename: "system_preset",
+  },
+  {
+    name: "whisperer",
+    displayName: {
+      zh: "低语者",
+      en: "Whisperer",
+    },
+    description: {
+      zh: "被遗忘者的证言，边缘叙事的守护者",
+      en: "Testimonies of the forgotten, guardian of edge narratives",
     },
     filename: "system_preset",
   },
@@ -238,13 +263,15 @@ function markPresetAsDownloaded(presetName: string): void {
   }
 }
 
-export function getCurrentSystemPresetType(): "mirror_realm" | "novel_king" | "professional_heart" {
+export function getCurrentSystemPresetType(): PromptKey {
   try {
     const presetType = localStorage.getItem("system_preset_type");
     if (presetType === "novel_king") {
       return "novel_king";
     } else if (presetType === "professional_heart") {
       return "professional_heart";
+    } else if (presetType === "magician") {
+      return "magician";
     } else {
       return "mirror_realm";
     }

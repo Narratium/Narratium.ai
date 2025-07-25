@@ -115,7 +115,7 @@ export default function Sidebar({ isOpen, toggleSidebar, openLoginModal, openAcc
         <div className={`logo-magic-container transition-all duration-300 ease-in-out ${isOpen ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"}`} style={{ overflow: "hidden", transitionDelay: isOpen ? "0ms" : "0ms" }}>
           <div className="flex items-center h-10">
             <div className={"w-[80px] h-10 flex items-center"}>
-              <Image src="/logo.png" alt="Narratium" width={80} height={20} className="object-contain" />
+              <Image src="/logo-narratium.png" alt="Narratium" width={80} height={20} className="object-contain" />
             </div>
             <span className={"ml-1 text-lg font-cinzel font-bold tracking-wider h-10 flex items-center -translate-x-3"} style={{ fontFamily: "var(--font-cinzel)" }}>
               <span className={"bg-clip-text text-transparent bg-gradient-to-r from-amber-500 via-orange-400 to-yellow-300 drop-shadow-[0_0_10px_rgba(251,146,60,0.5)] font-cinzel"}>Narratium</span>

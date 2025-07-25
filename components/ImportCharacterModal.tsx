@@ -30,6 +30,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/app/i18n";
 import { trackButtonClick } from "@/utils/google-analytics";
 import { handleCharacterUpload } from "@/function/character/import";
+import ErrorToast from "@/components/ErrorToast";
 
 /**
  * Interface definitions for the component's props
@@ -60,6 +61,26 @@ export default function ImportCharacterModal({ isOpen, onClose, onImport }: Impo
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // ErrorToast state
+  const [errorToast, setErrorToast] = useState({
+    isVisible: false,
+    message: "",
+  });
+
+  const showErrorToast = (message: string) => {
+    setErrorToast({
+      isVisible: true,
+      message,
+    });
+  };
+
+  const hideErrorToast = () => {
+    setErrorToast({
+      isVisible: false,
+      message: "",
+    });
+  };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -81,7 +102,9 @@ export default function ImportCharacterModal({ isOpen, onClose, onImport }: Impo
         setSelectedFile(file);
         setError("");
       } else {
-        setError(t("importCharacterModal.pngOnly"));
+        const errorMessage = t("importCharacterModal.pngOnly");
+        setError(errorMessage);
+        showErrorToast(errorMessage);
       }
     }
   };
@@ -93,14 +116,18 @@ export default function ImportCharacterModal({ isOpen, onClose, onImport }: Impo
         setSelectedFile(file);
         setError("");
       } else {
-        setError(t("importCharacterModal.pngOnly"));
+        const errorMessage = t("importCharacterModal.pngOnly");
+        setError(errorMessage);
+        showErrorToast(errorMessage);
       }
     }
   };
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      setError(t("importCharacterModal.noFileSelected"));
+      const errorMessage = t("importCharacterModal.noFileSelected");
+      setError(errorMessage);
+      showErrorToast(errorMessage);
       return;
     }
 
@@ -121,7 +148,9 @@ export default function ImportCharacterModal({ isOpen, onClose, onImport }: Impo
       onClose();
     } catch (err) {
       console.error("Error uploading character:", err);
-      setError(typeof err === "string" ? err : t("importCharacterModal.uploadFailed"));
+      const errorMessage = typeof err === "string" ? err : t("importCharacterModal.uploadFailed");
+      setError(errorMessage);
+      showErrorToast(errorMessage);
     } finally {
       setIsUploading(false);
     }
@@ -232,6 +261,11 @@ export default function ImportCharacterModal({ isOpen, onClose, onImport }: Impo
           </motion.div>
         </div>
       )}
+      <ErrorToast
+        isVisible={errorToast.isVisible}
+        message={errorToast.message}
+        onClose={hideErrorToast}
+      />
     </AnimatePresence>
   );
 }

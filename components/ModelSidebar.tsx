@@ -162,12 +162,12 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
   // Listen for model changes from other components
   useEffect(() => {
     const handleModelChanged = (event: CustomEvent) => {
-      const { configId, modelName, configName } = event.detail;
+      const { configId, modelName, configName, config } = event.detail; // Destructure config from detail
       if (configId && configId !== activeConfigId) {
-        const selectedConfig = configs.find(c => c.id === configId);
-        if (selectedConfig) {
+        // Use the config object directly from the event detail
+        if (config) {
           setActiveConfigId(configId);
-          loadConfigToForm(selectedConfig);
+          loadConfigToForm(config); // Use 'config' directly
         } else {
           console.error("ModelSidebar: Config not found for id", configId);
         }
@@ -184,7 +184,7 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
     return () => {
       window.removeEventListener("modelChanged", handleModelChanged as EventListener);
     };
-  }, [configs, activeConfigId, model, llmType]);
+  }, [activeConfigId, model, llmType]); // Removed 'configs' from dependencies
 
   /**
    * Loads a configuration into the form fields
@@ -1083,6 +1083,7 @@ export default function ModelSidebar({ isOpen, toggleSidebar }: ModelSidebarProp
                 ))}
               </div>
             )}
+
           </div>
 
           {!showNewConfigForm && activeConfigId && (

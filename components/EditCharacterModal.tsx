@@ -25,12 +25,13 @@
  * - CharacterAvatarBackground: For avatar display
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "@/app/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import { trackButtonClick } from "@/utils/google-analytics";
 import { updateCharacter } from "@/function/dialogue/update";
 import { CharacterAvatarBackground } from "@/components/CharacterAvatarBackground";
+import ErrorToast from "@/components/ErrorToast";
 
 /**
  * Interface definitions for the component's props
@@ -77,7 +78,26 @@ const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
   const [firstMessage, setFirstMessage] = useState(""); 
   const [creatorComment, setCreatorComment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+
+  // Add ErrorToast state
+  const [errorToast, setErrorToast] = useState({
+    isVisible: false,
+    message: "",
+  });
+
+  const showErrorToast = useCallback((message: string) => {
+    setErrorToast({
+      isVisible: true,
+      message,
+    });
+  }, []);
+
+  const hideErrorToast = useCallback(() => {
+    setErrorToast({
+      isVisible: false,
+      message: "",
+    });
+  }, []);
 
   useEffect(() => {
     if (isOpen && characterData) {
@@ -86,14 +106,12 @@ const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
       setScenario(characterData.scenario || "");
       setFirstMessage(characterData.first_mes || "");
       setCreatorComment(characterData.creatorcomment || "");
-      setError("");
     }
   }, [isOpen, characterData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
 
     try {
       const response = await updateCharacter(characterId, {
@@ -111,7 +129,7 @@ const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
       onSave();
       onClose();
     } catch (err: any) {
-      setError(err.message || "An error occurred");
+      showErrorToast(err.message || "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -157,12 +175,6 @@ const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
               </button>
             </div>
 
-            {error && (
-              <div className="mb-4 p-3 bg-red-900/30 border border-red-800 rounded text-red-200 text-sm">
-                {error}
-              </div>
-            )}
-
             <div className="flex flex-col md:flex-row">
               <div className="md:w-2/5 lg:w-1/3 relative">
                 <div className="h-full">
@@ -185,12 +197,6 @@ const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
                 <h2 className={`text-xl font-semibold text-[#eae6db] magical-text mb-6 ${serifFontClass}`}>
                   {t("editCharacterModal.title")}
                 </h2>
-                
-                {error && (
-                  <div className="mb-4 p-3 bg-red-900/30 border border-red-800 rounded text-red-200 text-sm">
-                    {error}
-                  </div>
-                )}
                 
                 <form onSubmit={handleSubmit} className="max-h-[70vh] overflow-y-auto pr-2 space-y-5">
                   <div>
@@ -301,6 +307,13 @@ const EditCharacterModal: React.FC<EditCharacterModalProps> = ({
           </motion.div>
         </div>
       )}
+      
+      {/* ErrorToast */}
+      <ErrorToast
+        isVisible={errorToast.isVisible}
+        message={errorToast.message}
+        onClose={hideErrorToast}
+      />
     </AnimatePresence>
   );
 };

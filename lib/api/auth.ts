@@ -51,6 +51,13 @@ interface UpdateUsernameResponse extends APIResponse {
   };
 }
 
+interface ApiKeyInfoResponse extends APIResponse {
+  data?: {
+    apiKey: string;
+    baseUrl: string;
+  };
+}
+
 class AuthAPI {
   // Generic fetch wrapper with error handling
   private static async fetchAPI<T>(
@@ -155,6 +162,19 @@ class AuthAPI {
       localStorage.removeItem("authToken");
       return null;
     }
+  }
+
+  // Get API key and base URL for official API
+  static async getApiKeyInfo(): Promise<ApiKeyInfoResponse> {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    return this.fetchAPI<ApiKeyInfoResponse>("/get-api-key-info", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    });
   }
 
   // Logout - clear local storage

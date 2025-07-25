@@ -26,11 +26,13 @@
 
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { useLanguage } from "@/app/i18n";
 import { importWorldBookFromJson } from "@/function/worldbook/import";
 import { listGlobalWorldBooks, importFromGlobalWorldBook, GlobalWorldBook, deleteGlobalWorldBook } from "@/function/worldbook/global";
+import ErrorToast from "@/components/ErrorToast";
 
 /**
  * Interface definitions for the component's props
@@ -76,6 +78,26 @@ export default function ImportWorldBookModal({
   const [isLoadingGlobal, setIsLoadingGlobal] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
+  // Add ErrorToast state
+  const [errorToast, setErrorToast] = useState({
+    isVisible: false,
+    message: "",
+  });
+
+  const showErrorToast = useCallback((message: string) => {
+    setErrorToast({
+      isVisible: true,
+      message,
+    });
+  }, []);
+
+  const hideErrorToast = useCallback(() => {
+    setErrorToast({
+      isVisible: false,
+      message: "",
+    });
+  }, []);
+
   useEffect(() => {
     if (activeTab === "global" && isOpen) {
       loadGlobalWorldBooks();
@@ -89,11 +111,11 @@ export default function ImportWorldBookModal({
       if (result.success) {
         setGlobalWorldBooks(result.globalWorldBooks);
       } else {
-        toast.error("Failed to load global world books");
+        showErrorToast("Failed to load global world books");
       }
     } catch (error) {
       console.error("Failed to load global world books:", error);
-      toast.error("Failed to load global world books");
+      showErrorToast("Failed to load global world books");
     } finally {
       setIsLoadingGlobal(false);
     }
@@ -101,7 +123,7 @@ export default function ImportWorldBookModal({
 
   const handleImportFromGlobal = async () => {
     if (!selectedGlobalId) {
-      toast.error("Please select a global world book");
+      showErrorToast("Please select a global world book");
       return;
     }
 
@@ -120,11 +142,11 @@ export default function ImportWorldBookModal({
         toast.success(result.message);
         onImportSuccess();
       } else {
-        toast.error(result.message);
+        showErrorToast(result.message);
       }
     } catch (error: any) {
       console.error("Import from global failed:", error);
-      toast.error(`Import failed: ${error.message}`);
+      showErrorToast(`Import failed: ${error.message}`);
     } finally {
       setIsImporting(false);
     }
@@ -132,7 +154,7 @@ export default function ImportWorldBookModal({
 
   const handleFileSelect = async (file: File) => {
     if (!file.type.includes("json")) {
-      toast.error("Please select a JSON file");
+      showErrorToast("Please select a JSON file");
       return;
     }
 
@@ -157,11 +179,11 @@ export default function ImportWorldBookModal({
         toast.success(result.message);
         onImportSuccess();
       } else {
-        toast.error(result.message);
+        showErrorToast(result.message);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to import: ${errorMessage}`);
+      showErrorToast(`Failed to import: ${errorMessage}`);
       setImportResult({
         success: false,
         message: `Failed to import: ${errorMessage}`,
@@ -225,11 +247,11 @@ export default function ImportWorldBookModal({
           setSelectedGlobalId("");
         }
       } else {
-        toast.error(result.message || t("worldBook.failedToDeleteGlobalWorldBook"));
+        showErrorToast(result.message || t("worldBook.failedToDeleteGlobalWorldBook"));
       }
     } catch (error: any) {
       console.error("Failed to delete global world book:", error);
-      toast.error(`${t("worldBook.failedToDeleteGlobalWorldBook")}: ${error.message}`);
+      showErrorToast(`${t("worldBook.failedToDeleteGlobalWorldBook")}: ${error.message}`);
     } finally {
       setIsDeleting(null);
     }
@@ -570,6 +592,13 @@ export default function ImportWorldBookModal({
           )}
         </div>
       </div>
+      
+      {/* ErrorToast */}
+      <ErrorToast
+        isVisible={errorToast.isVisible}
+        message={errorToast.message}
+        onClose={hideErrorToast}
+      />
     </div>
   );
 } 

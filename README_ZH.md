@@ -11,6 +11,13 @@
   </blockquote>
 </div>
 
+> [!IMPORTANT]
+> 
+> * 本项目仅供个人学习使用，且不提供任何技术支持
+> * 商业化请参考 License 或进入[社区咨询作者](https://discord.gg/PP7EpSzDfU)
+> * 使用者必须在遵循 OpenAI 等模型服务商的使用条款以及法律法规的情况下使用，不得用于非法用途
+> * 根据《生成式人工智能服务管理暂行办法》的要求，请勿对中国地区公众提供一切未经备案的生成式人工智能服务
+
 <br>
 
 ![Narratium.ai](https://raw.githubusercontent.com/Narratium/Narratium.ai/main/public/banner.png)
@@ -22,7 +29,6 @@
 </p>
 
 <div align="center">
-  <a href="https://narratium.org">🔗 Live Demo</a> &nbsp;|&nbsp;
   <a href="https://deepwiki.com/Narratium/Narratium.ai/">📖 DeepWiki Docs</a> &nbsp;|&nbsp;
   <a href="https://discord.gg/PP7EpSzDfU">💬 Discord Community</a> &nbsp;|&nbsp;
   <a href="https://github.com/Narratium/Narratium.ai/releases">💾 Download</a> &nbsp;|&nbsp;
@@ -36,6 +42,7 @@
 [![Twitter Follow](https://img.shields.io/twitter/follow/qian_crypto?style=social)](https://x.com/qian_crypto)
 ![GitHub stars](https://img.shields.io/github/stars/Narratium/Narratium.ai?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/Narratium/Narratium.ai?style=social)
+![GitHub closed PRs](https://img.shields.io/github/issues-pr-closed/Narratium/Narratium.ai)
 ![GitHub commits](https://img.shields.io/github/commit-activity/m/Narratium/Narratium.ai)
 ![GitHub Downloads](https://img.shields.io/github/downloads/Narratium/Narratium.ai/total)
 
@@ -63,6 +70,14 @@
 | :---------------- |
 
 [Narratium.ai](https://narratium.org/) 是一个用于创建AI角色、沉浸式世界和动态对话的开源平台。它是您构建个性化角色扮演冒险的创意工作室 — 从情感旅程到史诗传奇。
+
+| 体验与游玩 |
+| :---------------- |
+
+<div align="center">
+  <a href="https://narratium.org">官方服务（注册即可免费使用）</a> &nbsp;|&nbsp;
+  <a href="https://narratium-ai-woad.vercel.app/">🧪 开源版本预览</a>
+</div>
 
 | 版本说明 |
 | :---------------- |
@@ -174,7 +189,7 @@
 
 - 🔐 代码: AGPL-3.0许可证 — 左版权许可证，要求网络服务必须公开源代码，并强制显示GitHub归属。
 - 🔒 内容: CC BY-NC-SA 4.0 — 仅限非商业用途，需要署名和相同许可证共享。
-- 🌐 Web部署: 必须显示到 https://github.com/Narratium/Narratium.ai 的可见链接
+- 🌐 Web部署: 必须显示到 https://github.com/Narratium/Narratium.ai 的可见链接。
 
 > 有关完整许可证详情，请参阅 [LICENSE](./LICENSE)。
 

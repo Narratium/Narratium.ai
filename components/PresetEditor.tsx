@@ -12,6 +12,7 @@ import CopyPresetModal from "@/components/CopyPresetModal";
 import "@/app/styles/fantasy-ui.css";
 import React from "react";
 import EditPromptModal from "@/components/EditPromptModal";
+import ErrorToast from "@/components/ErrorToast";
 
 interface PresetEditorProps {
   onClose: () => void;
@@ -67,6 +68,26 @@ export default function PresetEditor({
   const [currentEditingPreset, setCurrentEditingPreset] = useState<PresetData | null>(null);
   const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
   const [currentCopyingPreset, setCurrentCopyingPreset] = useState<PresetData | null>(null);
+  
+  // ErrorToast state
+  const [errorToast, setErrorToast] = useState({
+    isVisible: false,
+    message: "",
+  });
+
+  const showErrorToast = (message: string) => {
+    setErrorToast({
+      isVisible: true,
+      message,
+    });
+  };
+
+  const hideErrorToast = () => {
+    setErrorToast({
+      isVisible: false,
+      message: "",
+    });
+  };
 
   const SORT_STORAGE_KEY = `preset_sort_${characterId || "global"}`;
   const FILTER_STORAGE_KEY = `preset_filter_${characterId || "global"}`;
@@ -183,12 +204,12 @@ export default function PresetEditor({
                 })),
               );
             } else {
-              toast.error(`No preset found matching "${activatePresetName}"`);
+              showErrorToast(`No preset found matching "${activatePresetName}"`);
             }
           }
         } catch (error) {
           console.error("Error activating preset by name:", error);
-          toast.error("Failed to activate preset");
+          showErrorToast("Failed to activate preset");
         }
         sessionStorage.removeItem("activate_preset_name");
       }
@@ -214,13 +235,13 @@ export default function PresetEditor({
         })) as PresetData[];
         setPresets(formattedPresets);
       } else {
-        toast.error(t("preset.loadFailed"));
+        showErrorToast(t("preset.loadFailed") || "Failed to load presets");
       }
       setIsLoading(false);
       setAnimationComplete(true);
     } catch (error) {
       console.error("Error loading presets:", error);
-      toast.error(t("preset.loadFailed"));
+      showErrorToast(t("preset.loadFailed") || "Failed to load presets");
       setIsLoading(false);
     }
   };
@@ -283,11 +304,11 @@ export default function PresetEditor({
         await loadPresetData();
         toast.success(t("preset.deleteSuccess"));
       } else {
-        toast.error(t("preset.deleteFailed"));
+        showErrorToast(t("preset.deleteFailed") || "Failed to delete preset");
       }
     } catch (error) {
       console.error("Delete preset failed:", error);
-      toast.error(t("preset.deleteFailed"));
+      showErrorToast(t("preset.deleteFailed") || "Failed to delete preset");
     }
   };
 
@@ -297,7 +318,7 @@ export default function PresetEditor({
       if (result.success && result.data) {
         const orderedPromptsResult = await getPromptsForDisplay(presetId);
         if (!orderedPromptsResult.success || !orderedPromptsResult.data) {
-          toast.error(t("preset.loadDetailsFailed"));
+          showErrorToast(t("preset.loadDetailsFailed") || "Failed to load preset details");
           return;
         }
         const formattedPreset = {
@@ -311,11 +332,11 @@ export default function PresetEditor({
         };
         setSelectedPreset(formattedPreset as PresetData);
       } else {
-        toast.error(t("preset.loadDetailsFailed"));
+        showErrorToast(t("preset.loadDetailsFailed") || "Failed to load preset details");
       }
     } catch (error) {
       console.error("Load preset failed:", error);
-      toast.error(t("preset.loadDetailsFailed"));
+      showErrorToast(t("preset.loadDetailsFailed") || "Failed to load preset details");
     }
   };
 
@@ -342,11 +363,11 @@ export default function PresetEditor({
         await handleSelectPreset(presetId);
         toast.success(t("preset.deletePromptSuccess"));
       } else {
-        toast.error(t("preset.deletePromptFailed"));
+        showErrorToast(t("preset.deletePromptFailed") || "Failed to delete prompt");
       }
     } catch (error) {
       console.error("Delete prompt failed:", error);
-      toast.error(t("preset.deletePromptFailed"));
+      showErrorToast(t("preset.deletePromptFailed") || "Failed to delete prompt");
     }
   };
 
@@ -465,7 +486,7 @@ export default function PresetEditor({
           }),
         );
         
-        toast.error(t("preset.togglePromptFailed"));
+        showErrorToast(t("preset.togglePromptFailed") || "Failed to toggle prompt");
       }
     } catch (error) {
       if (selectedPreset && selectedPreset.id === presetId) {
@@ -499,7 +520,7 @@ export default function PresetEditor({
       );
       
       console.error("Toggle prompt failed:", error);
-      toast.error(t("preset.togglePromptFailed"));
+      showErrorToast(t("preset.togglePromptFailed") || "Failed to toggle prompt");
     }
   };
 
@@ -582,7 +603,7 @@ export default function PresetEditor({
           }
         }
         
-        toast.error(t("preset.togglePresetFailed"));
+        showErrorToast(t("preset.togglePresetFailed") || "Failed to toggle preset");
       }
     } catch (error) {
       setPresets(prevPresets => 
@@ -619,7 +640,7 @@ export default function PresetEditor({
       }
       
       console.error("Toggle preset failed:", error);
-      toast.error(t("preset.togglePresetFailed"));
+      showErrorToast(t("preset.togglePresetFailed") || "Failed to toggle preset");
     }
   };
 
@@ -1128,6 +1149,12 @@ export default function PresetEditor({
         presetId={selectedPreset?.id || ""}
         prompt={currentEditingPrompt}
         onSave={handleSaveEditPrompt}
+      />
+      
+      <ErrorToast
+        isVisible={errorToast.isVisible}
+        message={errorToast.message}
+        onClose={hideErrorToast}
       />
     </div>
   );

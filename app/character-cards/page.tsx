@@ -36,6 +36,7 @@ import { deleteCharacter } from "@/function/character/delete";
 import { handleCharacterUpload } from "@/function/character/import";
 import { trackButtonClick } from "@/utils/google-analytics";
 import { moveToTop } from "@/function/character/move-to-top";
+import ErrorToast from "@/components/ErrorToast";
 
 /**
  * Interface defining the structure of a character object
@@ -75,6 +76,26 @@ export default function CharacterCards() {
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isDownloadingPresets, setIsDownloadingPresets] = useState(false);
+  
+  // ErrorToast state
+  const [errorToast, setErrorToast] = useState({
+    isVisible: false,
+    message: "",
+  });
+
+  const showErrorToast = (message: string) => {
+    setErrorToast({
+      isVisible: true,
+      message,
+    });
+  };
+
+  const hideErrorToast = () => {
+    setErrorToast({
+      isVisible: false,
+      message: "",
+    });
+  };
 
   useEffect(() => {
     const savedViewMode = localStorage.getItem("characterCardsViewMode");
@@ -124,6 +145,7 @@ export default function CharacterCards() {
       setCharacters(response);
     } catch (err) {
       console.error("Error fetching characters:", err);
+      showErrorToast(t("characterCardsPage.fetchError") || "Failed to fetch characters");
       setCharacters([]);
     } finally {
       setIsLoading(false);
@@ -156,6 +178,7 @@ export default function CharacterCards() {
               console.log(`Deleted character: ${character.name}`);
             } catch (error) {
               console.error(`Failed to delete character ${character.name}:`, error);
+              showErrorToast(`Failed to delete character ${character.name}`);
             }
           }
         }
@@ -166,6 +189,7 @@ export default function CharacterCards() {
         
       } catch (error) {
         console.error("Error during data structure migration:", error);
+        showErrorToast(t("characterCardsPage.migrationError") || "Error during data migration");
       }
     }
   };
@@ -182,6 +206,7 @@ export default function CharacterCards() {
       fetchCharacters();
     } catch (err) {
       console.error("Error deleting character:", err);
+      showErrorToast(t("characterCardsPage.deleteFailed") || "Failed to delete character");
       setIsLoading(false);
     }
   };
@@ -198,6 +223,7 @@ export default function CharacterCards() {
       fetchCharacters();
     } catch (err) {
       console.error("Error moving character to top:", err);
+      showErrorToast(t("characterCardsPage.topFailed") || "Failed to move character to top");
       setIsLoading(false);
     }
   };
@@ -227,6 +253,7 @@ export default function CharacterCards() {
       
       if (!Array.isArray(data)) {
         console.error("Failed to fetch character files from GitHub");
+        showErrorToast(t("characterCardsPage.downloadError") || "Failed to fetch preset characters");
         return;
       }
 
@@ -248,6 +275,7 @@ export default function CharacterCards() {
           const fileResponse = await fetch(file.download_url || `https://raw.githubusercontent.com/Narratium/Character-Card/main/${file.name}`);
           if (!fileResponse.ok) {
             console.error(`Failed to download ${file.name}`);
+            showErrorToast(`Failed to download ${file.name}`);
             continue;
           }
           
@@ -497,6 +525,12 @@ export default function CharacterCards() {
               onSave={handleEditSuccess}
             />
           )}
+          
+          <ErrorToast
+            isVisible={errorToast.isVisible}
+            message={errorToast.message}
+            onClose={hideErrorToast}
+          />
         </div>
       </div>
     </div>

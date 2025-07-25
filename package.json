@@ -8,12 +8,14 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
     "preview": "serve -s out",
     "test": "vitest",
     "build:pwa": "node scripts/build-pwa.js",
     "pake-mac": "pake out/index.html --name Narratium --use-local-file --icon ./public/icon.icns --multi-arch",
     "pake-win": "pake out/index.html --name Narratium --use-local-file --icon ./public/icon.ico",
-    "pake-linux": "pake out/index.html --name narratium --use-local-file --icon ./public/icon.png"
+    "pake-linux": "pake out/index.html --name narratium --use-local-file --icon ./public/icon.png",
+    "prepare": "husky"
   },
   "dependencies": {
     "@fal-ai/client": "^1.5.0",
@@ -69,6 +71,7 @@
     "concurrently": "^9.1.2",
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
+    "husky": "^9.1.7",
     "jsdom": "^26.1.0",
     "tailwindcss": "^4",
     "typescript": "^5",

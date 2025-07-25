@@ -89,7 +89,15 @@
     "testSuccess": "Model test successful",
     "testError": "Model test failed",
     "apiTestFailed": "API test failed",
-    "modelTestFailed": "Model test failed"
+    "modelTestFailed": "Model test failed",
+    "enableOfficialApi": "Enable Official API",
+    "officialApi": "【Official】Official API",
+    "addingOfficialApi": "Adding Official API...",
+    "officialApiAdded": "Official API Added",
+    "officialApiAlreadyExists": "Official API Already Exists",
+    "officialApiError": "Failed to Get Official API",
+    "needLogin": "Login Required for Official API",
+    "guestLoginNotSupported": "Guest Login Not Supported for Official API"
   },
   "llmSettings": {
     "title": "Settings",
@@ -295,6 +303,9 @@
     "downloadingPresets": "Downloading preset characters...",
     "fetchError": "Failed to fetch characters",
     "deleteFailed": "Failed to delete character",
+    "topFailed": "Failed to move character to top",
+    "migrationError": "Error during data migration",
+    "downloadError": "Failed to fetch preset characters",
     "delete": "Delete",
     "move_to_top": "Move to Top",
     "edit": "Edit",
@@ -420,7 +431,59 @@
     "characters": "characters",
     "loadingDialogue": "Loading dialogue...",
     "requestFailed": "Request Failed",
-    "checkNetworkOrAPI": "Please check your network connection or API configuration"
+    "checkNetworkOrAPI": "Please check your network connection or API configuration",
+    "userNameSetting": "Username",
+    "openUserNameSetting": "Set Username"
+  },
+  "presetInfo": {
+    "modalTitle": "Preset Details",
+    "description": "Description",
+    "features": "Key Features",
+    "tip": "Choose a preset that matches your creative style. You can switch between presets anytime during character conversations.",
+    "mirrorRealm": {
+      "title": "Mirror Realm",
+      "description": "Multi-faceted soul character protocol focused on deep emotional interaction and psychological character portrayal. Creates authentic and touching dialogue experiences through multiple perspectives of complex inner worlds.",
+      "feature1": "Multi-layered personality exploration with deep inner character mining",
+      "feature2": "Emotional resonance mechanism enhancing interaction authenticity",
+      "feature3": "Dynamic psychological state tracking for natural character development",
+      "feature4": "Delicate emotional expression creating immersive experiences"
+    },
+    "novelKing": {
+      "title": "Novel King",
+      "description": "Epic narrative master skilled in building grand story architectures and advancing complex plot developments. Designed for long-form storytelling and world-building, infusing every dialogue with narrative tension.",
+      "feature1": "Epic-scale story architecture building grand worldviews",
+      "feature2": "Powerful plot progression maintaining story rhythm",
+      "feature3": "Precise conflict design enhancing dramatic tension",
+      "feature4": "Rich world-building with detailed layered construction"
+    },
+    "professionalHeart": {
+      "title": "This Killer Isn't So Cold",
+      "description": "Harsh reality contrast narrative expert, skilled at revealing warm hearts beneath cold exteriors. Creates unique charm through strong character contrasts, finding perfect balance between cruelty and tenderness.",
+      "feature1": "Strong contrast between cold exterior and warm heart",
+      "feature2": "Collision and fusion of professional spirit with human brilliance",
+      "feature3": "Light of hope in darkness with prominent redemption themes",
+      "feature4": "Deep contradictions between harsh reality and inner softness"
+    },
+    "magician": {
+      "title": "Magician",
+      "description": "Weaver of boundaries between reality and fantasy, skilled at building mysterious story atmospheres between truth and illusion. Creates magical dialogue experiences through clever settings and supernatural elements.",
+      "feature1": "Exquisite interweaving of reality and fantasy with blurred boundaries",
+      "feature2": "Mysterious atmosphere creation with rich supernatural elements",
+      "feature3": "Magic system construction with complete rule setting",
+      "feature4": "Dreamlike narrative style with unlimited imagination"
+    },
+    "whisperer": {
+      "title": "Whisperer",
+      "description": "Guardian of testimonies from the forgotten, focused on edge narratives and overlooked voices. Skilled at uncovering hidden stories and forgotten details, giving voice to silent characters.",
+      "feature1": "Edge perspective narratives focusing on overlooked voices",
+      "feature2": "Deep exploration of history and memory with rich details",
+      "feature3": "Hope in dim light with gentle spirit of resistance",
+      "feature4": "Stories of the forgotten with emotionally touching depth"
+    },
+    "unknown": {
+      "title": "Unknown Preset",
+      "description": "Information for this preset is currently unavailable."
+    }
   },
   "preset": {
     "title": "Preset Manager",
@@ -550,6 +613,7 @@
     "skippedEntries": "Skipped {count} entries",
     "importErrors": "Import Errors",
     "loading": "Loading world book data...",
+    "loadingFailed": "Failed to load world book entries",
     "noEntries": "No world book entries yet",
     "noEntriesDescription": "Click \"Create Entry\" to start creating your first world book entry",
     "createEntry": "Create Entry",
@@ -778,7 +842,6 @@
     "tags": {
       "Cultivation": "Cultivation",
       "Fantasy": "Fantasy",
-      "NSFW": "NSFW",
       "Fanfiction": "Fanfic",
       "Anime": "Anime",
       "Other": "Other"
@@ -787,12 +850,17 @@
     "loading": "Conjuring characters from the market...",
     "preloading": "Preloading images...",
     "preloadingDescription": "Optimizing image loading experience, please wait...",
-    "viewNsfw": "View",
     "by": "By",
     "importing": "Importing...",
     "downloadAndImport": "Download & Import",
     "downloadShort": "Download",
-    "importingShort": "Importing..."
+    "importingShort": "Importing...",
+    "regulatoryWarning": {
+      "title": "Important Notice",
+      "message": "According to the requirements of the 'Interim Measures for the Management of Generative Artificial Intelligence Services', please do not provide any unregistered generative artificial intelligence services to the public in China.",
+      "understand": "I Understand",
+      "doNotShowAgain": "Do Not Show Again"
+    }
   },
   "creatorInput": {
     "title": "Creator Studio",
@@ -902,5 +970,19 @@
     "success": "Success",
     "warning": "Warning",
     "error": "Error"
+  },
+  "userNameSetting": {
+    "title": "Username Settings",
+    "description": "Set the username displayed in conversations, does not affect login name",
+    "loginUsername": "Login Username",
+    "displayUsername": "Display Username",
+    "displayNamePlaceholder": "Enter display username...",
+    "nameRequired": "Username cannot be empty",
+    "saveFailed": "Save failed, please try again",
+    "saving": "Saving...",
+    "save": "Save",
+    "reset": "Reset",
+    "helperText": "This name will replace {{user}} tags in character dialogues",
+    "notLoggedIn": "Not logged in"
   }
 }

@@ -37,6 +37,7 @@ import {
   getPresetDescription,
 } from "@/function/preset/download";
 import AdvancedSettingsEditor from "@/components/AdvancedSettingsEditor";
+import PresetInfoModal from "@/components/PresetInfoModal";
 
 /**
  * Interface definitions for the component's props
@@ -85,6 +86,8 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
     useState(false);
   const [downloadedPresets, setDownloadedPresets] = useState<string[]>([]);
   const [isAdvancedSettingsOpen, setIsAdvancedSettingsOpen] = useState(false);
+  const [showPresetInfoModal, setShowPresetInfoModal] = useState(false);
+  const [selectedPresetForInfo, setSelectedPresetForInfo] = useState<string>("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -150,6 +153,10 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
         currentPresetName = "novel_king";
       } else if (currentPresetType === "professional_heart") {
         currentPresetName = "professional_heart";
+      } else if (currentPresetType === "magician") {
+        currentPresetName = "magician";
+      } else if (currentPresetType === "whisperer") {
+        currentPresetName = "whisperer";
       } else {
         currentPresetName = "mirror_realm";
       }
@@ -171,6 +178,11 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const handleShowPresetInfo = (presetName: string) => {
+    setSelectedPresetForInfo(presetName);
+    setShowPresetInfoModal(true);
+  };
 
   return (
     <>
@@ -652,7 +664,7 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
               </div>
 
               {showGithubPresetDropdown && (
-                <div className="absolute left-0 right-0 mt-1 mx-6 bg-[#1c1c1c] border border-[#333333] rounded-md shadow-lg z-10 overflow-hidden">
+                <div className="absolute left-0 right-0 mt-1 mx-6 bg-[#1c1c1c] border border-[#333333] rounded-md shadow-lg z-10 overflow-hidden max-h-[240px]">
                   {githubPresets.length === 0 ? (
                     <div className="p-3 text-center text-[#a18d6f]">
                       <span className={`text-[10px] md:text-xs ${fontClass}`}>
@@ -660,53 +672,88 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
                       </span>
                     </div>
                   ) : (
-                    githubPresets.map((preset) => (
-                      <div
-                        key={preset.name}
-                        className="p-3 hover:bg-[#252525] cursor-pointer border-b border-[#333333] last:border-b-0"
-                        onClick={() => handleSelectPreset(preset.name)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span
-                              className={`text-xs md:text-sm text-[#f4e8c1] ${fontClass}`}
+                    <div className="overflow-y-auto max-h-[240px] scrollbar-thin scrollbar-track-[#2a2a2a] scrollbar-thumb-[#555555] hover:scrollbar-thumb-[#666666]">
+                      {githubPresets.map((preset, index) => (
+                        <div
+                          key={preset.name}
+                          className={`p-3 hover:bg-[#252525] transition-colors duration-200 group ${
+                            index !== githubPresets.length - 1 ? "border-b border-[#333333]" : ""
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div 
+                              className="flex-1 min-w-0 cursor-pointer"
+                              onClick={() => handleSelectPreset(preset.name)}
                             >
-                              {getPresetDisplayName(
-                                preset.name,
-                                language as "zh" | "en",
-                              )}
-                            </span>
-                            <p
-                              className={`text-[10px] md:text-xs text-[#a18d6f] mt-1 ${fontClass}`}
-                            >
-                              {getPresetDescription(
-                                preset.name,
-                                language as "zh" | "en",
-                              )}
-                            </p>
-                          </div>
-                          <div>
-                            {downloadedPresets.includes(preset.name) ? (
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="#a78bfa"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
+                              <div className="flex items-center">
+                                <span
+                                  className={`text-xs md:text-sm text-[#f4e8c1] ${fontClass} block truncate`}
+                                >
+                                  {getPresetDisplayName(
+                                    preset.name,
+                                    language as "zh" | "en",
+                                  )}
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleShowPresetInfo(preset.name);
+                                  }}
+                                  className="ml-2 w-4 h-4 flex items-center justify-center text-[#a18d6f] hover:text-[#f9c86d] transition-all duration-300 rounded-full hover:bg-[#333]/50 group/info"
+                                  title={t("presetInfo.modalTitle")}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="transition-transform duration-300 group-hover/info:scale-110"
+                                  >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 16v-4" />
+                                    <path d="M12 8h.01" />
+                                  </svg>
+                                </button>
+                              </div>
+                              <p
+                                className={`text-[10px] md:text-xs text-[#a18d6f] mt-1 ${fontClass} line-clamp-2`}
                               >
-                                <path d="M20 6L9 17l-5-5"></path>
-                              </svg>
-                            ) : (
-                              <div className="w-4 h-4 border border-[#555555] rounded"></div>
-                            )}
+                                {getPresetDescription(
+                                  preset.name,
+                                  language as "zh" | "en",
+                                )}
+                              </p>
+                            </div>
+                            <div className="ml-2 flex-shrink-0">
+                              {downloadedPresets.includes(preset.name) ? (
+                                <div className="w-4 h-4 flex items-center justify-center">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="#a78bfa"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M20 6L9 17l-5-5"></path>
+                                  </svg>
+                                </div>
+                              ) : (
+                                <div className="w-4 h-4 border border-[#555555] rounded"></div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      ))}
+                    </div>
                   )}
                 </div>
               )}
@@ -837,6 +884,12 @@ const CharacterSidebar: React.FC<CharacterSidebarProps> = ({
         isOpen={isAdvancedSettingsOpen}
         onClose={() => setIsAdvancedSettingsOpen(false)}
         onViewSwitch={onViewSwitch}
+      />
+
+      <PresetInfoModal
+        isOpen={showPresetInfoModal}
+        onClose={() => setShowPresetInfoModal(false)}
+        presetName={selectedPresetForInfo}
       />
     </>
   );
