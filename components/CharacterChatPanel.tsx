@@ -691,7 +691,7 @@ export default function CharacterChatPanel({
 
                 return message.role === "user" ? (
                   <div key={index} className="flex justify-end mb-4">
-                    <div className="whitespace-pre-line text-[#f4e8c1] story-text leading-relaxed magical-text">
+                    <div className="max-w-md lg:max-w-2xl break-words whitespace-pre-line text-[#f4e8c1] story-text leading-relaxed magical-text">
                       <p
                         className={`${serifFontClass}`}
                         dangerouslySetInnerHTML={{

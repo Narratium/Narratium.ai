@@ -7,9 +7,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { useLanguage } from "@/app/i18n";
 import { isUpdateAvailable, fetchLatestRelease } from "@/utils/version-compare";
 import "@/app/styles/fantasy-ui.css";
-import { History, Trash2, ChevronDown } from "lucide-react";
-import { listAgentSessions } from "@/function/agent/list";
-import { deleteAgentSession } from "@/function/agent/delete-session";
 import { useAuth } from "@/hooks/useAuth";
 import PWAInstallButton from "./PWAInstallButton";
 
@@ -36,19 +33,6 @@ export default function Sidebar({ isOpen, toggleSidebar, openLoginModal, openAcc
   const [isCreatorOpen, setIsCreatorOpen] = useState(true);
   const [updateInfo, setUpdateInfo] = useState<{version: string, url: string} | null>(null);
   const [hasCheckedUpdate, setHasCheckedUpdate] = useState(false);
-  const [creationHistory, setCreationHistory] = useState<{id: string, title: string}[]>([]);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(true);
-  
-  const fetchHistory = useCallback(async () => {
-    const history = await listAgentSessions();
-    setCreationHistory(history);
-  }, []);
-
-  useEffect(() => {
-    if (isCreatorOpen && isOpen) {
-      fetchHistory();
-    }
-  }, [isCreatorOpen, isOpen, fetchHistory]);
 
   useEffect(() => {
     if (isOpen) {
@@ -58,22 +42,6 @@ export default function Sidebar({ isOpen, toggleSidebar, openLoginModal, openAcc
       setAnimationComplete(false);
     }
   }, [isOpen]);
-
-  const handleDeleteSession = async (e: React.MouseEvent, sessionId: string, sessionTitle: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (window.confirm(`${t("sidebar.confirmDelete")}: "${sessionTitle}"?`)) {
-      const result = await deleteAgentSession(sessionId);
-      if (result.success) {
-        setCreationHistory(prev => prev.filter(item => item.id !== sessionId));
-      } else {
-        // You could show a toast notification here on failure
-        console.error("Failed to delete session:", result.error);
-        alert(t("sidebar.deleteError"));
-      }
-    }
-  };
 
   // Check for updates on component mount
   useEffect(() => {
@@ -277,130 +245,6 @@ export default function Sidebar({ isOpen, toggleSidebar, openLoginModal, openAcc
                     </Link>
                   )}
                 </div>
-              </div>
-            </div>
-          </li>
-          <li className="min-h-[15px]">
-            <div className="mb-4">
-              <div className="px-2 py-1 flex justify-between items-center text-xs text-[#8a8a8a] uppercase tracking-wider font-medium text-[10px] transition-all duration-300 ease-in-out overflow-hidden" style={{ width: isOpen ? "auto" : "0", maxWidth: isOpen ? "100%" : "0", padding: isOpen ? "0.25rem 0.5rem" : "0", opacity: isOpen ? 1 : 0, whiteSpace: "nowrap", transitionDelay: isOpen ? "0ms" : "0ms" }}>
-                <span>{t("sidebar.creationArea")}</span>
-                {isOpen && (
-                  <button 
-                    onClick={() => setIsCreatorOpen(!isCreatorOpen)}
-                    className="w-5 h-5 flex items-center justify-center text-[#8a8a8a] hover:text-amber-400 transition-colors duration-300 login-fantasy-bg rounded-sm"
-                    aria-label={isCreatorOpen ? t("sidebar.collapseCreation") : t("sidebar.expandCreation")}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-300 ${isCreatorOpen ? "rotate-180" : ""}`}>
-                      <path d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-                
-              <div className={`overflow-hidden transition-all duration-300 ${isOpen ? (isCreatorOpen ? "max-h-20 opacity-100 mt-1" : "max-h-0 opacity-0 mt-0") : "max-h-20 opacity-100 mt-1"} mx-1`}>
-                <div className="relative group mt-1">
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  {!isOpen ? (
-                    <Link href="/creator-input" className={`menu-item flex justify-center p-2 rounded-md cursor-pointer transition-all duration-300 ${isCreatorAreaActive ? "bg-amber-900/30" : "hover:bg-[#252525]"}`}>
-                      <div className={`flex items-center justify-center text-[#f4e8c1] bg-[#1c1c1c] rounded-lg border border-[#333333] shadow-inner transition-all duration-300 w-8 h-8 ${isCreatorAreaActive ? "border-amber-500/80 text-amber-400 shadow-[0_0_10px_rgba(251,146,60,0.5)]" : "group-hover:border-[#444444] hover:text-amber-400 hover:border-[#444444] hover:shadow-[0_0_8px_rgba(251,146,60,0.4)]"}`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300">
-                          <path d="M9 18h6" />
-                          <path d="M10 22h4" />
-                          <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" />
-                          <path d="M12 2v1" />
-                          <path d="M3.05 11.05l.76.76" />
-                          <path d="M20.95 11.05l-.76.76" />
-                        </svg>
-                      </div>
-                    </Link>
-                  ) : (
-                    <Link href="/creator-input" className="focus:outline-none group relative overflow-hidden rounded-md w-full transition-all duration-300">
-                      <div className={`absolute inset-0 transition-opacity duration-300 ${isCreatorAreaActive ? "bg-gradient-to-br from-amber-500/20 via-amber-500/5 to-transparent opacity-100" : "bg-gradient-to-br from-amber-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100"}`}></div>
-                      <div className="relative flex items-center p-2 w-full transition-all duration-300 z-10">
-                        <div className={`absolute inset-0 w-full h-full bg-[#333] transition-opacity duration-300 ${isCreatorAreaActive ? "opacity-20" : "opacity-0 group-hover:opacity-10"}`}></div>
-                        <div className={`absolute bottom-0 left-0 h-[1px] bg-gradient-to-r from-transparent via-[#f8d36a] to-transparent transition-all duration-500 ${isCreatorAreaActive ? "w-full" : "w-0 group-hover:w-full"}`}></div>
-                        <div className={`w-8 h-8 flex items-center justify-center flex-shrink-0 text-[#f4e8c1] bg-[#1c1c1c] rounded-lg border border-[#333333] shadow-inner transition-all duration-300 ${isCreatorAreaActive ? "border-amber-500/80 text-amber-400 shadow-[0_0_10px_rgba(251,146,60,0.5)]" : "group-hover:border-[#444444] group-hover:text-amber-400 group-hover:shadow-[0_0_8px_rgba(251,146,60,0.4)]"}`}>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300">
-                            <path d="M9 18h6" />
-                            <path d="M10 22h4" />
-                            <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" />
-                            <path d="M12 2v1" />
-                            <path d="M3.05 11.05l.76.76" />
-                            <path d="M20.95 11.05l-.76.76" />
-                          </svg>
-                        </div>
-                        <div className={"ml-2 transition-all duration-300 ease-in-out overflow-hidden"} style={{ transitionDelay: isOpen ? "50ms" : "0ms", opacity: isOpen ? 1 : 0 }}>
-                          <span className={`magical-text whitespace-nowrap block text-sm transition-colors duration-300 ${fontClass} ${isCreatorAreaActive ? "text-amber-300 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]" : "group-hover:text-amber-400"}`}>
-                            {isOpen && t("sidebar.creator").split("").map((char, index) => (
-                              <span 
-                                key={index} 
-                                className="inline-block transition-all duration-300" 
-                                style={{ 
-                                  opacity: animationComplete ? 1 : 0,
-                                  transform: animationComplete ? "translateY(0)" : "translateY(8px)",
-                                  transitionDelay: `${200 + index * 30}ms`,
-                                  width: char === " " ? "0.25em" : "auto",
-                                }}
-                              >
-                                {char}
-                              </span>
-                            ))}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  )}
-                </div>
-              </div>
-            </div>
-          </li>
-          <li className="min-h-[15px]">
-            <div className="mb-4">
-              <div className="px-2 py-1 flex justify-between items-center text-xs text-[#8a8a8a] uppercase tracking-wider font-medium text-[10px] transition-all duration-300 ease-in-out overflow-hidden" style={{ width: isOpen ? "auto" : "0", maxWidth: isOpen ? "100%" : "0", padding: isOpen ? "0.25rem 0.5rem" : "0", opacity: isOpen ? 1 : 0, whiteSpace: "nowrap", transitionDelay: isOpen ? "0ms" : "0ms" }}>
-                <span>{t("sidebar.creationHistory")}</span>
-                {isOpen && (
-                  <button 
-                    onClick={() => setIsHistoryOpen(!isHistoryOpen)}
-                    className="w-5 h-5 flex items-center justify-center text-[#8a8a8a] hover:text-amber-400 transition-colors duration-300 login-fantasy-bg rounded-sm"
-                    aria-label={isHistoryOpen ? t("sidebar.collapseHistory") : t("sidebar.expandHistory")}
-                  >
-                    <ChevronDown size={12} className={`transition-transform duration-300 ${isHistoryOpen ? "rotate-180" : ""}`} />
-                  </button>
-                )}
-              </div>
-              
-              <div className={`overflow-hidden transition-all duration-300 ${isOpen && isHistoryOpen ? "max-h-[300px] opacity-100 mt-1" : "max-h-0 opacity-0 mt-0"} mx-1`}>
-                {creationHistory.length > 0 ? creationHistory.map((item, index) => (
-                  <div key={item.id} className="relative group">
-                    <Link href={`/creator-area?id=${item.id}`} className="focus:outline-none group relative overflow-hidden rounded-md w-full transition-all duration-300">
-                      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <div className="relative flex items-center justify-between p-2 w-full transition-all duration-300 z-10">
-                        <div className="flex items-center overflow-hidden">
-                          <div className="absolute inset-0 w-full h-full bg-[#2c2c2c] opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
-                          <div className="absolute bottom-0 left-0 h-[1px] bg-gradient-to-r from-transparent via-[#c9aa5f] to-transparent w-0 group-hover:w-full transition-all duration-500"></div>
-                            
-                          <div className="w-6 h-6 flex items-center justify-center flex-shrink-0 text-[#c9aa5f] group-hover:text-amber-400 transition-colors duration-300">
-                            <History size={14} />
-                          </div>
-                          <div className={"ml-2 transition-all duration-300 ease-in-out overflow-hidden"} style={{ transitionDelay: "0ms", opacity: 1 }}>
-                            <span className={`whitespace-nowrap block text-xs group-hover:text-amber-400 text-[#ccc] transition-colors duration-300 ${fontClass}`}>
-                              {item.title}
-                            </span>
-                          </div>
-                        </div>
-                        <button 
-                          onClick={(e) => handleDeleteSession(e, item.id, item.title)}
-                          className="p-1 rounded-md text-gray-500 hover:text-red-500 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex-shrink-0"
-                          aria-label={t("sidebar.deleteSession")}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </Link>
-                  </div>
-                )) : (
-                  <div className="px-3 py-2 text-xs text-gray-500">{t("sidebar.noHistory")}</div>
-                )}
               </div>
             </div>
           </li>
