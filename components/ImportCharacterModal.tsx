@@ -57,28 +57,31 @@ interface ImportCharacterModalProps {
 export default function ImportCharacterModal({ isOpen, onClose, onImport }: ImportCharacterModalProps) {
   const { t, fontClass, serifFontClass } = useLanguage();
   const [isDragging, setIsDragging] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // ErrorToast state
-  const [errorToast, setErrorToast] = useState({
+  // Toast state
+  const [toast, setToast] = useState({
     isVisible: false,
     message: "",
+    type: "error" as "success" | "error" | "warning",
   });
 
-  const showErrorToast = (message: string) => {
-    setErrorToast({
+  const showToast = (message: string, type: "success" | "error" | "warning" = "error") => {
+    setToast({
       isVisible: true,
       message,
+      type,
     });
   };
 
-  const hideErrorToast = () => {
-    setErrorToast({
+  const hideToast = () => {
+    setToast({
       isVisible: false,
       message: "",
+      type: "error",
     });
   };
 
@@ -97,37 +100,53 @@ export default function ImportCharacterModal({ isOpen, onClose, onImport }: Impo
     setIsDragging(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      if (file.type === "image/png") {
-        setSelectedFile(file);
+      const files = Array.from(e.dataTransfer.files);
+      const pngFiles = files.filter(file => file.type === "image/png");
+      
+      if (pngFiles.length > 0) {
+        setSelectedFiles(pngFiles);
         setError("");
+        
+        // Show warning if some files were not PNG
+        if (pngFiles.length < files.length) {
+          const warningMessage = t("importCharacterModal.someFilesSkipped");
+          showToast(warningMessage, "warning");
+        }
       } else {
         const errorMessage = t("importCharacterModal.pngOnly");
         setError(errorMessage);
-        showErrorToast(errorMessage);
+        showToast(errorMessage, "error");
       }
     }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      if (file.type === "image/png") {
-        setSelectedFile(file);
+      const files = Array.from(e.target.files);
+      const pngFiles = files.filter(file => file.type === "image/png");
+      
+      if (pngFiles.length > 0) {
+        setSelectedFiles(pngFiles);
         setError("");
+        
+        // Show warning if some files were not PNG
+        if (pngFiles.length < files.length) {
+          const warningMessage = t("importCharacterModal.someFilesSkipped");
+          showToast(warningMessage, "warning");
+        }
       } else {
         const errorMessage = t("importCharacterModal.pngOnly");
         setError(errorMessage);
-        showErrorToast(errorMessage);
+        showToast(errorMessage, "error");
       }
     }
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) {
+    if (selectedFiles.length === 0) {
       const errorMessage = t("importCharacterModal.noFileSelected");
       setError(errorMessage);
-      showErrorToast(errorMessage);
+      showToast(errorMessage, "error");
       return;
     }
 
@@ -135,29 +154,66 @@ export default function ImportCharacterModal({ isOpen, onClose, onImport }: Impo
     setError("");
 
     try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
+      let successCount = 0;
+      let failCount = 0;
+      const errors: string[] = [];
 
-      const response = await handleCharacterUpload(selectedFile);
-
-      if (!response.success) {
-        throw new Error(t("importCharacterModal.uploadFailed"));
+      // Upload files sequentially to avoid overwhelming the server
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        try {
+          const response = await handleCharacterUpload(file);
+          
+          if (response.success) {
+            successCount++;
+          } else {
+            failCount++;
+            errors.push(`${file.name}: ${t("importCharacterModal.uploadFailed")}`);
+          }
+        } catch (err) {
+          failCount++;
+          const errorMsg = typeof err === "string" ? err : t("importCharacterModal.uploadFailed");
+          errors.push(`${file.name}: ${errorMsg}`);
+        }
       }
 
-      onImport();
-      onClose();
+      // Show results
+      if (successCount > 0 && failCount === 0) {
+        showToast(
+          selectedFiles.length === 1 
+            ? t("importCharacterModal.uploadSuccess")
+            : `${successCount} characters imported successfully`,
+          "success",
+        );
+        onImport();
+        onClose();
+      } else if (successCount > 0 && failCount > 0) {
+        showToast(
+          `${successCount} characters imported, ${failCount} failed`,
+          "warning",
+        );
+        if (errors.length > 0) {
+          setError(errors.slice(0, 3).join("; ") + (errors.length > 3 ? "..." : ""));
+        }
+        onImport(); // Refresh the character list
+      } else {
+        // All failed
+        const errorMessage = errors.length > 0 ? errors[0] : t("importCharacterModal.uploadFailed");
+        setError(errorMessage);
+        showToast(errorMessage, "error");
+      }
     } catch (err) {
-      console.error("Error uploading character:", err);
+      console.error("Error uploading characters:", err);
       const errorMessage = typeof err === "string" ? err : t("importCharacterModal.uploadFailed");
       setError(errorMessage);
-      showErrorToast(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setIsUploading(false);
     }
   };
 
   const resetForm = () => {
-    setSelectedFile(null);
+    setSelectedFiles([]);
     setError("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -209,23 +265,44 @@ export default function ImportCharacterModal({ isOpen, onClose, onImport }: Impo
                   ref={fileInputRef}
                   className="hidden"
                   accept="image/png"
+                  multiple
                   onChange={handleFileSelect}
                 />
                 
                 <div className="flex flex-col items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-12 h-12 mb-3 ${selectedFile ? "text-[#f9c86d]" : "text-[#a18d6f]"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-12 h-12 mb-3 ${selectedFiles.length > 0 ? "text-[#f9c86d]" : "text-[#a18d6f]"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
                   
-                  {selectedFile ? (
-                    <div className={`text-[#eae6db] ${fontClass}`}>
-                      <p className="font-medium">{selectedFile.name}</p>
-                      <p className="text-xs text-[#a18d6f] mt-1">{(selectedFile.size / 1024).toFixed(1)} KB</p>
+                  {selectedFiles.length > 0 ? (
+                    <div className={`text-[#eae6db] ${fontClass} max-w-full`}>
+                      {selectedFiles.length === 1 ? (
+                        <div>
+                          <p className="font-medium truncate">{selectedFiles[0].name}</p>
+                          <p className="text-xs text-[#a18d6f] mt-1">{(selectedFiles[0].size / 1024).toFixed(1)} KB</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="font-medium">{selectedFiles.length} files selected</p>
+                          <p className="text-xs text-[#a18d6f] mt-1">
+                            Total: {(selectedFiles.reduce((sum, file) => sum + file.size, 0) / 1024).toFixed(1)} KB
+                          </p>
+                          <div className="mt-2 max-h-16 overflow-y-auto text-xs space-y-1">
+                            {selectedFiles.slice(0, 3).map((file, index) => (
+                              <p key={index} className="text-[#c0a480] truncate">{file.name}</p>
+                            ))}
+                            {selectedFiles.length > 3 && (
+                              <p className="text-[#a18d6f]">... and {selectedFiles.length - 3} more</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className={`text-[#a18d6f] ${fontClass}`}>
                       <p>{t("importCharacterModal.dragOrClick")}</p>
                       <p className="text-xs mt-1">{t("importCharacterModal.pngFormat")}</p>
+                      <p className="text-xs mt-1 text-[#8a7c6a]">Multiple files supported</p>
                     </div>
                   )}
                 </div>
@@ -247,14 +324,22 @@ export default function ImportCharacterModal({ isOpen, onClose, onImport }: Impo
                 
                 <button
                   onClick={(e) => {trackButtonClick("ImportCharacterModal", "导入角色");handleUpload();}}
-                  className={`px-4 py-2 bg-[#252220] hover:bg-[#3a2a2a] border border-[#534741] rounded-md text-[#f9c86d] transition-colors ${fontClass} ${(!selectedFile || isUploading) ? "opacity-50 cursor-not-allowed" : ""}`}
+                  disabled={selectedFiles.length === 0 || isUploading}
+                  className={`px-4 py-2 bg-[#252220] hover:bg-[#3a2a2a] border border-[#534741] rounded-md text-[#f9c86d] transition-colors ${fontClass} ${(selectedFiles.length === 0 || isUploading) ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {isUploading ? (
                     <div className="flex items-center">
                       <div className="w-4 h-4 mr-2 rounded-full border-2 border-t-[#f9c86d] border-r-[#c0a480] border-b-[#a18d6f] border-l-transparent animate-spin"></div>
-                      {t("importCharacterModal.uploading")}
+                      {selectedFiles.length > 1 
+                        ? `${t("importCharacterModal.uploading")} (${selectedFiles.length} files)`
+                        : t("importCharacterModal.uploading")
+                      }
                     </div>
-                  ) : t("importCharacterModal.import")}
+                  ) : (
+                    selectedFiles.length > 1 
+                      ? `${t("importCharacterModal.import")} (${selectedFiles.length})`
+                      : t("importCharacterModal.import")
+                  )}
                 </button>
               </div>
             </div>
@@ -262,10 +347,10 @@ export default function ImportCharacterModal({ isOpen, onClose, onImport }: Impo
         </div>
       )}
       <Toast
-        isVisible={errorToast.isVisible}
-        message={errorToast.message}
-        onClose={hideErrorToast}
-        type="error"
+        type={toast.type}
+        isVisible={toast.isVisible}
+        message={toast.message}
+        onClose={hideToast}
       />
     </AnimatePresence>
   );
