@@ -1,5 +1,5 @@
 <h1 style="border-bottom: none" align="center">
-  <a href=https://narratium.org/">Narratium.ai</a>
+  <a href=https://narratium-ai-rust.vercel.app/">Narratium.ai</a>
   <br />
   <p>Create, Play, and Roleplay with AI</p>
 </h1>
@@ -70,14 +70,13 @@
 | What is Narratium |
 | :---------------- |
 
-[Narratium.ai](https://narratium.org/) is an open-source platform for creating AI characters, immersive worlds, and dynamic conversations.It's your creative studio for building personalized roleplay adventures — from emotional journeys to epic sagas.
+[Narratium.ai](https://narratium-ai-rust.vercel.app/) is an open-source platform for creating AI characters, immersive worlds, and dynamic conversations.It's your creative studio for building personalized roleplay adventures — from emotional journeys to epic sagas.
 
 | Experience & Play |
 | :---------------- |
 
 <div align="center">
-  <a href="https://narratium.org">Official Service (Free registration required)</a> &nbsp;|&nbsp;
-  <a href="https://narratium-ai-woad.vercel.app/">🧪 Open Source Preview</a>
+  <a href="hhttps://narratium-ai-rust.vercel.app/">🧪 Open Source Preview</a>
 </div>
 
 | Version Information |
