@@ -12,9 +12,8 @@
 </div>
 
 > [!IMPORTANT]
-> 
+>
 > * 本项目仅供个人学习使用，且不提供任何技术支持
-> * 商业化请参考 License 或进入[社区咨询作者](https://discord.gg/PP7EpSzDfU)
 > * 使用者必须在遵循 OpenAI 等模型服务商的使用条款以及法律法规的情况下使用，不得用于非法用途
 > * 根据《生成式人工智能服务管理暂行办法》的要求，请勿对中国地区公众提供一切未经备案的生成式人工智能服务
 
@@ -31,7 +30,6 @@
 <div align="center">
   <a href="https://narratium.org">🔗 Live Demo</a> &nbsp;|&nbsp;
   <a href="https://deepwiki.com/Narratium/Narratium.ai/">📖 DeepWiki Docs</a> &nbsp;|&nbsp;
-  <a href="https://discord.gg/PP7EpSzDfU">💬 Discord Community</a> &nbsp;|&nbsp;
   <a href="https://github.com/Narratium/Narratium.ai/releases">💾 Download</a> &nbsp;|&nbsp;
   <a href="./README_ZH.md">🇨🇳 中文文档</a>
 </div>
@@ -191,17 +189,6 @@ This project consists of two distinct parts with independent licenses:
 
 > For full license details, please refer to the [LICENSE](./LICENSE).
 
-| Contact & Support |
-| :---------------- |
-
-* 如果你喜欢这个项目，我们非常欢迎你加入
-* If you like this project, we warmly welcome you to join us
-<div align="center">
-  <img src="public/qq.jpg" alt="QQ群二维码" width="220" />
-  <div>官方 QQ 用户群</div>
-</div>
-
-[Discord 技术社区](https://discord.gg/PP7EpSzDfU)
 
 | Code Contributer |
 | :--------------- |
