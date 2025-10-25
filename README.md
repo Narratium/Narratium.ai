@@ -17,6 +17,12 @@
 > * 使用者必须在遵循 OpenAI 等模型服务商的使用条款以及法律法规的情况下使用，不得用于非法用途
 > * 根据《生成式人工智能服务管理暂行办法》的要求，请勿对中国地区公众提供一切未经备案的生成式人工智能服务
 
+> [!CAUTION]
+>
+> * Narratium.ai 为纯粹的开源社区项目，仅供研究与个人学习。
+> * 未经作者及贡献者的书面许可，任何个人或组织不得将本项目用于商业化、变现或提供衍生商业服务。
+> * 因使用、部署或运营本项目产生的一切责任、合规义务及法律风险，均由使用者自行承担，与作者、贡献者及维护者无任何关联或连带责任。
+
 <br>
 
 ![Narratium.ai](/public/banner.png)
@@ -204,4 +210,3 @@ Thanks all Official Website Test API Sponsor
 | :---------- |
 
 [![Stargazers over time](https://starchart.cc/Narratium/Narratium.ai.svg?variant=adaptive)](https://starchart.cc/Narratium/Narratium.ai)
-
